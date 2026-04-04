@@ -5,10 +5,32 @@
 spring:
   application:
     name: servicename
+  datasource:
+    url: jdbc:postgresql://${servicename.db.host}:${servicename.db.port}/${servicename.db.name}
+    username: ${servicename.db.username}
+    password: ${servicename.db.password}
+  rabbitmq:
+    host: ${servicename.rabbitmq.host}
+    port: ${servicename.rabbitmq.port}
+    username: ${servicename.rabbitmq.username}
+    password: ${servicename.rabbitmq.password}
+  liquibase:
+    enabled: false
   messages:
     basename: messages
     encoding: UTF-8
     fallback-to-system-locale: false
+
+mybatis:
+  mapper-locations: classpath:mappers/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+server:
+  port: 8080
+  shutdown: graceful
+  tomcat:
+    connection-timeout: 5s
 
 springdoc:
   api-docs:
@@ -29,6 +51,21 @@ management:
       probes:
         enabled: true
       show-details: when-authorized
+
+servicename:
+  db:
+    host: ${DB_HOST:localhost}
+    port: ${DB_PORT:5432}
+    name: ${DB_NAME:servicename}
+    username: ${DB_USERNAME:servicename}
+    password: ${DB_PASSWORD:servicename}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+  liquibase:
+    change-log: db/changelog/db.changelog-master.xml
 
 git:
   build_time: "@git.build.time@"

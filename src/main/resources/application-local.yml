@@ -1,7 +1,13 @@
 # ===================================================================
 # Spring Boot configuration for the "local" profile.
-# Overrides base: relaxes actuator, enables debug logging.
+# Overrides base: enables Liquibase with demo data, relaxes actuator,
+# enables debug logging.
 # ===================================================================
+
+spring:
+  liquibase:
+    enabled: true
+    contexts: demo
 
 management:
   endpoints:
@@ -12,3 +18,14 @@ management:
 logging:
   level:
     com.iqscaffold: DEBUG
+    org.mybatis: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+
+servicename:
+  db:
+    host: ${DB_HOST:localhost}
+    port: ${DB_PORT:5432}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}

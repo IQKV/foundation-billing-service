@@ -5,10 +5,27 @@
 spring:
   application:
     name: servicename
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password: test
+  liquibase:
+    enabled: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: # disabled in tests — configure per test with @WithMockUser or SecurityMockMvcConfigurer
 
 logging:
   level:
     com.iqscaffold: DEBUG
+    liquibase: DEBUG
 
 git:
   build_time: "@git.build.time@"

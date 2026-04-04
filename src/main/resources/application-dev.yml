@@ -1,7 +1,13 @@
 # ===================================================================
 # Spring Boot configuration for the "dev" profile (K8s / dev cluster).
-# Overrides base: enables debug logging, exposes all actuator endpoints.
+# Overrides base: points to in-cluster service names, enables Liquibase
+# with demo data.
 # ===================================================================
+
+spring:
+  liquibase:
+    enabled: true
+    contexts: demo
 
 management:
   endpoints:
@@ -12,3 +18,15 @@ management:
 logging:
   level:
     com.iqscaffold: DEBUG
+    org.mybatis: DEBUG
+    liquibase: DEBUG
+
+servicename:
+  db:
+    host: ${DB_HOST:postgres}
+    username: ${DB_USERNAME:servicename}
+    password: ${DB_PASSWORD:servicename}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    username: ${RABBITMQ_USERNAME:servicename}
+    password: ${RABBITMQ_PASSWORD:servicename}
