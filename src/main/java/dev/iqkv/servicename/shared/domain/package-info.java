@@ -15,7 +15,7 @@
  */
 
 /**
- * Messaging infrastructure: event publishers, message-broker configuration, and outbox patterns.
- * Domain events are defined in bounded-context {@code domain.event} packages and referenced here.
+ * Shared domain primitives (value objects, base types) used across all bounded contexts.
+ * Classes in this package must not depend on any bounded-context or infrastructure packages.
  */
-package com.iqscaffold.servicename.infrastructure.messaging;
+package dev.iqkv.servicename.shared.domain;

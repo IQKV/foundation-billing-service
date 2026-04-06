@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iqscaffold.servicename;
+package dev.iqkv.servicename;
 
 import java.util.TimeZone;
 

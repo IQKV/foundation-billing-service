@@ -15,6 +15,7 @@
  */
 
 /**
- * Application root package for the Servicename service.
+ * Common exception types shared across all bounded contexts.
+ * Classes in this package must not depend on any bounded-context or infrastructure packages.
  */
-package com.iqscaffold.servicename;
+package dev.iqkv.servicename.shared.exception;

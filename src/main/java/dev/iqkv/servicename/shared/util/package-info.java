@@ -15,7 +15,7 @@
  */
 
 /**
- * Shared domain primitives (value objects, base types) used across all bounded contexts.
+ * Utility classes shared across all bounded contexts (e.g. date helpers, string utilities).
  * Classes in this package must not depend on any bounded-context or infrastructure packages.
  */
-package com.iqscaffold.servicename.shared.domain;
+package dev.iqkv.servicename.shared.util;

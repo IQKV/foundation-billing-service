@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-package com.iqscaffold.servicename;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-
-@SpringBootTest
-class ServicenameApplicationTests {
-
-  @Test
-  void contextLoads() {
-  }
-}
+/**
+ * Messaging infrastructure: event publishers, message-broker configuration, and outbox patterns.
+ * Domain events are defined in bounded-context {@code domain.event} packages and referenced here.
+ */
+package dev.iqkv.servicename.infrastructure.messaging;

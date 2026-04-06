@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-/**
- * Spring Security filter chains, JWT filters, and security utility classes.
- * Must not depend on bounded-context adapter or application packages.
- */
-package com.iqscaffold.servicename.infrastructure.security;
+package dev.iqkv.servicename;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class ServicenameApplicationTests {
+
+  @Test
+  void contextLoads() {
+  }
+}

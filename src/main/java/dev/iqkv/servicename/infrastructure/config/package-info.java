@@ -14,21 +14,9 @@
  * limitations under the License.
  */
 
-package com.iqscaffold.servicename;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-import org.springframework.boot.test.context.SpringBootTest;
-
 /**
- * Base composite annotation for integration tests.
+ * Spring {@code @Configuration} classes and application-wide bean definitions.
+ * This is the top-level technical concern; it may reference all other packages but must not
+ * contain any business logic.
  */
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-@SpringBootTest(classes = {ServicenameApplication.class})
-public @interface IntegrationTest {
-
-}
+package dev.iqkv.servicename.infrastructure.config;

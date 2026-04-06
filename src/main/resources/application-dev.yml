@@ -17,7 +17,7 @@ management:
 
 logging:
   level:
-    com.iqscaffold: DEBUG
+    dev.iqkv: DEBUG
     org.mybatis: DEBUG
     liquibase: DEBUG
 

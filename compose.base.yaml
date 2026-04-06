@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
       target: builder
-    image: iqscaffold/servicename:dev
+    image: iqkv/servicename:dev
     container_name: servicename-dev
     environment:
       SPRING_PROFILES_ACTIVE: dev

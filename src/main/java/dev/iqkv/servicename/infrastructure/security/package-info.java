@@ -15,7 +15,7 @@
  */
 
 /**
- * Utility classes shared across all bounded contexts (e.g. date helpers, string utilities).
- * Classes in this package must not depend on any bounded-context or infrastructure packages.
+ * Spring Security filter chains, JWT filters, and security utility classes.
+ * Must not depend on bounded-context adapter or application packages.
  */
-package com.iqscaffold.servicename.shared.util;
+package dev.iqkv.servicename.infrastructure.security;

@@ -18,4 +18,4 @@
  * JPA / Spring Data infrastructure configuration (datasource, transaction manager, Liquibase/Flyway setup).
  * Bounded-context-specific repository implementations belong in their own {@code adapter.out.persistence} packages.
  */
-package com.iqscaffold.servicename.infrastructure.persistence;
+package dev.iqkv.servicename.infrastructure.persistence;

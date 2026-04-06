@@ -32,7 +32,7 @@ project-root/
 │       └── auto-approve-dependabot-pr.yml
 ├── src/
 │   ├── main/
-│   │   ├── java/com/iqscaffold/servicename/
+│   │   ├── java/dev/iqkv/servicename/
 │   │   │   ├── shared/                   # Shared kernel (cross-cutting concerns)
 │   │   │   │   ├── domain/               # Shared domain primitives
 │   │   │   │   ├── exception/            # Common exceptions
@@ -64,7 +64,7 @@ project-root/
 │   │       ├── logback-spring.xml            # Structured JSON logging (logstash encoder)
 │   │       └── db/changelog/                 # Database migrations (Liquibase)
 │   └── test/
-│       └── java/com/iqscaffold/servicename/
+│       └── java/dev/iqkv/servicename/
 │           ├── [bounded-context]/
 │           │   ├── domain/                       # Domain model tests
 │           │   ├── application/                  # Application service tests
