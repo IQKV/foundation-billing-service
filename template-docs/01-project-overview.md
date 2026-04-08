@@ -99,7 +99,7 @@ project-root/
 ## Technology Stack
 
 | Layer                | Technology                                          |
-| -------------------- |-----------------------------------------------------|
+| -------------------- | --------------------------------------------------- |
 | Language             | Java 25 (OpenJDK)                                   |
 | Framework            | Spring Boot 3.x (via `boot-parent-pom`)             |
 | Modularity           | Spring Modulith                                     |

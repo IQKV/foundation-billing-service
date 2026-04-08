@@ -7,7 +7,7 @@
 | Java (OpenJDK)   | 21              | LTS — required                      |
 | Maven            | 3.9+            | or use the bundled `./mvnw` wrapper |
 | Node.js          | 22.15.0         | required for Git hooks toolchain    |
-| pnpm             | 10.32.1         | install via `npm i -g pnpm`         |
+| pnpm             | 10.33.0         | install via `npm i -g pnpm`         |
 | Docker + Compose | any recent      | for running SonarQube locally       |
 | Git              | any recent      |                                     |
 
