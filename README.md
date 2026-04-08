@@ -53,7 +53,7 @@ After creating your repository:
 
 ## Prerequisites
 
-- Java 21 (OpenJDK)
+- Java 25 (OpenJDK)
 - Maven
 - Node.js & pnpm
 - Docker & Docker Compose
