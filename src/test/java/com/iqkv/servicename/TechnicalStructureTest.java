@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.iqkv.servicename;
+package com.iqkv.servicename;
 
 import static com.tngtech.archunit.base.DescribedPredicate.alwaysTrue;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.belongToAnyOf;

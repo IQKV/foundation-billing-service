@@ -52,7 +52,7 @@ After creating your repository from the template:
 
 - [ ] Update `groupId`, `artifactId`, `name`, `description` in `pom.xml`
 - [ ] Update `<start-class>` property in `pom.xml` to match your new package
-- [ ] Rename the Java package from `dev.iqkv.servicename` to your own (`com.example.myservice`)
+- [ ] Rename the Java package from `com.iqkv.servicename` to your own (`com.example.myservice`)
 - [ ] Update `spring.application.name` in `src/main/resources/application.yml`
 - [ ] Update `name` in `package.json` (`@iqkv/servicename` → `@yourorg/myservice`)
 - [ ] Rename `compose.yaml` service name from `dev-servicename` to your service name

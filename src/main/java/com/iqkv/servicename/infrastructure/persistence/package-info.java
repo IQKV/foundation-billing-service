@@ -15,7 +15,7 @@
  */
 
 /**
- * Shared domain primitives (value objects, base types) used across all bounded contexts.
- * Classes in this package must not depend on any bounded-context or infrastructure packages.
+ * JPA / Spring Data infrastructure configuration (datasource, transaction manager, Liquibase/Flyway setup).
+ * Bounded-context-specific repository implementations belong in their own {@code adapter.out.persistence} packages.
  */
-package dev.iqkv.servicename.shared.domain;
+package com.iqkv.servicename.infrastructure.persistence;

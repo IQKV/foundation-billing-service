@@ -15,7 +15,7 @@
  */
 
 /**
- * Spring Security filter chains, JWT filters, and security utility classes.
- * Must not depend on bounded-context adapter or application packages.
+ * Utility classes shared across all bounded contexts (e.g. date helpers, string utilities).
+ * Classes in this package must not depend on any bounded-context or infrastructure packages.
  */
-package dev.iqkv.servicename.infrastructure.security;
+package com.iqkv.servicename.shared.util;

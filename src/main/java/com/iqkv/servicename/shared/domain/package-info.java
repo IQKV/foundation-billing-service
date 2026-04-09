@@ -14,18 +14,8 @@
  * limitations under the License.
  */
 
-package dev.iqkv.servicename;
-
-import java.util.TimeZone;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-@SpringBootApplication
-public class ServicenameApplication {
-
-  public static void main(String[] args) {
-    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    SpringApplication.run(ServicenameApplication.class, args);
-  }
-}
+/**
+ * Shared domain primitives (value objects, base types) used across all bounded contexts.
+ * Classes in this package must not depend on any bounded-context or infrastructure packages.
+ */
+package com.iqkv.servicename.shared.domain;

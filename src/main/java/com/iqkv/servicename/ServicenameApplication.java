@@ -14,9 +14,18 @@
  * limitations under the License.
  */
 
-/**
- * Spring {@code @Configuration} classes and application-wide bean definitions.
- * This is the top-level technical concern; it may reference all other packages but must not
- * contain any business logic.
- */
-package dev.iqkv.servicename.infrastructure.config;
+package com.iqkv.servicename;
+
+import java.util.TimeZone;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ServicenameApplication {
+
+  public static void main(String[] args) {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    SpringApplication.run(ServicenameApplication.class, args);
+  }
+}

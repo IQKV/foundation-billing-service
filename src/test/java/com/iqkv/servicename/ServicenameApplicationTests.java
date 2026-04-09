@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package dev.iqkv.servicename;
+package com.iqkv.servicename;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

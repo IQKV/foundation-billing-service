@@ -15,6 +15,8 @@
  */
 
 /**
- * Application root package for the Servicename service.
+ * Spring {@code @Configuration} classes and application-wide bean definitions.
+ * This is the top-level technical concern; it may reference all other packages but must not
+ * contain any business logic.
  */
-package dev.iqkv.servicename;
+package com.iqkv.servicename.infrastructure.config;

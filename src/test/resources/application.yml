@@ -24,7 +24,7 @@ spring:
 
 logging:
   level:
-    dev.iqkv: DEBUG
+    com.iqkv: DEBUG
     liquibase: DEBUG
 
 git:

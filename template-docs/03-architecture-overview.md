@@ -5,7 +5,7 @@
 This template follows a **Tactical DDD** layout with hexagonal architecture, enforced at test time by ArchUnit (`TechnicalStructureTest`):
 
 ```
-src/main/java/dev/iqkv/{servicename}/
+src/main/java/com/iqkv/{servicename}/
 ├── shared/                   # Shared kernel (cross-cutting concerns)
 │   ├── domain/               # Shared domain primitives
 │   ├── exception/            # Common exceptions
