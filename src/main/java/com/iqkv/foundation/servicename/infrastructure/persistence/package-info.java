@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-package com.iqkv.servicename;
-
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-
-@SpringBootTest
-class ServicenameApplicationTests {
-
-  @Test
-  void contextLoads() {
-  }
-}
+/**
+ * JPA / Spring Data infrastructure configuration (datasource, transaction manager, Liquibase/Flyway setup).
+ * Bounded-context-specific repository implementations belong in their own {@code adapter.out.persistence} packages.
+ */
+package com.iqkv.foundation.servicename.infrastructure.persistence;

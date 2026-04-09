@@ -26,7 +26,7 @@
         <checkstyle.skip>true</checkstyle.skip>
         <maven.gitcommitid.skip>false</maven.gitcommitid.skip>
         <jacoco.skip>true</jacoco.skip>
-        <start-class>com.iqkv.servicename.ServicenameApplication</start-class>
+        <start-class>com.iqkv.foundation.servicename.ServicenameApplication</start-class>
     </properties>
     <dependencyManagement>
         <dependencies>

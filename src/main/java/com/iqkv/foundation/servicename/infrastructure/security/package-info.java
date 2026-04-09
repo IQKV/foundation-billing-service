@@ -15,7 +15,7 @@
  */
 
 /**
- * Messaging infrastructure: event publishers, message-broker configuration, and outbox patterns.
- * Domain events are defined in bounded-context {@code domain.event} packages and referenced here.
+ * Spring Security filter chains, JWT filters, and security utility classes.
+ * Must not depend on bounded-context adapter or application packages.
  */
-package com.iqkv.servicename.infrastructure.messaging;
+package com.iqkv.foundation.servicename.infrastructure.security;

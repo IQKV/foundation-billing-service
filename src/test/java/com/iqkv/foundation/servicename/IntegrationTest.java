@@ -14,8 +14,21 @@
  * limitations under the License.
  */
 
+package com.iqkv.foundation.servicename;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import org.springframework.boot.test.context.SpringBootTest;
+
 /**
- * Shared domain primitives (value objects, base types) used across all bounded contexts.
- * Classes in this package must not depend on any bounded-context or infrastructure packages.
+ * Base composite annotation for integration tests.
  */
-package com.iqkv.servicename.shared.domain;
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@SpringBootTest(classes = {ServicenameApplication.class})
+public @interface IntegrationTest {
+
+}

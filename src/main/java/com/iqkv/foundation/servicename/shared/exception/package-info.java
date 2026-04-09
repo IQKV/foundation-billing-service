@@ -15,7 +15,7 @@
  */
 
 /**
- * JPA / Spring Data infrastructure configuration (datasource, transaction manager, Liquibase/Flyway setup).
- * Bounded-context-specific repository implementations belong in their own {@code adapter.out.persistence} packages.
+ * Common exception types shared across all bounded contexts.
+ * Classes in this package must not depend on any bounded-context or infrastructure packages.
  */
-package com.iqkv.servicename.infrastructure.persistence;
+package com.iqkv.foundation.servicename.shared.exception;

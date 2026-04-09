@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iqkv.servicename;
+package com.iqkv.foundation.servicename;
 
 import java.util.TimeZone;
 

@@ -15,7 +15,6 @@
  */
 
 /**
- * Spring Security filter chains, JWT filters, and security utility classes.
- * Must not depend on bounded-context adapter or application packages.
+ * Application root package for the Servicename service.
  */
-package com.iqkv.servicename.infrastructure.security;
+package com.iqkv.foundation.servicename;
