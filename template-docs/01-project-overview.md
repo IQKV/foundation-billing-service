@@ -122,7 +122,6 @@ project-root/
 | --------------- | ------------------------------------------------------------------------------ |
 | `default`       | Active by default — standard build                                             |
 | `dev`           | Adds `spring-boot-devtools` for local development                              |
-| `production`    | Placeholder for production-specific configuration                              |
 | `modulith-test` | Runs only `*ModulithTest`, `*ModulithIntegrationTest`, `*ModulithScenarioTest` |
 | `use-qulice`    | Enables Qulice static analysis (license header checks etc.)                    |
 
