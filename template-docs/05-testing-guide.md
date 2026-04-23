@@ -6,7 +6,7 @@ The template follows the [Test Pyramid](https://martinfowler.com/bliki/TestPyram
 
 | Test class                     | Type                 | Purpose                                      |
 | ------------------------------ | -------------------- | -------------------------------------------- |
-| `ServicenameApplicationTests`  | Smoke                | Spring context loads without errors          |
+| `BillingServiceApplicationTests`  | Smoke                | Spring context loads without errors          |
 | `TechnicalStructureTest`       | Architecture         | ArchUnit enforces layered architecture rules |
 | `ModulithTest`                 | Modulith             | Verifies Spring Modulith module boundaries   |
 | `ModulithIntegrationTest`      | Modulith integration | Tests cross-module interactions              |
@@ -81,7 +81,7 @@ domain           → only accessed by adapter.out, application, adapter.in, infr
 shared           → accessed by all layers
 ```
 
-`ServicenameApplication` is excluded from all access checks.
+`BillingServiceApplication` is excluded from all access checks.
 
 These rules run automatically on every `mvn test` invocation — no separate step needed.
 

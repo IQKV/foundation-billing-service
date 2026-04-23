@@ -22,10 +22,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ServicenameApplication {
+public class BillingServiceApplication {
 
   public static void main(String[] args) {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    SpringApplication.run(ServicenameApplication.class, args);
+    SpringApplication.run(BillingServiceApplication.class, args);
   }
 }

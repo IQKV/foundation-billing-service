@@ -55,7 +55,7 @@ project-root/
 │   │   │   │       │   └── rest/         # REST controllers
 │   │   │   │       └── out/
 │   │   │   │           └── persistence/  # Repository implementations
-│   │   │   └── ServicenameApplication.java   # Spring Boot entry point (UTC timezone forced)
+│   │   │   └── BillingServiceApplication.java   # Spring Boot entry point (UTC timezone forced)
 │   │   └── resources/
 │   │       ├── application.yml               # Base config with git build info placeholders
 │   │       ├── application-dev.yml           # Dev profile overrides
@@ -70,7 +70,7 @@ project-root/
 │           │   └── adapter/                      # Adapter tests
 │           ├── architecture/                     # ArchUnit tests
 │           │   └── TechnicalStructureTest.java   # ArchUnit layered arch rules
-│           ├── ServicenameApplicationTests.java  # Context load smoke test
+│           ├── BillingServiceApplicationTests.java  # Context load smoke test
 │           ├── ModulithTest.java                 # Spring Modulith module verification
 │           ├── ModulithIntegrationTest.java      # Modulith integration tests
 │           ├── ModulithScenarioTest.java         # Modulith scenario tests

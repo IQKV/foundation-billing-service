@@ -25,12 +25,12 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
-@AnalyzeClasses(packagesOf = ServicenameApplication.class, importOptions = DoNotIncludeTests.class)
+@AnalyzeClasses(packagesOf = BillingServiceApplication.class, importOptions = DoNotIncludeTests.class)
 class TechnicalStructureTest {
 
   // prettier-ignore
   @ArchTest
   static final ArchRule respectsTechnicalArchitectureLayers = onionArchitecture()
       .withOptionalLayers(true)
-      .ignoreDependency(belongToAnyOf(ServicenameApplication.class), alwaysTrue());
+      .ignoreDependency(belongToAnyOf(BillingServiceApplication.class), alwaysTrue());
 }

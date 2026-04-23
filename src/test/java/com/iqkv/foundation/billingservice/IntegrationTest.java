@@ -28,7 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@SpringBootTest(classes = {ServicenameApplication.class})
+@SpringBootTest(classes = {BillingServiceApplication.class})
 public @interface IntegrationTest {
 
 }
