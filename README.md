@@ -47,7 +47,7 @@ Base path: `/api/v1/billing`
 
 ## Tech Stack
 
-- Java 25 / Spring Boot 4.4
+- Java 25 / Spring Boot 4.0
 - MyBatis 3.x (no JPA) + PostgreSQL 17
 - Liquibase for schema migrations
 - RabbitMQ for async event consumption and publishing
