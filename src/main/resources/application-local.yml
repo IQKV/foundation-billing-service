@@ -22,10 +22,15 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
 
-servicename:
+billing:
   db:
     host: ${DB_HOST:localhost}
-    port: ${DB_PORT:5432}
+    port: ${DB_PORT:5434}
+    name: ${DB_NAME:billing}
+    username: ${DB_USERNAME:billing}
+    password: ${DB_PASSWORD:billing}
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
+    port: ${RABBITMQ_PORT:5673}
+    username: ${RABBITMQ_USERNAME:billing}
+    password: ${RABBITMQ_PASSWORD:billing}

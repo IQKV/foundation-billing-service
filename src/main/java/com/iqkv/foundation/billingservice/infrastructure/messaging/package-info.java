@@ -15,8 +15,7 @@
  */
 
 /**
- * Spring {@code @Configuration} classes and application-wide bean definitions.
- * This is the top-level technical concern; it may reference all other packages but must not
- * contain any business logic.
+ * Messaging infrastructure: event publishers, message-broker configuration, and outbox patterns.
+ * Domain events are defined in bounded-context {@code domain.event} packages and referenced here.
  */
-package com.iqkv.foundation.servicename.infrastructure.config;
+package com.iqkv.foundation.billingservice.infrastructure.messaging;

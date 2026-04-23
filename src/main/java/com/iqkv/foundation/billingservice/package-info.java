@@ -15,7 +15,6 @@
  */
 
 /**
- * Shared domain primitives (value objects, base types) used across all bounded contexts.
- * Classes in this package must not depend on any bounded-context or infrastructure packages.
+ * Application root package for the Servicename service.
  */
-package com.iqkv.foundation.servicename.shared.domain;
+package com.iqkv.foundation.billingservice;

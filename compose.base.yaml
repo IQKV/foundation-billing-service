@@ -1,20 +1,116 @@
 services:
-  # Servicename - Local Development
-  servicename:
+  # PostgreSQL Database for Billing Service - Local Development
+  postgres-billing:
+    image: postgres:17-alpine
+    container_name: foundation-billing-postgres-dev
+    environment:
+      POSTGRES_DB: billing
+      POSTGRES_USER: billing
+      POSTGRES_PASSWORD: billing
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_billing_data:/var/lib/postgresql/data
+    networks:
+      - billing-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U billing -d billing -h localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.track=all
+      -c max_connections=100
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+
+  # RabbitMQ for Billing Service - Local Development
+  rabbitmq-billing:
+    image: rabbitmq:3.13-management-alpine
+    container_name: foundation-billing-rabbitmq-dev
+    environment:
+      RABBITMQ_DEFAULT_USER: billing
+      RABBITMQ_DEFAULT_PASS: billing
+      RABBITMQ_DEFAULT_VHOST: /
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit log_levels [{connection,error},{default,info}] disk_free_limit 2147483648
+    ports:
+      - "5673:5672"   # AMQP port
+      - "15673:15672" # Management UI
+    volumes:
+      - rabbitmq_billing_data:/var/lib/rabbitmq
+    networks:
+      - billing-service-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  # Billing Service - Local Development
+  billing-service:
     build:
       context: .
       dockerfile: ./Dockerfile
       target: builder
-    image: iqkv/servicename:dev
-    container_name: servicename-dev
+    image: iqkv/foundation-billing-service:dev
+    container_name: foundation-billing-service-dev
     environment:
+      # Spring Configuration
       SPRING_PROFILES_ACTIVE: dev
-      SPRING_APPLICATION_NAME: servicename
+      SPRING_APPLICATION_NAME: foundation-billing-service
+
+      # Database Configuration
+      DB_HOST: postgres-billing
+      DB_PORT: 5432
+      DB_NAME: billing
+      DB_USERNAME: billing
+      DB_PASSWORD: billing
+
+      # RabbitMQ Configuration
+      RABBITMQ_HOST: rabbitmq-billing
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: billing
+      RABBITMQ_PASSWORD: billing
+
+      # Observability
+      OTEL_SERVICE_NAME: foundation-billing-service
+      OTEL_RESOURCE_ATTRIBUTES: service.name=foundation-billing-service,service.version=1.0.0,deployment.environment=dev
+
+      # JVM Configuration
+      JAVA_OPTS: >-
+        -Xms256m
+        -Xmx512m
+        -XX:+UseG1GC
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -Djava.security.egd=file:/dev/./urandom
     ports:
-      - "8080:8080"
-      - "8081:8081"
+      - "8080:8080" # Billing service API
+      - "8081:8081" # Actuator / management
+    depends_on:
+      postgres-billing:
+        condition: service_healthy
+      rabbitmq-billing:
+        condition: service_healthy
     networks:
-      - servicename-network
+      - billing-service-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health/readiness"]
       interval: 30s
@@ -23,8 +119,8 @@ services:
       start_period: 90s
     restart: unless-stopped
     volumes:
-      - servicename_logs:/app/logs
-      - servicename_tmp:/app/tmp
+      - billing_logs:/app/logs
+      - billing_tmp:/app/tmp
     deploy:
       resources:
         limits:
@@ -34,15 +130,65 @@ services:
           cpus: "0.25"
           memory: 384M
 
+  # SonarQube for code quality analysis
+  sonar:
+    image: sonarqube:25.3.0.104237-community
+    container_name: foundation-billing-sonarqube-dev
+    environment:
+      - SONAR_FORCEAUTHENTICATION=false
+    ports:
+      - "127.0.0.1:9001:9000"
+      - "127.0.0.1:9000:9000"
+    networks:
+      - billing-service-network
+    restart: unless-stopped
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: foundation-billing-prometheus-dev
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - billing-service-network
+    restart: unless-stopped
+
+  # Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: foundation-billing-grafana-dev
+    volumes:
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - billing-service-network
+    restart: unless-stopped
+
 networks:
-  servicename-network:
+  billing-service-network:
     driver: bridge
-    name: servicename-network-dev
+    name: foundation-billing-network-dev
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
 
 volumes:
-  servicename_logs:
-    name: servicename_logs_dev
+  postgres_billing_data:
+    name: iqkv_billing_postgres_data_dev
     driver: local
-  servicename_tmp:
-    name: servicename_tmp_dev
+  rabbitmq_billing_data:
+    name: iqkv_billing_rabbitmq_data_dev
+    driver: local
+  billing_logs:
+    name: iqkv_billing_logs_dev
+    driver: local
+  billing_tmp:
+    name: iqkv_billing_tmp_dev
     driver: local

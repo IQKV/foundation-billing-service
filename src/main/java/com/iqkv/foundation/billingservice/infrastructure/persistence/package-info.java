@@ -15,7 +15,7 @@
  */
 
 /**
- * Spring Security filter chains, JWT filters, and security utility classes.
- * Must not depend on bounded-context adapter or application packages.
+ * JPA / Spring Data infrastructure configuration (datasource, transaction manager, Liquibase/Flyway setup).
+ * Bounded-context-specific repository implementations belong in their own {@code adapter.out.persistence} packages.
  */
-package com.iqkv.foundation.servicename.infrastructure.security;
+package com.iqkv.foundation.billingservice.infrastructure.persistence;

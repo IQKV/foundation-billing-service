@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package com.iqkv.foundation.servicename;
+package com.iqkv.foundation.billingservice;
 
-import java.util.TimeZone;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+@SpringBootTest
+class ServicenameApplicationTests {
 
-@SpringBootApplication
-public class ServicenameApplication {
-
-  public static void main(String[] args) {
-    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    SpringApplication.run(ServicenameApplication.class, args);
+  @Test
+  void contextLoads() {
   }
 }

@@ -21,12 +21,15 @@ logging:
     org.mybatis: DEBUG
     liquibase: DEBUG
 
-servicename:
+billing:
   db:
-    host: ${DB_HOST:postgres}
-    username: ${DB_USERNAME:servicename}
-    password: ${DB_PASSWORD:servicename}
+    host: ${DB_HOST:postgres-billing}
+    port: ${DB_PORT:5432}
+    name: ${DB_NAME:billing}
+    username: ${DB_USERNAME:billing}
+    password: ${DB_PASSWORD:billing}
   rabbitmq:
-    host: ${RABBITMQ_HOST:rabbitmq}
-    username: ${RABBITMQ_USERNAME:servicename}
-    password: ${RABBITMQ_PASSWORD:servicename}
+    host: ${RABBITMQ_HOST:rabbitmq-billing}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:billing}
+    password: ${RABBITMQ_PASSWORD:billing}

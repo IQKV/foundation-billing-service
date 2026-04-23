@@ -1,4 +1,4 @@
-# Multi-stage build with optimized caching
+# Multi-stage build for Billing Service with optimized caching
 FROM eclipse-temurin:21-jdk-alpine AS builder
 
 # Install Maven for build optimization

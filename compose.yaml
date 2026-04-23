@@ -1,33 +1,51 @@
-# This configuration is intended for development purposes
-name: dev-servicename
 services:
+  # PostgreSQL Database for Billing Service
+  postgres-billing:
+    extends:
+      file: compose.base.yaml
+      service: postgres-billing
+
+  # RabbitMQ for Billing Service
+  rabbitmq-billing:
+    extends:
+      file: compose.base.yaml
+      service: rabbitmq-billing
+
+  # Billing Service - Full platform run including build phase
+  billing-service:
+    extends:
+      file: compose.base.yaml
+      service: billing-service
+
+  # SonarQube for code quality analysis
   sonar:
-    container_name: dev-sonarqube
-    image: sonarqube:25.3.0.104237-community
-    environment:
-      - SONAR_FORCEAUTHENTICATION=false
-    ports:
-      - 127.0.0.1:9001:9000
-      - 127.0.0.1:9000:9000
+    extends:
+      file: compose.base.yaml
+      service: sonar
 
+  # Prometheus for metrics collection
   prometheus:
-    image: prom/prometheus:latest
-    container_name: dev-prometheus
-    volumes:
-      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-    restart: unless-stopped
+    extends:
+      file: compose.base.yaml
+      service: prometheus
 
+  # Grafana for metrics visualization
   grafana:
-    image: grafana/grafana:latest
-    container_name: dev-grafana
-    volumes:
-      - ./docker/grafana/provisioning:/etc/grafana/provisioning
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    ports:
-      - "3000:3000"
-    depends_on:
-      - prometheus
-    restart: unless-stopped
+    extends:
+      file: compose.base.yaml
+      service: grafana
+
+networks:
+  billing-service-network:
+    name: foundation-billing-network-dev
+    external: false
+
+volumes:
+  postgres_billing_data:
+    name: iqkv_billing_postgres_data_dev
+  rabbitmq_billing_data:
+    name: iqkv_billing_rabbitmq_data_dev
+  billing_logs:
+    name: iqkv_billing_logs_dev
+  billing_tmp:
+    name: iqkv_billing_tmp_dev

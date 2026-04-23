@@ -1,17 +1,33 @@
 services:
-  # Servicename - Full platform run including build phase
-  servicename:
+  # PostgreSQL Database for Billing Service
+  postgres-billing:
     extends:
       file: compose.base.yaml
-      service: servicename
+      service: postgres-billing
+
+  # RabbitMQ for Billing Service
+  rabbitmq-billing:
+    extends:
+      file: compose.base.yaml
+      service: rabbitmq-billing
+
+  # Billing Service - Full platform run including build phase
+  billing-service:
+    extends:
+      file: compose.base.yaml
+      service: billing-service
 
 networks:
-  servicename-network:
-    name: servicename-network-dev
+  billing-service-network:
+    name: foundation-billing-network-dev
     external: false
 
 volumes:
-  servicename_logs:
-    name: servicename_logs_dev
-  servicename_tmp:
-    name: servicename_tmp_dev
+  postgres_billing_data:
+    name: iqkv_billing_postgres_data_dev
+  rabbitmq_billing_data:
+    name: iqkv_billing_rabbitmq_data_dev
+  billing_logs:
+    name: iqkv_billing_logs_dev
+  billing_tmp:
+    name: iqkv_billing_tmp_dev

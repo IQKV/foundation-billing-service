@@ -12,6 +12,9 @@ spring:
     pathmatch:
       use-suffix-pattern: false
 
+server:
+  shutdown: graceful
+
 springdoc:
   api-docs:
     enabled: false
@@ -23,7 +26,7 @@ management:
     health:
       show-details: never
 
-servicename:
+billing:
   db:
     host: ${DB_HOST}
     port: ${DB_PORT}

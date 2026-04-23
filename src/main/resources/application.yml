@@ -4,16 +4,16 @@
 
 spring:
   application:
-    name: servicename
+    name: foundation-billing-service
   datasource:
-    url: jdbc:postgresql://${servicename.db.host}:${servicename.db.port}/${servicename.db.name}
-    username: ${servicename.db.username}
-    password: ${servicename.db.password}
+    url: jdbc:postgresql://${billing.db.host}:${billing.db.port}/${billing.db.name}
+    username: ${billing.db.username}
+    password: ${billing.db.password}
   rabbitmq:
-    host: ${servicename.rabbitmq.host}
-    port: ${servicename.rabbitmq.port}
-    username: ${servicename.rabbitmq.username}
-    password: ${servicename.rabbitmq.password}
+    host: ${billing.rabbitmq.host}
+    port: ${billing.rabbitmq.port}
+    username: ${billing.rabbitmq.username}
+    password: ${billing.rabbitmq.password}
   liquibase:
     enabled: false
   messages:
@@ -52,18 +52,18 @@ management:
         enabled: true
       show-details: when-authorized
 
-servicename:
+billing:
   db:
     host: ${DB_HOST:localhost}
-    port: ${DB_PORT:5432}
-    name: ${DB_NAME:servicename}
-    username: ${DB_USERNAME:servicename}
-    password: ${DB_PASSWORD:servicename}
+    port: ${DB_PORT:5434}
+    name: ${DB_NAME:billing}
+    username: ${DB_USERNAME:billing}
+    password: ${DB_PASSWORD:billing}
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
+    port: ${RABBITMQ_PORT:5673}
+    username: ${RABBITMQ_USERNAME:billing}
+    password: ${RABBITMQ_PASSWORD:billing}
   liquibase:
     change-log: db/changelog/db.changelog-master.xml
 

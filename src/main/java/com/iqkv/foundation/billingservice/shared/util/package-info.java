@@ -15,7 +15,7 @@
  */
 
 /**
- * Messaging infrastructure: event publishers, message-broker configuration, and outbox patterns.
- * Domain events are defined in bounded-context {@code domain.event} packages and referenced here.
+ * Utility classes shared across all bounded contexts (e.g. date helpers, string utilities).
+ * Classes in this package must not depend on any bounded-context or infrastructure packages.
  */
-package com.iqkv.foundation.servicename.infrastructure.messaging;
+package com.iqkv.foundation.billingservice.shared.util;
