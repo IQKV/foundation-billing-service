@@ -2,12 +2,12 @@
 
 ## Introduction
 
-`standard-maven-single-project-layout` is a GitHub repository template for bootstrapping Spring Boot microservices under the IQKV organization. It inherits from the `com.iqkv:boot-parent-pom` BOM and enforces a consistent project structure, quality toolchain, and Git workflow out of the box.
+`foundation-billing-service` is a GitHub repository template for bootstrapping Spring Boot microservices under the IQKV organization. It inherits from the `com.iqkv:boot-parent-pom` BOM and enforces a consistent project structure, quality toolchain, and Git workflow out of the box.
 
 ## Key Features
 
 - **Custom Parent POM**: Inherits `com.iqkv:boot-parent-pom` — versions for all plugins and third-party libraries are managed centrally
-- **Spring Boot 3 + Java 21**: Pre-wired for modern Spring Boot with Modulith support
+- **Spring Boot 4 + Java 25**: Pre-wired for modern Spring Boot with Modulith support
 - **Spring Modulith**: Module boundary enforcement via `spring-modulith-starter-core` and dedicated test profiles
 - **Observability**: Micrometer + Prometheus metrics (`micrometer-registry-prometheus`) and structured JSON logging via `logstash-logback-encoder`
 - **Git Build Info**: `git-commit-id-maven-plugin` injects build metadata (commit SHA, build time) into the `/info` actuator endpoint automatically
@@ -101,7 +101,7 @@ project-root/
 | Layer                | Technology                                          |
 | -------------------- | --------------------------------------------------- |
 | Language             | Java 25 (OpenJDK)                                   |
-| Framework            | Spring Boot 3.x (via `boot-parent-pom`)             |
+| Framework            | Spring Boot 4.x (via `boot-parent-pom`)             |
 | Modularity           | Spring Modulith                                     |
 | Build                | Maven 3.9+, `boot-parent-pom` BOM                   |
 | Logging              | Logback + `logstash-logback-encoder` (JSON)         |

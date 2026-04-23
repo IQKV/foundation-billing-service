@@ -6,7 +6,7 @@
 > - Manage issues with **20 issue labels**.
 > - Make _community healthier_ with all the guides like code of conduct, contributing, support, security...
 > - Learn more with the [official GitHub guide on creating repositories from a template](https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template).
-> - To start using it, click **[Use this template](https://github.com/IQKV/standard-maven-single-project-layout/generate)** to create your new repository.
+> - To start using it, click **[Use this template](https://github.com/IQKV/foundation-billing-service/generate)** to create your new repository.
 
 ---
 
@@ -23,7 +23,7 @@ the [template-docs](./template-docs) directory.
 
 To use this template for your own project:
 
-1. Click the **[Use this template](https://github.com/IQKV/standard-maven-single-project-layout/generate)** button at the top of the repository
+1. Click the **[Use this template](https://github.com/IQKV/foundation-billing-service/generate)** button at the top of the repository
 2. Name your repository and provide a description
 3. Choose the repository visibility (public or private)
 4. Click **Create repository from template**
@@ -62,7 +62,7 @@ After creating your repository:
 
 ```bash
 # Clone the repository
-git clone https://github.com/IQKV/standard-maven-single-project-layout.git my-service
+git clone https://github.com/IQKV/foundation-billing-service.git my-service
 
 # Navigate to project directory
 cd my-service

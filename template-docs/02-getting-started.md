@@ -15,10 +15,10 @@
 
 ### 1. Create a new repository from this template
 
-Click **[Use this template](https://github.com/IQKV/standard-maven-single-project-layout/generate)** on GitHub, or clone directly:
+Click **[Use this template](https://github.com/IQKV/foundation-billing-service/generate)** on GitHub, or clone directly:
 
 ```bash
-git clone https://github.com/IQKV/standard-maven-single-project-layout.git my-service
+git clone https://github.com/IQKV/foundation-billing-service.git my-service
 cd my-service
 ```
 

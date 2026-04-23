@@ -63,7 +63,7 @@ Run Modulith-specific tests with:
 
 | Component             | Technology                         | Notes                               |
 | --------------------- | ---------------------------------- | ----------------------------------- |
-| Application framework | Spring Boot 3.x                    | Via `com.iqkv:boot-parent-pom`      |
+| Application framework | Spring Boot 4.x                    | Via `com.iqkv:boot-parent-pom`      |
 | Module system         | Spring Modulith                    | Module verification + actuator      |
 | Persistence           | Spring Data JPA                    | Added per-service as needed         |
 | Logging               | Logback + logstash-logback-encoder | Structured JSON output              |
