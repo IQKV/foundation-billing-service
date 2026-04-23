@@ -8,7 +8,6 @@
 
 - **Custom Parent POM**: Inherits `com.iqkv:boot-parent-pom` — versions for all plugins and third-party libraries are managed centrally
 - **Spring Boot 4 + Java 25**: Pre-wired for modern Spring Boot with Modulith support
-- **Spring Modulith**: Module boundary enforcement via `spring-modulith-starter-core` and dedicated test profiles
 - **Observability**: Micrometer + Prometheus metrics (`micrometer-registry-prometheus`) and structured JSON logging via `logstash-logback-encoder`
 - **Git Build Info**: `git-commit-id-maven-plugin` injects build metadata (commit SHA, build time) into the `/info` actuator endpoint automatically
 - **Architecture Tests**: ArchUnit (`archunit-junit5-api/engine`) + `TechnicalStructureTest` enforce layered architecture rules at compile-time
