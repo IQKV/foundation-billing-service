@@ -64,7 +64,7 @@ docker compose up -d                 # start local SonarQube
 
 - Add code following [Architecture Overview](03-architecture-overview.md) layer structure
 - Write tests alongside new functionality
-- Use Java 21 features: records, pattern matching, text blocks, `var`
+- Use Java 25 features: records, pattern matching, text blocks, `var`
 
 ### 3. Run Tests Locally
 
