@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iqkv.foundation.billingservice.shared.domain;
+package com.iqkv.foundation.billingservice.webhook;
 
 import java.time.Instant;
 import java.util.UUID;

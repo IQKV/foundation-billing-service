@@ -18,7 +18,7 @@ package com.iqkv.foundation.billingservice.infrastructure.persistence;
 
 import java.time.Instant;
 
-import com.iqkv.foundation.billingservice.shared.domain.WebhookLog;
+import com.iqkv.foundation.billingservice.webhook.WebhookLog;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

@@ -18,7 +18,7 @@ package com.iqkv.foundation.billingservice.infrastructure.persistence;
 
 import java.util.Optional;
 
-import com.iqkv.foundation.billingservice.shared.domain.BillingSettings;
+import com.iqkv.foundation.billingservice.settings.BillingSettings;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -33,4 +33,6 @@ public interface BillingSettingsMapper {
 
   void updateExternalCustomerId(@Param("tenantKey") String tenantKey,
                                 @Param("externalCustomerId") String externalCustomerId);
+
+  void update(BillingSettings settings);
 }

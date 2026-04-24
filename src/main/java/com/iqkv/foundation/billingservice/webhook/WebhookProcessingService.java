@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iqkv.foundation.billingservice.infrastructure.config;
+package com.iqkv.foundation.billingservice.webhook;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -22,84 +22,62 @@ import java.util.UUID;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.WebhookLogMapper;
-import com.iqkv.foundation.billingservice.shared.domain.Subscription;
-import com.iqkv.foundation.billingservice.shared.domain.WebhookLog;
-import com.stripe.exception.SignatureVerificationException;
+import com.iqkv.foundation.billingservice.subscription.Subscription;
+import com.iqkv.foundation.billingservice.webhook.WebhookLog;
 import com.stripe.model.Event;
-import com.stripe.net.Webhook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
 /**
- * REST endpoint for inbound payment gateway webhook events.
+ * Processes inbound Stripe webhook events.
  *
- * <p>Handles Stripe webhook delivery with signature verification, idempotency guard via
- * {@code webhook_log}, and dispatches subscription lifecycle events to the appropriate handlers.
+ * <p>Handles idempotency via {@code webhook_log}, dispatches subscription lifecycle
+ * events, and publishes domain events to RabbitMQ on cancellation.
  *
- * <p>Always returns HTTP 200 after the idempotency check to prevent Stripe from retrying
- * on business logic failures — failed events are recorded in {@code webhook_log} for
- * manual replay or investigation.
+ * <p>Status lifecycle: {@code RECEIVED} → {@code PROCESSED} on success,
+ * or {@code RECEIVED} → {@code FAILED} on error.
  */
-@RestController
-@RequestMapping("/api/v1/billing/webhooks")
-public class PaymentWebhookRestResource {
+@Service
+public class WebhookProcessingService {
 
-  private static final Logger log = LoggerFactory.getLogger(PaymentWebhookRestResource.class);
+  private static final Logger log = LoggerFactory.getLogger(WebhookProcessingService.class);
 
   private static final String EVENT_SUBSCRIPTION_CREATED = "customer.subscription.created";
   private static final String EVENT_SUBSCRIPTION_UPDATED = "customer.subscription.updated";
   private static final String EVENT_SUBSCRIPTION_DELETED = "customer.subscription.deleted";
 
-  private static final String STATUS_RECEIVED = "RECEIVED";
-  private static final String STATUS_PROCESSED = "PROCESSED";
-  private static final String STATUS_FAILED = "FAILED";
+  static final String STATUS_RECEIVED = "RECEIVED";
+  static final String STATUS_PROCESSED = "PROCESSED";
+  static final String STATUS_FAILED = "FAILED";
 
   private final WebhookLogMapper webhookLogMapper;
   private final SubscriptionMapper subscriptionMapper;
   private final MessagingService messagingService;
 
-  @Value("${iqkv.stripe.webhook-secret}")
-  private String webhookSecret;
-
-  public PaymentWebhookRestResource(WebhookLogMapper webhookLogMapper,
-                                    SubscriptionMapper subscriptionMapper,
-                                    MessagingService messagingService) {
+  public WebhookProcessingService(WebhookLogMapper webhookLogMapper,
+                                  SubscriptionMapper subscriptionMapper,
+                                  MessagingService messagingService) {
     this.webhookLogMapper = webhookLogMapper;
     this.subscriptionMapper = subscriptionMapper;
     this.messagingService = messagingService;
   }
 
-  @PostMapping("/stripe")
-  public ResponseEntity<Void> handleStripeWebhook(
-      @RequestBody String payload,
-      @RequestHeader("Stripe-Signature") String sigHeader) {
-
-    // 1. Verify Stripe signature
-    final Event event;
-    try {
-      event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
-    } catch (SignatureVerificationException e) {
-      log.warn("Invalid Stripe webhook signature: {}", e.getMessage());
-      return ResponseEntity.badRequest().build();
-    }
-
+  /**
+   * Processes a verified Stripe event idempotently.
+   *
+   * @param event the verified Stripe event
+   * @return {@code true} if the event was already processed (duplicate), {@code false} otherwise
+   */
+  public boolean process(Event event) {
     final String externalEventId = event.getId();
     final String eventType = event.getType();
 
-    // 2. Idempotency check — return 200 immediately for duplicate deliveries
     if (webhookLogMapper.existsByExternalEventId(externalEventId)) {
       log.debug("Duplicate Stripe webhook event received, skipping: {}", externalEventId);
-      return ResponseEntity.ok().build();
+      return true;
     }
 
-    // 3. Insert webhook_log row with status = RECEIVED
     final var webhookLog = new WebhookLog(
         UUID.randomUUID(),
         externalEventId,
@@ -111,25 +89,22 @@ public class PaymentWebhookRestResource {
     );
     webhookLogMapper.insert(webhookLog);
 
-    // 4. Dispatch by event type
     try {
-      dispatch(event, externalEventId, eventType);
-      // 5. On success: mark PROCESSED
+      dispatch(event);
       webhookLogMapper.updateStatus(externalEventId, STATUS_PROCESSED, null, Instant.now());
     } catch (Exception e) {
-      // 6. On failure: mark FAILED, still return 200 to prevent Stripe retry
       log.error("Failed to process Stripe webhook event {}: {}", externalEventId, e.getMessage(), e);
       webhookLogMapper.updateStatus(externalEventId, STATUS_FAILED, e.getMessage(), null);
     }
 
-    return ResponseEntity.ok().build();
+    return false;
   }
 
-  private void dispatch(Event event, String externalEventId, String eventType) {
-    switch (eventType) {
+  private void dispatch(Event event) {
+    switch (event.getType()) {
       case EVENT_SUBSCRIPTION_CREATED, EVENT_SUBSCRIPTION_UPDATED -> handleSubscriptionUpsert(event);
       case EVENT_SUBSCRIPTION_DELETED -> handleSubscriptionDeleted(event);
-      default -> log.debug("Unhandled Stripe event type: {}", eventType);
+      default -> log.debug("Unhandled Stripe event type: {}", event.getType());
     }
   }
 
@@ -155,7 +130,6 @@ public class PaymentWebhookRestResource {
     subscription.setCanceledAt(Instant.now());
     subscriptionMapper.upsert(subscription);
 
-    // Resolve tenantKey from subscription metadata to publish cancellation event
     final String tenantKey = stripeSubscription.getMetadata() != null
         ? stripeSubscription.getMetadata().get("tenantKey")
         : null;
@@ -190,9 +164,6 @@ public class PaymentWebhookRestResource {
     sub.setStatus(stripe.getStatus());
     sub.setCancelAtPeriodEnd(Boolean.TRUE.equals(stripe.getCancelAtPeriodEnd()));
 
-    // currentPeriodStart / currentPeriodEnd were removed in Stripe SDK 31.x.
-    // Use billingCycleAnchor as a proxy for the period start; period end is not
-    // directly available on the Subscription object in this SDK version.
     if (stripe.getBillingCycleAnchor() != null) {
       sub.setCurrentPeriodStart(Instant.ofEpochSecond(stripe.getBillingCycleAnchor()));
     }
@@ -200,7 +171,6 @@ public class PaymentWebhookRestResource {
       sub.setCanceledAt(Instant.ofEpochSecond(stripe.getCanceledAt()));
     }
 
-    // Resolve tenantKey and planId from metadata / items
     if (stripe.getMetadata() != null) {
       sub.setTenantKey(stripe.getMetadata().get("tenantKey"));
     }

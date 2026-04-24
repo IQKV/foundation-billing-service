@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iqkv.foundation.billingservice.shared.domain;
+package com.iqkv.foundation.billingservice.subscription;
 
 import java.time.Instant;
 import java.time.LocalDateTime;

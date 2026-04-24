@@ -22,7 +22,7 @@ import java.util.UUID;
 import com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayClient;
 import com.iqkv.foundation.billingservice.infrastructure.config.RabbitMQConfig;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
-import com.iqkv.foundation.billingservice.shared.domain.BillingSettings;
+import com.iqkv.foundation.billingservice.settings.BillingSettings;
 import com.stripe.exception.StripeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

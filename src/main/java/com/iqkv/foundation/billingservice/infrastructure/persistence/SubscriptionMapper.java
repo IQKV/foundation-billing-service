@@ -19,7 +19,7 @@ package com.iqkv.foundation.billingservice.infrastructure.persistence;
 import java.util.List;
 import java.util.Optional;
 
-import com.iqkv.foundation.billingservice.shared.domain.Subscription;
+import com.iqkv.foundation.billingservice.subscription.Subscription;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
