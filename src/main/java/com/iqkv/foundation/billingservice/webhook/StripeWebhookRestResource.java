@@ -16,12 +16,12 @@
 
 package com.iqkv.foundation.billingservice.webhook;
 
+import com.iqkv.foundation.billingservice.infrastructure.config.ApplicationProperties;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.net.Webhook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,12 +43,12 @@ public class StripeWebhookRestResource {
   private static final Logger log = LoggerFactory.getLogger(StripeWebhookRestResource.class);
 
   private final WebhookProcessingService webhookProcessingService;
+  private final ApplicationProperties applicationProperties;
 
-  @Value("${iqkv.stripe.webhook-secret}")
-  private String webhookSecret;
-
-  public StripeWebhookRestResource(WebhookProcessingService webhookProcessingService) {
+  public StripeWebhookRestResource(WebhookProcessingService webhookProcessingService,
+                                   ApplicationProperties applicationProperties) {
     this.webhookProcessingService = webhookProcessingService;
+    this.applicationProperties = applicationProperties;
   }
 
   @PostMapping("/stripe")
@@ -58,7 +58,7 @@ public class StripeWebhookRestResource {
 
     final Event event;
     try {
-      event = Webhook.constructEvent(payload, sigHeader, webhookSecret);
+      event = Webhook.constructEvent(payload, sigHeader, applicationProperties.stripe().webhookSecret());
     } catch (SignatureVerificationException e) {
       log.warn("Invalid Stripe webhook signature: {}", e.getMessage());
       return ResponseEntity.badRequest().build();
