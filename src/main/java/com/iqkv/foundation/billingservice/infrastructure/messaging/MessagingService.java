@@ -3,6 +3,8 @@ package com.iqkv.foundation.billingservice.infrastructure.messaging;
 import java.time.Instant;
 
 import com.iqkv.foundation.billingservice.infrastructure.config.RabbitMQConfig;
+import com.iqkv.foundation.billingservice.shared.exception.MessagingException;
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +24,15 @@ public class MessagingService {
         SubscriptionEvent.EventType.SUBSCRIPTION_CANCELLED,
         Instant.now()
     );
-    rabbitTemplate.convertAndSend(
-        RabbitMQConfig.EVENTS_EXCHANGE,
-        RabbitMQConfig.ROUTING_SUBSCRIPTION_CANCELLED,
-        event
-    );
+    try {
+      rabbitTemplate.convertAndSend(
+          RabbitMQConfig.EVENTS_EXCHANGE,
+          RabbitMQConfig.ROUTING_SUBSCRIPTION_CANCELLED,
+          event
+      );
+    } catch (AmqpException e) {
+      throw new MessagingException(
+          "Failed to publish subscription.cancelled event for tenantKey=" + tenantKey, e);
+    }
   }
 }

@@ -17,16 +17,16 @@
 package com.iqkv.foundation.billingservice.shared.exception;
 
 /**
- * Thrown when a requested resource (billing settings, subscription) does not exist.
- * Mapped to HTTP 404 by the global exception handler.
+ * Thrown when publishing a domain event to the message broker fails.
+ * Mapped to HTTP 503 Service Unavailable by the global exception handler.
  */
-public class ResourceNotFoundException extends BillingServiceException {
+public class MessagingException extends BillingServiceException {
 
-  public ResourceNotFoundException(String message) {
+  public MessagingException(String message) {
     super(message);
   }
 
-  public ResourceNotFoundException(String message, Throwable cause) {
+  public MessagingException(String message, Throwable cause) {
     super(message, cause);
   }
 }

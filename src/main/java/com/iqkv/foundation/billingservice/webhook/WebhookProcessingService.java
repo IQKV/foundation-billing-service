@@ -23,6 +23,7 @@ import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingServ
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.WebhookLogMapper;
 import com.iqkv.foundation.billingservice.subscription.Subscription;
+import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
 import com.iqkv.foundation.billingservice.webhook.WebhookLog;
 import com.stripe.model.Event;
 import org.slf4j.Logger;
@@ -110,9 +111,6 @@ public class WebhookProcessingService {
 
   private void handleSubscriptionUpsert(Event event) {
     final var stripeSubscription = deserializeSubscription(event);
-    if (stripeSubscription == null) {
-      return;
-    }
     final var subscription = mapToSubscription(stripeSubscription);
     subscriptionMapper.upsert(subscription);
     log.debug("Upserted subscription {} for tenant {}",
@@ -121,9 +119,6 @@ public class WebhookProcessingService {
 
   private void handleSubscriptionDeleted(Event event) {
     final var stripeSubscription = deserializeSubscription(event);
-    if (stripeSubscription == null) {
-      return;
-    }
 
     final var subscription = mapToSubscription(stripeSubscription);
     subscription.setStatus("canceled");
@@ -150,10 +145,8 @@ public class WebhookProcessingService {
         .getObject()
         .filter(obj -> obj instanceof com.stripe.model.Subscription)
         .map(obj -> (com.stripe.model.Subscription) obj)
-        .orElseGet(() -> {
-          log.error("Could not deserialize Stripe Subscription from event {}", event.getId());
-          return null;
-        });
+        .orElseThrow(() -> new WebhookProcessingException(
+            "Could not deserialize Stripe Subscription from event " + event.getId()));
   }
 
   private Subscription mapToSubscription(com.stripe.model.Subscription stripe) {

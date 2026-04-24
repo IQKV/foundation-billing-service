@@ -17,16 +17,16 @@
 package com.iqkv.foundation.billingservice.shared.exception;
 
 /**
- * Thrown when a requested resource (billing settings, subscription) does not exist.
- * Mapped to HTTP 404 by the global exception handler.
+ * Thrown when attempting to create a resource that already exists.
+ * Mapped to HTTP 409 Conflict by the global exception handler.
  */
-public class ResourceNotFoundException extends BillingServiceException {
+public class DuplicateResourceException extends BillingServiceException {
 
-  public ResourceNotFoundException(String message) {
+  public DuplicateResourceException(String message) {
     super(message);
   }
 
-  public ResourceNotFoundException(String message, Throwable cause) {
+  public DuplicateResourceException(String message, Throwable cause) {
     super(message, cause);
   }
 }

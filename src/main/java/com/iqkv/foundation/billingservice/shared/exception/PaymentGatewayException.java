@@ -17,16 +17,16 @@
 package com.iqkv.foundation.billingservice.shared.exception;
 
 /**
- * Thrown when a requested resource (billing settings, subscription) does not exist.
- * Mapped to HTTP 404 by the global exception handler.
+ * Thrown when a call to the payment gateway (Stripe) fails.
+ * Mapped to HTTP 502 Bad Gateway by the global exception handler.
  */
-public class ResourceNotFoundException extends BillingServiceException {
+public class PaymentGatewayException extends BillingServiceException {
 
-  public ResourceNotFoundException(String message) {
+  public PaymentGatewayException(String message) {
     super(message);
   }
 
-  public ResourceNotFoundException(String message, Throwable cause) {
+  public PaymentGatewayException(String message, Throwable cause) {
     super(message, cause);
   }
 }

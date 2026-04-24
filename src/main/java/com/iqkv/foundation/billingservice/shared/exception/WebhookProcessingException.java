@@ -17,16 +17,17 @@
 package com.iqkv.foundation.billingservice.shared.exception;
 
 /**
- * Thrown when a requested resource (billing settings, subscription) does not exist.
- * Mapped to HTTP 404 by the global exception handler.
+ * Thrown when a Stripe webhook event cannot be processed — e.g. deserialization
+ * failure or missing required metadata.
+ * Mapped to HTTP 422 Unprocessable Entity by the global exception handler.
  */
-public class ResourceNotFoundException extends BillingServiceException {
+public class WebhookProcessingException extends BillingServiceException {
 
-  public ResourceNotFoundException(String message) {
+  public WebhookProcessingException(String message) {
     super(message);
   }
 
-  public ResourceNotFoundException(String message, Throwable cause) {
+  public WebhookProcessingException(String message, Throwable cause) {
     super(message, cause);
   }
 }

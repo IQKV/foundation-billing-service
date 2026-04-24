@@ -23,6 +23,7 @@ import com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayCl
 import com.iqkv.foundation.billingservice.infrastructure.config.RabbitMQConfig;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
 import com.iqkv.foundation.billingservice.settings.BillingSettings;
+import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException;
 import com.stripe.exception.StripeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +69,7 @@ public class TenantEventConsumer {
     try {
       externalCustomerId = paymentGatewayClient.createCustomer(tenantName, ownerEmail);
     } catch (StripeException e) {
-      throw new RuntimeException(
+      throw new PaymentGatewayException(
           "Failed to create payment gateway customer for tenantKey=" + tenantKey, e);
     }
 
