@@ -36,6 +36,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Servlet filter that resolves the tenant key from the {@code X-Tenant-ID} header (priority 1)
@@ -52,9 +53,9 @@ public class TenantExtractionFilter extends OncePerRequestFilter {
   private static final String MDC_CORRELATION_ID = "correlationId";
 
   private final JwtDecoder jwtDecoder;
-  private final ObjectMapper objectMapper;
+  private final JsonMapper objectMapper;
 
-  public TenantExtractionFilter(final JwtDecoder jwtDecoder, final ObjectMapper objectMapper) {
+  public TenantExtractionFilter(final JwtDecoder jwtDecoder, final JsonMapper objectMapper) {
     this.jwtDecoder = jwtDecoder;
     this.objectMapper = objectMapper;
   }
