@@ -22,6 +22,14 @@ spring:
         jwt:
           issuer-uri: # disabled in tests — configure per test with @WithMockUser or SecurityMockMvcConfigurer
 
+iqkv:
+  stripe:
+    secret-key: sk_test_placeholder
+    webhook-secret: whsec_placeholder
+  messaging:
+    rabbitmq:
+      enabled: false
+
 logging:
   level:
     com.iqkv: DEBUG

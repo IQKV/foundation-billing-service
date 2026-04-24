@@ -6,14 +6,14 @@ spring:
   application:
     name: foundation-billing-service
   datasource:
-    url: jdbc:postgresql://${billing.db.host}:${billing.db.port}/${billing.db.name}
-    username: ${billing.db.username}
-    password: ${billing.db.password}
+    url: jdbc:postgresql://${iqkv.db.host}:${iqkv.db.port}/${iqkv.db.name}
+    username: ${iqkv.db.username}
+    password: ${iqkv.db.password}
   rabbitmq:
-    host: ${billing.rabbitmq.host}
-    port: ${billing.rabbitmq.port}
-    username: ${billing.rabbitmq.username}
-    password: ${billing.rabbitmq.password}
+    host: ${iqkv.rabbitmq.host}
+    port: ${iqkv.rabbitmq.port}
+    username: ${iqkv.rabbitmq.username}
+    password: ${iqkv.rabbitmq.password}
   liquibase:
     enabled: false
   messages:
@@ -52,7 +52,7 @@ management:
         enabled: true
       show-details: when-authorized
 
-billing:
+iqkv:
   db:
     host: ${DB_HOST:localhost}
     port: ${DB_PORT:5434}
@@ -66,6 +66,12 @@ billing:
     password: ${RABBITMQ_PASSWORD:billing}
   liquibase:
     change-log: db/changelog/db.changelog-master.xml
+  messaging:
+    rabbitmq:
+      enabled: ${MESSAGING_ENABLED:true}
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY:}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
 
 git:
   build_time: "@git.build.time@"

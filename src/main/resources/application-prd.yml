@@ -26,7 +26,7 @@ management:
     health:
       show-details: never
 
-billing:
+iqkv:
   db:
     host: ${DB_HOST}
     port: ${DB_PORT}

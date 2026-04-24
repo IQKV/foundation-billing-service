@@ -21,7 +21,7 @@ logging:
     org.mybatis: DEBUG
     liquibase: DEBUG
 
-billing:
+iqkv:
   db:
     host: ${DB_HOST:postgres-billing}
     port: ${DB_PORT:5432}

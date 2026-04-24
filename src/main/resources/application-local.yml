@@ -22,7 +22,7 @@ logging:
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
 
-billing:
+iqkv:
   db:
     host: ${DB_HOST:localhost}
     port: ${DB_PORT:5434}
