@@ -29,6 +29,7 @@ import com.iqkv.foundation.billingservice.infrastructure.config.AuthConfiguratio
 import com.iqkv.foundation.billingservice.tenancy.TenantExtractionFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -56,7 +57,7 @@ public class SecurityConfig {
 
   public SecurityConfig(final AuthConfigurationProperties authProps,
                         final ResourceLoader resourceLoader,
-                        final TenantExtractionFilter tenantExtractionFilter,
+                        @Lazy final TenantExtractionFilter tenantExtractionFilter,
                         final CorrelationIdFilter correlationIdFilter) {
     this.authProps = authProps;
     this.resourceLoader = resourceLoader;
