@@ -28,12 +28,15 @@ import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundExcep
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
 import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -59,60 +62,6 @@ public class GlobalExceptionHandler {
     return pd;
   }
 
-  @ExceptionHandler(ResourceNotFoundException.class)
-  public ResponseEntity<ProblemDetail> handleNotFound(final ResourceNotFoundException ex,
-                                                      final HttpServletRequest request) {
-    log.warn("Resource not found: {}", ex.getMessage());
-    final ProblemDetail pd = problem("about:blank", "Not Found", 404,
-        ex.getMessage(), request);
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(pd);
-  }
-
-  @ExceptionHandler(PaymentGatewayException.class)
-  public ResponseEntity<ProblemDetail> handlePaymentGateway(final PaymentGatewayException ex,
-                                                            final HttpServletRequest request) {
-    log.error("Payment gateway error: {}", ex.getMessage(), ex);
-    final ProblemDetail pd = problem("about:blank", "Bad Gateway", 502,
-        ex.getMessage(), request);
-    return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(pd);
-  }
-
-  @ExceptionHandler(WebhookProcessingException.class)
-  public ResponseEntity<ProblemDetail> handleWebhookProcessing(final WebhookProcessingException ex,
-                                                               final HttpServletRequest request) {
-    log.error("Webhook processing error: {}", ex.getMessage(), ex);
-    final ProblemDetail pd = problem("about:blank", "Unprocessable Entity", 422,
-        ex.getMessage(), request);
-    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(pd);
-  }
-
-  @ExceptionHandler(DuplicateResourceException.class)
-  public ResponseEntity<ProblemDetail> handleDuplicateResource(final DuplicateResourceException ex,
-                                                               final HttpServletRequest request) {
-    log.warn("Duplicate resource: {}", ex.getMessage());
-    final ProblemDetail pd = problem("about:blank", "Conflict", 409,
-        ex.getMessage(), request);
-    return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);
-  }
-
-  @ExceptionHandler(TenantContextMismatchException.class)
-  public ResponseEntity<ProblemDetail> handleTenantContextMismatch(final TenantContextMismatchException ex,
-                                                                   final HttpServletRequest request) {
-    log.warn("Tenant context mismatch: {}", ex.getMessage());
-    final ProblemDetail pd = problem("about:blank", "Forbidden", 403,
-        ex.getMessage(), request);
-    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
-  }
-
-  @ExceptionHandler(MessagingException.class)
-  public ResponseEntity<ProblemDetail> handleMessaging(final MessagingException ex,
-                                                       final HttpServletRequest request) {
-    log.error("Messaging error: {}", ex.getMessage(), ex);
-    final ProblemDetail pd = problem("about:blank", "Service Unavailable", 503,
-        ex.getMessage(), request);
-    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(pd);
-  }
-
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ProblemDetail> handleValidation(final MethodArgumentNotValidException ex,
                                                         final HttpServletRequest request) {
@@ -125,6 +74,87 @@ public class GlobalExceptionHandler {
         .toList();
     pd.setProperty("fields", fields);
     return ResponseEntity.badRequest().body(pd);
+  }
+
+  @ExceptionHandler(ConstraintViolationException.class)
+  public ResponseEntity<ProblemDetail> handleConstraintViolation(final ConstraintViolationException ex,
+                                                                 final HttpServletRequest request) {
+    log.warn("Constraint violation: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Constraint Violation", 400,
+        ex.getMessage(), request);
+    return ResponseEntity.badRequest().body(pd);
+  }
+
+  @ExceptionHandler(ResourceNotFoundException.class)
+  public ResponseEntity<ProblemDetail> handleNotFound(final ResourceNotFoundException ex,
+                                                      final HttpServletRequest request) {
+    log.warn("Resource not found: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Not Found", 404,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(pd);
+  }
+
+  @ExceptionHandler(TenantContextMismatchException.class)
+  public ResponseEntity<ProblemDetail> handleTenantContextMismatch(final TenantContextMismatchException ex,
+                                                                   final HttpServletRequest request) {
+    log.warn("Tenant context mismatch: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Forbidden", 403,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
+  }
+
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<ProblemDetail> handleAccessDenied(final AccessDeniedException ex,
+                                                          final HttpServletRequest request) {
+    log.warn("Access denied: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Forbidden", 403,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
+  }
+
+  @ExceptionHandler(AuthenticationException.class)
+  public ResponseEntity<ProblemDetail> handleAuthentication(final AuthenticationException ex,
+                                                            final HttpServletRequest request) {
+    log.warn("Authentication failed: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Unauthorized", 401,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(pd);
+  }
+
+  @ExceptionHandler(DuplicateResourceException.class)
+  public ResponseEntity<ProblemDetail> handleDuplicateResource(final DuplicateResourceException ex,
+                                                               final HttpServletRequest request) {
+    log.warn("Duplicate resource: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Conflict", 409,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);
+  }
+
+  @ExceptionHandler(WebhookProcessingException.class)
+  public ResponseEntity<ProblemDetail> handleWebhookProcessing(final WebhookProcessingException ex,
+                                                               final HttpServletRequest request) {
+    log.error("Webhook processing error: {}", ex.getMessage(), ex);
+    final ProblemDetail pd = problem("about:blank", "Unprocessable Entity", 422,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(pd);
+  }
+
+  @ExceptionHandler(PaymentGatewayException.class)
+  public ResponseEntity<ProblemDetail> handlePaymentGateway(final PaymentGatewayException ex,
+                                                            final HttpServletRequest request) {
+    log.error("Payment gateway error: {}", ex.getMessage(), ex);
+    final ProblemDetail pd = problem("about:blank", "Bad Gateway", 502,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(pd);
+  }
+
+  @ExceptionHandler(MessagingException.class)
+  public ResponseEntity<ProblemDetail> handleMessaging(final MessagingException ex,
+                                                       final HttpServletRequest request) {
+    log.error("Messaging error: {}", ex.getMessage(), ex);
+    final ProblemDetail pd = problem("about:blank", "Service Unavailable", 503,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(pd);
   }
 
   @ExceptionHandler(Exception.class)

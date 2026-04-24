@@ -19,8 +19,8 @@ package com.iqkv.foundation.billingservice.settings;
 import java.time.LocalDateTime;
 
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
-import com.iqkv.foundation.billingservice.settings.BillingSettings;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
+import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -34,7 +34,7 @@ public class BillingSettingsService {
 
   private final BillingSettingsMapper billingSettingsMapper;
 
-  public BillingSettingsService(BillingSettingsMapper billingSettingsMapper) {
+  public BillingSettingsService(final BillingSettingsMapper billingSettingsMapper) {
     this.billingSettingsMapper = billingSettingsMapper;
   }
 
@@ -43,7 +43,7 @@ public class BillingSettingsService {
    *
    * @throws ResourceNotFoundException if no settings exist for the tenant
    */
-  public BillingSettings getByTenantKey(String tenantKey) {
+  public BillingSettings getByTenantKey(final String tenantKey) {
     return billingSettingsMapper.findByTenantKey(tenantKey)
         .orElseThrow(() -> new ResourceNotFoundException(
             "BillingSettings not found for tenantKey=" + tenantKey));
@@ -51,29 +51,39 @@ public class BillingSettingsService {
 
   /**
    * Applies non-null fields from the request to the tenant's billing settings.
+   * Verifies that {@code authenticatedTenantKey} matches the requested {@code tenantKey}
+   * to prevent cross-tenant data access.
    *
-   * @throws ResourceNotFoundException if no settings exist for the tenant
+   * @throws TenantContextMismatchException if the authenticated tenant does not match the path
+   * @throws ResourceNotFoundException      if no settings exist for the tenant
    */
-  public BillingSettings update(String tenantKey, BillingSettingsRequest request) {
+  public BillingSettings update(final String tenantKey,
+                                final String authenticatedTenantKey,
+                                final BillingSettingsDtos.UpdateBillingSettingsRequest request) {
+    if (!tenantKey.equals(authenticatedTenantKey)) {
+      throw new TenantContextMismatchException(
+          "Authenticated tenant '" + authenticatedTenantKey + "' does not match requested tenant '" + tenantKey + "'");
+    }
+
     final BillingSettings settings = getByTenantKey(tenantKey);
 
-    if (request.getBillingEmail() != null) {
-      settings.setBillingEmail(request.getBillingEmail());
+    if (request.billingEmail() != null) {
+      settings.setBillingEmail(request.billingEmail());
     }
-    if (request.getCompanyName() != null) {
-      settings.setCompanyName(request.getCompanyName());
+    if (request.companyName() != null) {
+      settings.setCompanyName(request.companyName());
     }
-    if (request.getBillingAddress() != null) {
-      settings.setBillingAddress(request.getBillingAddress());
+    if (request.billingAddress() != null) {
+      settings.setBillingAddress(request.billingAddress());
     }
-    if (request.getTaxId() != null) {
-      settings.setTaxId(request.getTaxId());
+    if (request.taxId() != null) {
+      settings.setTaxId(request.taxId());
     }
-    if (request.getTaxIdType() != null) {
-      settings.setTaxIdType(request.getTaxIdType());
+    if (request.taxIdType() != null) {
+      settings.setTaxIdType(request.taxIdType());
     }
-    if (request.getCurrency() != null) {
-      settings.setCurrency(request.getCurrency());
+    if (request.currency() != null) {
+      settings.setCurrency(request.currency());
     }
 
     settings.setUpdatedAt(LocalDateTime.now());

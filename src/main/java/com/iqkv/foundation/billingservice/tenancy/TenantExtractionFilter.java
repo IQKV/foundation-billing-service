@@ -17,14 +17,20 @@
 package com.iqkv.foundation.billingservice.tenancy;
 
 import java.io.IOException;
+import java.net.URI;
+import java.util.UUID;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iqkv.foundation.billingservice.infrastructure.security.JwtClaimNames;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -35,19 +41,22 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * Servlet filter that resolves the tenant key from the {@code X-Tenant-ID} header (priority 1)
  * or the JWT {@code tenant_id} claim (priority 2) and sets {@link TenantContext}.
  *
- * <p>Returns 400 with a problem+json body when the tenant cannot be resolved.
- * Always clears the tenant context in a {@code finally} block.
+ * <p>Returns a RFC 7807 {@code application/problem+json} 400 response when the tenant
+ * cannot be resolved. Always clears the tenant context in a {@code finally} block.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public class TenantExtractionFilter extends OncePerRequestFilter {
 
   private static final String TENANT_HEADER = "X-Tenant-ID";
+  private static final String MDC_CORRELATION_ID = "correlationId";
 
   private final JwtDecoder jwtDecoder;
+  private final ObjectMapper objectMapper;
 
-  public TenantExtractionFilter(final JwtDecoder jwtDecoder) {
+  public TenantExtractionFilter(final JwtDecoder jwtDecoder, final ObjectMapper objectMapper) {
     this.jwtDecoder = jwtDecoder;
+    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -58,9 +67,9 @@ public class TenantExtractionFilter extends OncePerRequestFilter {
     try {
       final String tenantId = resolveTenantId(request);
       if (tenantId == null) {
-        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        response.setContentType("application/problem+json");
-        response.getWriter().write("{\"title\":\"Tenant ID required\",\"status\":400}");
+        writeProblemDetail(response, request, HttpServletResponse.SC_BAD_REQUEST,
+            "Tenant ID Required",
+            "Request must include a tenant identifier via the X-Tenant-ID header or a JWT with a tenant_id claim.");
         return;
       }
       TenantContext.setCurrentTenant(tenantId);
@@ -100,5 +109,26 @@ public class TenantExtractionFilter extends OncePerRequestFilter {
     }
 
     return null;
+  }
+
+  /**
+   * Writes a RFC 7807 ProblemDetail response, consistent with the GlobalExceptionHandler format.
+   */
+  private void writeProblemDetail(final HttpServletResponse response,
+                                  final HttpServletRequest request,
+                                  final int status,
+                                  final String title,
+                                  final String detail) throws IOException {
+    final ProblemDetail pd = ProblemDetail.forStatus(status);
+    pd.setType(URI.create("about:blank"));
+    pd.setTitle(title);
+    pd.setDetail(detail);
+    pd.setInstance(URI.create(request.getRequestURI()));
+    pd.setProperty("correlationId", MDC.get(MDC_CORRELATION_ID));
+    pd.setProperty("requestId", "req-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8));
+
+    response.setStatus(status);
+    response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+    objectMapper.writeValue(response.getWriter(), pd);
   }
 }
