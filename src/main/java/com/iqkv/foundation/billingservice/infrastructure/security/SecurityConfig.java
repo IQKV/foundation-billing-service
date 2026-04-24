@@ -16,20 +16,53 @@
 
 package com.iqkv.foundation.billingservice.infrastructure.security;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+import java.util.List;
+
+import com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties;
+import com.iqkv.foundation.billingservice.tenancy.TenantExtractionFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+  private final AuthConfigurationProperties authProps;
+  private final ResourceLoader resourceLoader;
+  private final TenantExtractionFilter tenantExtractionFilter;
+  private final CorrelationIdFilter correlationIdFilter;
+
+  public SecurityConfig(final AuthConfigurationProperties authProps,
+                        final ResourceLoader resourceLoader,
+                        final TenantExtractionFilter tenantExtractionFilter,
+                        final CorrelationIdFilter correlationIdFilter) {
+    this.authProps = authProps;
+    this.resourceLoader = resourceLoader;
+    this.tenantExtractionFilter = tenantExtractionFilter;
+    this.correlationIdFilter = correlationIdFilter;
+  }
 
   @Bean
   public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
@@ -44,8 +77,52 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/api/v1/billing/webhooks/stripe").permitAll()
             .anyRequest().authenticated()
         )
-        .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
-        }));
+        .oauth2ResourceServer(oauth2 -> oauth2
+            .jwt(jwt -> jwt
+                .decoder(jwtDecoder())
+                .jwtAuthenticationConverter(jwtAuthenticationConverter())
+            )
+        )
+        .addFilterBefore(correlationIdFilter, BearerTokenAuthenticationFilter.class)
+        .addFilterAfter(tenantExtractionFilter, CorrelationIdFilter.class);
+
     return http.build();
+  }
+
+  @Bean
+  public JwtDecoder jwtDecoder() {
+    try {
+      final String publicKeyPath = authProps.jwt().publicKeyPath();
+      final String pem;
+      try (InputStream is = resourceLoader.getResource(publicKeyPath).getInputStream()) {
+        pem = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      }
+      final String stripped = pem
+          .replace("-----BEGIN PUBLIC KEY-----", "")
+          .replace("-----END PUBLIC KEY-----", "")
+          .replaceAll("\\s", "");
+      final byte[] keyBytes = Base64.getDecoder().decode(stripped);
+      final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+      final RSAPublicKey publicKey = (RSAPublicKey) keyFactory.generatePublic(new X509EncodedKeySpec(keyBytes));
+      return NimbusJwtDecoder.withPublicKey(publicKey).build();
+    } catch (final IOException | java.security.GeneralSecurityException e) {
+      throw new IllegalStateException("Failed to load RSA public key for JWT decoding", e);
+    }
+  }
+
+  @Bean
+  public JwtAuthenticationConverter jwtAuthenticationConverter() {
+    final var converter = new JwtAuthenticationConverter();
+    converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+      final List<String> authorities = jwt.getClaimAsStringList(JwtClaimNames.AUTHORITIES);
+      if (authorities == null) {
+        return List.of();
+      }
+      return authorities.stream()
+          .map(SimpleGrantedAuthority::new)
+          .map(a -> (GrantedAuthority) a)
+          .toList();
+    });
+    return converter;
   }
 }

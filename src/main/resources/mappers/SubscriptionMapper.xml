@@ -4,7 +4,7 @@
 <mapper namespace="com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper">
 
     <resultMap id="subscriptionResultMap"
-               type="com.iqkv.foundation.billingservice.shared.domain.Subscription">
+               type="com.iqkv.foundation.billingservice.subscription.Subscription">
         <id     property="id"                       column="id"/>
         <result property="tenantKey"                column="tenant_key"/>
         <result property="externalSubscriptionId"   column="external_subscription_id"/>
@@ -19,7 +19,7 @@
         <result property="updatedAt"                column="updated_at"/>
     </resultMap>
 
-    <insert id="upsert" parameterType="com.iqkv.foundation.billingservice.shared.domain.Subscription">
+    <insert id="upsert" parameterType="com.iqkv.foundation.billingservice.subscription.Subscription">
         INSERT INTO subscriptions
             (id, tenant_key, external_subscription_id, external_customer_id,
              status, plan_id, current_period_start, current_period_end,

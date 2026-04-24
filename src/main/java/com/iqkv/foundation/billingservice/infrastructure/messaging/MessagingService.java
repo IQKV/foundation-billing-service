@@ -1,9 +1,27 @@
+/*
+ * Copyright 2026 IQKV Foundation Team.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.iqkv.foundation.billingservice.infrastructure.messaging;
 
 import java.time.Instant;
 
 import com.iqkv.foundation.billingservice.infrastructure.config.RabbitMQConfig;
 import com.iqkv.foundation.billingservice.shared.exception.MessagingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
@@ -11,28 +29,31 @@ import org.springframework.stereotype.Service;
 @Service
 public class MessagingService {
 
+  private static final Logger log = LoggerFactory.getLogger(MessagingService.class);
+
   private final RabbitTemplate rabbitTemplate;
 
-  public MessagingService(RabbitTemplate rabbitTemplate) {
+  public MessagingService(final RabbitTemplate rabbitTemplate) {
     this.rabbitTemplate = rabbitTemplate;
   }
 
-  public void publishSubscriptionCancelled(String tenantKey, String externalSubscriptionId) {
+  public void publishSubscriptionCancelled(final String tenantKey, final String externalSubscriptionId) {
     final var event = new SubscriptionEvent(
         tenantKey,
         externalSubscriptionId,
         SubscriptionEvent.EventType.SUBSCRIPTION_CANCELLED,
         Instant.now()
     );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CANCELLED, event);
+  }
+
+  private void publish(final String exchange, final String routingKey, final Object payload) {
     try {
-      rabbitTemplate.convertAndSend(
-          RabbitMQConfig.EVENTS_EXCHANGE,
-          RabbitMQConfig.ROUTING_SUBSCRIPTION_CANCELLED,
-          event
-      );
-    } catch (AmqpException e) {
+      rabbitTemplate.convertAndSend(exchange, routingKey, payload);
+      log.debug("Published event to exchange={} routingKey={}", exchange, routingKey);
+    } catch (final AmqpException e) {
       throw new MessagingException(
-          "Failed to publish subscription.cancelled event for tenantKey=" + tenantKey, e);
+          "Failed to publish message to exchange=" + exchange + " routingKey=" + routingKey, e);
     }
   }
 }

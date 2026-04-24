@@ -4,7 +4,7 @@
 <mapper namespace="com.iqkv.foundation.billingservice.infrastructure.persistence.WebhookLogMapper">
 
     <resultMap id="webhookLogResultMap"
-               type="com.iqkv.foundation.billingservice.shared.domain.WebhookLog">
+               type="com.iqkv.foundation.billingservice.webhook.WebhookLog">
         <id     property="id"              column="id"/>
         <result property="externalEventId" column="external_event_id"/>
         <result property="eventType"       column="event_type"/>
@@ -14,7 +14,7 @@
         <result property="processedAt"     column="processed_at"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.iqkv.foundation.billingservice.shared.domain.WebhookLog">
+    <insert id="insert" parameterType="com.iqkv.foundation.billingservice.webhook.WebhookLog">
         INSERT INTO webhook_log
             (id, external_event_id, event_type, status, error_message, received_at, processed_at)
         VALUES

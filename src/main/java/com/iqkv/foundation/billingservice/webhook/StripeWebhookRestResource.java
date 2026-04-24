@@ -16,7 +16,7 @@
 
 package com.iqkv.foundation.billingservice.webhook;
 
-import com.iqkv.foundation.billingservice.infrastructure.config.ApplicationProperties;
+import com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.net.Webhook;
@@ -50,12 +50,12 @@ public class StripeWebhookRestResource {
   private static final Logger log = LoggerFactory.getLogger(StripeWebhookRestResource.class);
 
   private final WebhookProcessingService webhookProcessingService;
-  private final ApplicationProperties applicationProperties;
+  private final StripeConfigurationProperties stripeProps;
 
-  public StripeWebhookRestResource(WebhookProcessingService webhookProcessingService,
-                                   ApplicationProperties applicationProperties) {
+  public StripeWebhookRestResource(final WebhookProcessingService webhookProcessingService,
+                                   final StripeConfigurationProperties stripeProps) {
     this.webhookProcessingService = webhookProcessingService;
-    this.applicationProperties = applicationProperties;
+    this.stripeProps = stripeProps;
   }
 
   @PostMapping("/stripe")
@@ -71,13 +71,13 @@ public class StripeWebhookRestResource {
       @ApiResponse(responseCode = "400", description = "Invalid Stripe signature")
   })
   public ResponseEntity<Void> handleStripeWebhook(
-      @RequestBody String payload,
-      @RequestHeader("Stripe-Signature") String sigHeader) {
+      @RequestBody final String payload,
+      @RequestHeader("Stripe-Signature") final String sigHeader) {
 
     final Event event;
     try {
-      event = Webhook.constructEvent(payload, sigHeader, applicationProperties.stripe().webhookSecret());
-    } catch (SignatureVerificationException e) {
+      event = Webhook.constructEvent(payload, sigHeader, stripeProps.webhookSecret());
+    } catch (final SignatureVerificationException e) {
       log.warn("Invalid Stripe webhook signature: {}", e.getMessage());
       return ResponseEntity.badRequest().build();
     }

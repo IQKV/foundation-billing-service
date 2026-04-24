@@ -16,32 +16,39 @@
 
 package com.iqkv.foundation.billingservice.infrastructure.config;
 
+import java.util.Map;
+
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.param.CustomerCreateParams;
-import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
+/**
+ * Wrapper for Stripe SDK client initialization and global settings.
+ */
 @Component
 public class PaymentGatewayClient {
 
-  private final ApplicationProperties applicationProperties;
-
-  public PaymentGatewayClient(ApplicationProperties applicationProperties) {
-    this.applicationProperties = applicationProperties;
+  public PaymentGatewayClient(final StripeConfigurationProperties stripeProps) {
+    Stripe.apiKey = stripeProps.secretKey();
   }
 
-  @PostConstruct
-  public void init() {
-    Stripe.apiKey = applicationProperties.stripe().secretKey();
-  }
-
-  public String createCustomer(final String tenantName, final String ownerEmail) throws StripeException {
+  /**
+   * Creates a new customer in Stripe.
+   *
+   * @param name  the customer name (tenant name)
+   * @param email the customer email (owner email)
+   * @return the Stripe customer ID
+   * @throws StripeException if the creation fails
+   */
+  public String createCustomer(final String name, final String email) throws StripeException {
     final CustomerCreateParams params = CustomerCreateParams.builder()
-        .setName(tenantName)
-        .setEmail(ownerEmail)
+        .setName(name)
+        .setEmail(email)
+        .putMetadata("managed_by", "foundation-billing-service")
         .build();
+
     final Customer customer = Customer.create(params);
     return customer.getId();
   }

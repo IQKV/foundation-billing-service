@@ -72,6 +72,9 @@ iqkv:
   stripe:
     secret-key: ${STRIPE_SECRET_KEY:}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  auth:
+    jwt:
+      public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public.pem}
 
 git:
   build_time: "@git.build.time@"

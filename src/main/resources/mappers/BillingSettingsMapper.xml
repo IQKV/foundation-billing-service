@@ -4,7 +4,7 @@
 <mapper namespace="com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper">
 
     <resultMap id="billingSettingsResultMap"
-               type="com.iqkv.foundation.billingservice.shared.domain.BillingSettings">
+               type="com.iqkv.foundation.billingservice.settings.BillingSettings">
         <id     property="id"                   column="id"/>
         <result property="tenantKey"            column="tenant_key"/>
         <result property="externalCustomerId"   column="external_customer_id"/>
@@ -19,7 +19,7 @@
         <result property="updatedAt"            column="updated_at"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.iqkv.foundation.billingservice.shared.domain.BillingSettings">
+    <insert id="insert" parameterType="com.iqkv.foundation.billingservice.settings.BillingSettings">
         INSERT INTO billing_settings
             (id, tenant_key, external_customer_id, billing_email, company_name,
              billing_address, tax_id, tax_id_type, currency, profile_owner_id,
