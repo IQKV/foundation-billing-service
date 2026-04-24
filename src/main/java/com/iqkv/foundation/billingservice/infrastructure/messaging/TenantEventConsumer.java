@@ -34,6 +34,18 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+/**
+ * Consumes all {@code tenant.#} lifecycle events from {@code iqkv.billing.tenant.events}.
+ *
+ * <p>Billing needs full visibility into the tenant provisioning lifecycle because:
+ * <ul>
+ *   <li>{@code TENANT_CREATED} — bootstraps the Stripe customer and billing settings</li>
+ *   <li>{@code TENANT_PROVISIONED} — tenant is now ACTIVE; billing can activate services</li>
+ *   <li>{@code TENANT_PROVISIONING_FAILED} — provisioning failed; billing should not charge</li>
+ *   <li>{@code TENANT_SUSPENDED} — tenant suspended; billing may pause invoicing</li>
+ *   <li>{@code TENANT_DELETED} — tenant deleted; billing should archive/cancel</li>
+ * </ul>
+ */
 @Component
 @ConditionalOnProperty(name = "iqkv.messaging.rabbitmq.enabled", havingValue = "true")
 public class TenantEventConsumer {
@@ -56,66 +68,105 @@ public class TenantEventConsumer {
   }
 
   @RabbitListener(queues = RabbitMQConfig.TENANT_EVENTS_QUEUE)
-  public void handleTenantCreated(TenantEvent event) {
+  public void handleTenantEvent(final TenantEvent event) {
+    if (event.getEventType() == null) {
+      log.warn("Received tenant event with null eventType for tenantKey={}", event.getTenantKey());
+      return;
+    }
+    switch (event.getEventType()) {
+      case TENANT_CREATED            -> handleTenantCreated(event);
+      case TENANT_PROVISIONED        -> handleTenantProvisioned(event);
+      case TENANT_PROVISIONING_FAILED -> handleTenantProvisioningFailed(event);
+      case TENANT_SUSPENDED          -> handleTenantSuspended(event);
+      case TENANT_DELETED            -> handleTenantDeleted(event);
+      default -> log.debug("Unhandled tenant event type: {}", event.getEventType());
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Handlers
+  // ---------------------------------------------------------------------------
+
+  private void handleTenantCreated(final TenantEvent event) {
     final String tenantKey = event.getTenantKey();
     final String tenantName = event.getTenantName();
     final String ownerEmail = event.getOwnerEmail();
 
-    // 1. Validate ownerEmail non-null — throw to route message to DLQ
     if (ownerEmail == null) {
       throw new IllegalArgumentException(
           "tenant.created event for tenantKey=" + tenantKey + " is missing ownerEmail");
     }
 
-    // 2. Idempotency check — skip if billing settings already exist
     if (billingSettingsMapper.existsByTenantKey(tenantKey)) {
-      log.warn("BillingSettings already exist for tenantKey={}, skipping duplicate tenant.created event", tenantKey);
+      log.warn("BillingSettings already exist for tenantKey={}, skipping duplicate tenant.created", tenantKey);
       return;
     }
 
-    // 3. Create payment gateway customer
     final String externalCustomerId;
     try {
       externalCustomerId = paymentGatewayClient.createCustomer(tenantName, ownerEmail);
-    } catch (StripeException e) {
+    } catch (final StripeException e) {
       throw new PaymentGatewayException(
           "Failed to create payment gateway customer for tenantKey=" + tenantKey, e);
     }
 
-    // 4. Persist billing settings
     final LocalDateTime now = LocalDateTime.now();
-    final BillingSettings settings = new BillingSettings(
-        UUID.randomUUID(),
-        tenantKey,
-        externalCustomerId,
-        ownerEmail,
-        tenantName,
-        null,
-        null,
-        null,
-        "USD",
-        null,
-        now,
-        now
-    );
-    billingSettingsMapper.insert(settings);
-    log.info("BillingSettings created for tenantKey={}, externalCustomerId={}", tenantKey, externalCustomerId);
+    billingSettingsMapper.insert(new BillingSettings(
+        UUID.randomUUID(), tenantKey, externalCustomerId, ownerEmail, tenantName,
+        null, null, null, "USD", null, now, now));
+    log.info("BillingSettings created: tenantKey={}, externalCustomerId={}", tenantKey, externalCustomerId);
+  }
 
-    // Publish welcome notification — consumed asynchronously by BillingEmailConsumer
-    if (ownerEmail != null && !ownerEmail.isBlank()) {
-      try {
-        messagingService.publishNotification(new NotificationEvent(
-            ownerEmail,
+  private void handleTenantProvisioned(final TenantEvent event) {
+    final String tenantKey = event.getTenantKey();
+    log.info("Tenant provisioning succeeded: tenantKey={}", tenantKey);
+
+    // Notify billing contact that their account is ready
+    billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
+      final String email = settings.getBillingEmail();
+      if (email != null && !email.isBlank()) {
+        publishNotification(new NotificationEvent(
+            email,
             notificationProps.defaultLocale(),
             NotificationEventType.SUBSCRIPTION_ACTIVATED,
             Map.of(
-                "companyName", tenantName != null ? tenantName : "",
-                "firstName", event.getOwnerFirstName() != null ? event.getOwnerFirstName() : ""
+                "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
+                "firstName", ""
             ),
             Instant.now()));
-      } catch (final Exception e) {
-        log.warn("Failed to publish welcome notification for tenantKey={}", tenantKey, e);
       }
+    });
+  }
+
+  private void handleTenantProvisioningFailed(final TenantEvent event) {
+    final String tenantKey = event.getTenantKey();
+    log.warn("Tenant provisioning failed: tenantKey={} — billing will not activate", tenantKey);
+    // No billing action needed; Stripe customer already created but no subscription activated.
+    // Billing settings remain so retry-provisioning can succeed later.
+  }
+
+  private void handleTenantSuspended(final TenantEvent event) {
+    final String tenantKey = event.getTenantKey();
+    log.info("Tenant suspended: tenantKey={}", tenantKey);
+    // Future: pause invoicing, flag billing settings, etc.
+  }
+
+  private void handleTenantDeleted(final TenantEvent event) {
+    final String tenantKey = event.getTenantKey();
+    log.info("Tenant deleted: tenantKey={}", tenantKey);
+    // Future: cancel Stripe customer, archive billing settings, etc.
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  private void publishNotification(final NotificationEvent event) {
+    try {
+      messagingService.publishNotification(event);
+    } catch (final Exception e) {
+      log.warn("Failed to publish billing notification: type={} recipient={}",
+          event.getType(), event.getRecipientEmail(), e);
     }
   }
 }

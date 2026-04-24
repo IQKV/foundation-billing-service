@@ -74,4 +74,11 @@
         WHERE tenant_key = #{tenantKey}
     </update>
 
+    <update id="clearProfileOwnerById">
+        UPDATE billing_settings
+        SET profile_owner_id = NULL,
+            updated_at       = now()
+        WHERE profile_owner_id = #{profileOwnerId}::uuid
+    </update>
+
 </mapper>

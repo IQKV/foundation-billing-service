@@ -37,4 +37,6 @@ public interface BillingSettingsMapper {
                                 @Param("externalCustomerId") String externalCustomerId);
 
   void update(BillingSettings settings);
+
+  int clearProfileOwnerById(@Param("profileOwnerId") java.util.UUID profileOwnerId);
 }

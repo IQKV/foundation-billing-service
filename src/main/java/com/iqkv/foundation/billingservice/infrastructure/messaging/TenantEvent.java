@@ -10,6 +10,8 @@ public class TenantEvent {
 
   public enum EventType {
     TENANT_CREATED,
+    TENANT_PROVISIONED,
+    TENANT_PROVISIONING_FAILED,
     TENANT_UPDATED,
     TENANT_DELETED,
     TENANT_SUSPENDED

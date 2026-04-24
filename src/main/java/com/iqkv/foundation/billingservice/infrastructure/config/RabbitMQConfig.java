@@ -40,13 +40,21 @@ public class RabbitMQConfig {
   // Billing queue names
   // -------------------------------------------------------------------------
   public static final String TENANT_EVENTS_QUEUE  = "iqkv.billing.tenant.events";
+  public static final String USER_EVENTS_QUEUE    = "iqkv.billing.user.events";
   public static final String NOTIFICATIONS_QUEUE  = "iqkv.billing.notifications";
 
   // -------------------------------------------------------------------------
   // Routing keys — domain events
   // -------------------------------------------------------------------------
-  public static final String ROUTING_TENANT_CREATED         = "tenant.created";
-  public static final String ROUTING_SUBSCRIPTION_CANCELLED = "subscription.cancelled";
+  public static final String ROUTING_TENANT_CREATED             = "tenant.created";
+  public static final String ROUTING_TENANT_PROVISIONED         = "tenant.provisioned";
+  public static final String ROUTING_TENANT_PROVISIONING_FAILED = "tenant.provisioning_failed";
+  public static final String ROUTING_TENANT_UPDATED             = "tenant.updated";
+  public static final String ROUTING_TENANT_DELETED             = "tenant.deleted";
+  public static final String ROUTING_TENANT_SUSPENDED           = "tenant.suspended";
+  public static final String ROUTING_USER_REMOVED               = "user.removed";
+  public static final String ROUTING_USER_DELETED               = "user.deleted";
+  public static final String ROUTING_SUBSCRIPTION_CANCELLED     = "subscription.cancelled";
 
   // -------------------------------------------------------------------------
   // Routing keys — billing notification emails (scoped to avoid conflicts)
@@ -85,6 +93,14 @@ public class RabbitMQConfig {
   }
 
   @Bean
+  public Queue userEventsQueue() {
+    return QueueBuilder.durable(USER_EVENTS_QUEUE)
+        .withArgument("x-dead-letter-exchange", DLX_EXCHANGE)
+        .withArgument("x-message-ttl", TTL_24H_MS)
+        .build();
+  }
+
+  @Bean
   public Queue notificationsQueue() {
     return QueueBuilder.durable(NOTIFICATIONS_QUEUE)
         .withArgument("x-dead-letter-exchange", DLX_EXCHANGE)
@@ -94,8 +110,18 @@ public class RabbitMQConfig {
 
   @Bean
   public Binding tenantEventsBinding() {
-    return BindingBuilder.bind(tenantEventsQueue()).to(eventsExchange())
-        .with(ROUTING_TENANT_CREATED);
+    // Wildcard — all tenant.* lifecycle events route here so billing has full visibility
+    return BindingBuilder.bind(tenantEventsQueue()).to(eventsExchange()).with("tenant.#");
+  }
+
+  @Bean
+  public Binding userRemovedBinding() {
+    return BindingBuilder.bind(userEventsQueue()).to(eventsExchange()).with(ROUTING_USER_REMOVED);
+  }
+
+  @Bean
+  public Binding userDeletedBinding() {
+    return BindingBuilder.bind(userEventsQueue()).to(eventsExchange()).with(ROUTING_USER_DELETED);
   }
 
   @Bean
