@@ -16,6 +16,14 @@ spring:
     password: ${iqkv.rabbitmq.password}
   liquibase:
     enabled: false
+  mail:
+    host: ${iqkv.mail.host:localhost}
+    port: ${iqkv.mail.port:587}
+    username: ${iqkv.mail.username:}
+    password: ${iqkv.mail.password:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
   messages:
     basename: i18n/messages
     encoding: UTF-8
@@ -75,6 +83,18 @@ iqkv:
   notification:
     default-locale: en
     base-url: ${APP_BASE_URL:http://localhost:3000}
+    mail:
+      from: ${iqkv.mail.from}
+      from-name: ${iqkv.mail.from-name}
+      reply-to: ${iqkv.mail.reply-to:}
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    from: ${MAIL_FROM:noreply@iqkv.com}
+    from-name: ${MAIL_FROM_NAME:IQ Key Value}
+    reply-to: ${MAIL_REPLY_TO:}
   auth:
     jwt:
       public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public.pem}
