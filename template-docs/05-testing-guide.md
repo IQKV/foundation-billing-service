@@ -4,14 +4,14 @@
 
 The template follows the [Test Pyramid](https://martinfowler.com/bliki/TestPyramid.html) and ships with five pre-built test categories:
 
-| Test class                     | Type                 | Purpose                                      |
-| ------------------------------ | -------------------- | -------------------------------------------- |
-| `BillingServiceApplicationTests`  | Smoke                | Spring context loads without errors          |
-| `TechnicalStructureTest`       | Architecture         | ArchUnit enforces layered architecture rules |
-| `ModulithTest`                 | Modulith             | Verifies Spring Modulith module boundaries   |
-| `ModulithIntegrationTest`      | Modulith integration | Tests cross-module interactions              |
-| `ModulithScenarioTest`         | Modulith scenario    | Event-driven workflow testing                |
-| `IntegrationTest` (base class) | Integration          | Base class for service integration tests     |
+| Test class                       | Type                 | Purpose                                      |
+| -------------------------------- | -------------------- | -------------------------------------------- |
+| `BillingServiceApplicationTests` | Smoke                | Spring context loads without errors          |
+| `TechnicalStructureTest`         | Architecture         | ArchUnit enforces layered architecture rules |
+| `ModulithTest`                   | Modulith             | Verifies Spring Modulith module boundaries   |
+| `ModulithIntegrationTest`        | Modulith integration | Tests cross-module interactions              |
+| `ModulithScenarioTest`           | Modulith scenario    | Event-driven workflow testing                |
+| `IntegrationTest` (base class)   | Integration          | Base class for service integration tests     |
 
 ## Running Tests
 
