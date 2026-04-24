@@ -1,14 +1,15 @@
 # ===================================================================
-# Spring Boot configuration for tests.
+# Spring Boot configuration for the "test" profile.
+# Activated via @ActiveProfiles("test") on test classes.
+# Only contains overrides and test-specific values relative to application.yml.
 # ===================================================================
 
 spring:
-  application:
-    name: servicename
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
     username: sa
-    password: test
+    password: ""
+    driver-class-name: org.h2.Driver
   liquibase:
     enabled: false
   rabbitmq:
@@ -16,11 +17,6 @@ spring:
     port: 5672
     username: guest
     password: guest
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: # disabled in tests — configure per test with @WithMockUser or SecurityMockMvcConfigurer
 
 iqkv:
   stripe:
@@ -34,14 +30,3 @@ logging:
   level:
     com.iqkv: DEBUG
     liquibase: DEBUG
-
-git:
-  build_time: "@git.build.time@"
-  commit: "@git.commit.id.abbrev@"
-info:
-  app:
-    build_time: ${git.build_time}
-    description: "@project.description@"
-    git_commit: ${git.commit}
-    name: "@project.name@"
-    version: "@project.version@"
