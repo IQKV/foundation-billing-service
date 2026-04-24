@@ -17,6 +17,14 @@
 package com.iqkv.foundation.billingservice.settings;
 
 import jakarta.validation.Valid;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -33,6 +41,8 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/billing/settings")
+@Tag(name = "Billing Settings", description = "Tenant billing configuration management")
+@SecurityRequirement(name = "bearerAuth")
 public class BillingSettingsRestResource {
 
   private final BillingSettingsService billingSettingsService;
@@ -48,6 +58,14 @@ public class BillingSettingsRestResource {
    * @return 200 with billing settings, or 404 if not found
    */
   @GetMapping("/{tenantKey}")
+  @Operation(summary = "Get billing settings", description = "Returns billing settings for the given tenant. Requires TENANT_OWNER authority.")
+  @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true, description = "8-char alphanumeric tenantKey")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Billing settings returned"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER"),
+      @ApiResponse(responseCode = "404", description = "Tenant not found")
+  })
   public ResponseEntity<BillingSettingsResponse> getSettings(@PathVariable String tenantKey) {
     final var settings = billingSettingsService.getByTenantKey(tenantKey);
     return ResponseEntity.ok(BillingSettingsResponse.from(settings));
@@ -62,6 +80,15 @@ public class BillingSettingsRestResource {
    * @return 200 with updated billing settings, or 404 if not found
    */
   @PatchMapping("/{tenantKey}")
+  @Operation(summary = "Update billing settings", description = "Partially updates billing settings. Only non-null fields are applied. Requires TENANT_OWNER authority.")
+  @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true, description = "8-char alphanumeric tenantKey")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Billing settings updated"),
+      @ApiResponse(responseCode = "400", description = "Validation error"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER"),
+      @ApiResponse(responseCode = "404", description = "Tenant not found")
+  })
   public ResponseEntity<BillingSettingsResponse> updateSettings(
       @PathVariable String tenantKey,
       @Valid @RequestBody BillingSettingsRequest request) {

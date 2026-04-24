@@ -18,6 +18,13 @@ package com.iqkv.foundation.billingservice.subscription;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +39,8 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/billing/subscriptions")
+@Tag(name = "Subscriptions", description = "Tenant subscription queries (local Stripe cache)")
+@SecurityRequirement(name = "bearerAuth")
 public class SubscriptionRestResource {
 
   private final SubscriptionService subscriptionService;
@@ -47,6 +56,14 @@ public class SubscriptionRestResource {
    * @return 200 with the active subscription, or 404 if none exists
    */
   @GetMapping("/{tenantKey}/active")
+  @Operation(summary = "Get active subscription", description = "Returns the active Stripe subscription for the given tenant. No gateway round-trip — reads local cache.")
+  @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true, description = "8-char alphanumeric tenantKey")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Active subscription returned"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER"),
+      @ApiResponse(responseCode = "404", description = "No active subscription found")
+  })
   public ResponseEntity<SubscriptionResponse> getActive(@PathVariable String tenantKey) {
     final var subscription = subscriptionService.getActiveByTenantKey(tenantKey);
     return ResponseEntity.ok(SubscriptionResponse.from(subscription));
@@ -59,6 +76,13 @@ public class SubscriptionRestResource {
    * @return 200 with the list (may be empty)
    */
   @GetMapping("/{tenantKey}")
+  @Operation(summary = "Get all subscriptions", description = "Returns all subscriptions for the given tenant ordered by created_at DESC. May be empty.")
+  @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true, description = "8-char alphanumeric tenantKey")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Subscription list returned"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER")
+  })
   public ResponseEntity<List<SubscriptionResponse>> getAll(@PathVariable String tenantKey) {
     final var subscriptions = subscriptionService.getAllByTenantKey(tenantKey)
         .stream()
