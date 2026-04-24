@@ -5,8 +5,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-    <include file="db/changelog/changes/001_create_billing_settings.xml"/>
-    <include file="db/changelog/changes/002_create_subscriptions.xml"/>
-    <include file="db/changelog/changes/003_create_webhook_log.xml"/>
+    <include file="db/changelog/changes/20260422120000-create-billing-settings.xml"/>
+    <include file="db/changelog/changes/20260422120100-create-subscriptions.xml"/>
+    <include file="db/changelog/changes/20260422120300-create-webhook-log.xml"/>
 
 </databaseChangeLog>

@@ -5,34 +5,28 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-    <changeSet id="002_create_subscriptions" author="iqkv">
-        <createTable tableName="subscriptions" schemaName="public">
+    <changeSet id="20260422120000-create-billing-settings" author="iqkv">
+        <createTable tableName="billing_settings" schemaName="public">
             <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="tenant_key" type="VARCHAR(21)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="external_subscription_id" type="VARCHAR(255)">
-                <constraints nullable="false" unique="true" uniqueConstraintName="uq_subscriptions_external_subscription_id"/>
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_billing_settings_tenant_key"/>
             </column>
             <column name="external_customer_id" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="status" type="VARCHAR(50)">
+            <column name="billing_email" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="plan_id" type="VARCHAR(255)"/>
-            <column name="current_period_start" type="TIMESTAMP">
+            <column name="company_name" type="VARCHAR(255)"/>
+            <column name="billing_address" type="jsonb"/>
+            <column name="tax_id" type="VARCHAR(100)"/>
+            <column name="tax_id_type" type="VARCHAR(50)"/>
+            <column name="currency" type="VARCHAR(3)" defaultValue="USD">
                 <constraints nullable="false"/>
             </column>
-            <column name="current_period_end" type="TIMESTAMP">
-                <constraints nullable="false"/>
-            </column>
-            <column name="cancel_at_period_end" type="BOOLEAN" defaultValueBoolean="false">
-                <constraints nullable="false"/>
-            </column>
-            <column name="canceled_at" type="TIMESTAMP"/>
+            <column name="profile_owner_id" type="UUID"/>
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="now()">
                 <constraints nullable="false"/>
             </column>
@@ -40,10 +34,6 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-
-        <createIndex indexName="idx_subscriptions_tenant_key" tableName="subscriptions" schemaName="public">
-            <column name="tenant_key"/>
-        </createIndex>
     </changeSet>
 
 </databaseChangeLog>
