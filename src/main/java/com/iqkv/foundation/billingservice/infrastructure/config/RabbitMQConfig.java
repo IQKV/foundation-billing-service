@@ -29,19 +29,37 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(name = "iqkv.messaging.rabbitmq.enabled", havingValue = "true")
 public class RabbitMQConfig {
 
-  // Exchange names
+  // -------------------------------------------------------------------------
+  // Shared exchange (all services publish here)
+  // -------------------------------------------------------------------------
   public static final String EVENTS_EXCHANGE = "iqkv.events";
-  public static final String DLX_EXCHANGE = "iqkv.dlx";
+  public static final String DLX_EXCHANGE    = "iqkv.dlx";
+  public static final String DLQ             = "iqkv.dlq";
 
-  // Queue names
-  public static final String DLQ = "iqkv.dlq";
-  public static final String TENANT_EVENTS_QUEUE = "iqkv.billing.tenant.events";
+  // -------------------------------------------------------------------------
+  // Billing queue names
+  // -------------------------------------------------------------------------
+  public static final String TENANT_EVENTS_QUEUE  = "iqkv.billing.tenant.events";
+  public static final String NOTIFICATIONS_QUEUE  = "iqkv.billing.notifications";
 
-  // Routing keys
-  public static final String ROUTING_TENANT_CREATED = "tenant.created";
+  // -------------------------------------------------------------------------
+  // Routing keys — domain events
+  // -------------------------------------------------------------------------
+  public static final String ROUTING_TENANT_CREATED         = "tenant.created";
   public static final String ROUTING_SUBSCRIPTION_CANCELLED = "subscription.cancelled";
 
+  // -------------------------------------------------------------------------
+  // Routing keys — billing notification emails (scoped to avoid conflicts)
+  // billing.email.# wildcard: adding new email types needs no config change
+  // -------------------------------------------------------------------------
+  public static final String ROUTING_NOTIFICATION_BILLING_EMAIL          = "notification.billing.email";
+  public static final String ROUTING_NOTIFICATION_BILLING_EMAIL_PATTERN  = "notification.billing.#";
+
   private static final long TTL_24H_MS = 86_400_000L;
+
+  // -------------------------------------------------------------------------
+  // Beans
+  // -------------------------------------------------------------------------
 
   @Bean
   public TopicExchange eventsExchange() {
@@ -67,8 +85,24 @@ public class RabbitMQConfig {
   }
 
   @Bean
+  public Queue notificationsQueue() {
+    return QueueBuilder.durable(NOTIFICATIONS_QUEUE)
+        .withArgument("x-dead-letter-exchange", DLX_EXCHANGE)
+        .withArgument("x-message-ttl", TTL_24H_MS)
+        .build();
+  }
+
+  @Bean
   public Binding tenantEventsBinding() {
-    return BindingBuilder.bind(tenantEventsQueue()).to(eventsExchange()).with(ROUTING_TENANT_CREATED);
+    return BindingBuilder.bind(tenantEventsQueue()).to(eventsExchange())
+        .with(ROUTING_TENANT_CREATED);
+  }
+
+  @Bean
+  public Binding notificationsBinding() {
+    // Wildcard — all notification.billing.* keys route here
+    return BindingBuilder.bind(notificationsQueue()).to(eventsExchange())
+        .with(ROUTING_NOTIFICATION_BILLING_EMAIL_PATTERN);
   }
 
   @Bean

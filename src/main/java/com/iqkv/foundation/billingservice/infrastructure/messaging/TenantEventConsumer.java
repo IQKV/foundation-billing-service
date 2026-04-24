@@ -16,9 +16,12 @@
 
 package com.iqkv.foundation.billingservice.infrastructure.messaging;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayClient;
 import com.iqkv.foundation.billingservice.infrastructure.config.RabbitMQConfig;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
@@ -39,11 +42,17 @@ public class TenantEventConsumer {
 
   private final BillingSettingsMapper billingSettingsMapper;
   private final PaymentGatewayClient paymentGatewayClient;
+  private final MessagingService messagingService;
+  private final NotificationConfigurationProperties notificationProps;
 
-  public TenantEventConsumer(BillingSettingsMapper billingSettingsMapper,
-                              PaymentGatewayClient paymentGatewayClient) {
+  public TenantEventConsumer(final BillingSettingsMapper billingSettingsMapper,
+                              final PaymentGatewayClient paymentGatewayClient,
+                              final MessagingService messagingService,
+                              final NotificationConfigurationProperties notificationProps) {
     this.billingSettingsMapper = billingSettingsMapper;
     this.paymentGatewayClient = paymentGatewayClient;
+    this.messagingService = messagingService;
+    this.notificationProps = notificationProps;
   }
 
   @RabbitListener(queues = RabbitMQConfig.TENANT_EVENTS_QUEUE)
@@ -91,5 +100,22 @@ public class TenantEventConsumer {
     );
     billingSettingsMapper.insert(settings);
     log.info("BillingSettings created for tenantKey={}, externalCustomerId={}", tenantKey, externalCustomerId);
+
+    // Publish welcome notification — consumed asynchronously by BillingEmailConsumer
+    if (ownerEmail != null && !ownerEmail.isBlank()) {
+      try {
+        messagingService.publishNotification(new NotificationEvent(
+            ownerEmail,
+            notificationProps.defaultLocale(),
+            NotificationEventType.SUBSCRIPTION_ACTIVATED,
+            Map.of(
+                "companyName", tenantName != null ? tenantName : "",
+                "firstName", event.getOwnerFirstName() != null ? event.getOwnerFirstName() : ""
+            ),
+            Instant.now()));
+      } catch (final Exception e) {
+        log.warn("Failed to publish welcome notification for tenantKey={}", tenantKey, e);
+      }
+    }
   }
 }

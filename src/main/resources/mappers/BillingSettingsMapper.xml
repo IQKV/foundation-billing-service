@@ -42,6 +42,14 @@
         WHERE tenant_key = #{tenantKey}
     </select>
 
+    <select id="findByExternalCustomerId" resultMap="billingSettingsResultMap">
+        SELECT id, tenant_key, external_customer_id, billing_email, company_name,
+               billing_address, tax_id, tax_id_type, currency, profile_owner_id,
+               created_at, updated_at
+        FROM billing_settings
+        WHERE external_customer_id = #{externalCustomerId}
+    </select>
+
     <select id="existsByTenantKey" resultType="boolean">
         SELECT EXISTS (SELECT 1 FROM billing_settings WHERE tenant_key = #{tenantKey})
     </select>
@@ -50,6 +58,19 @@
         UPDATE billing_settings
         SET external_customer_id = #{externalCustomerId},
             updated_at           = now()
+        WHERE tenant_key = #{tenantKey}
+    </update>
+
+    <update id="update" parameterType="com.iqkv.foundation.billingservice.settings.BillingSettings">
+        UPDATE billing_settings
+        SET billing_email       = #{billingEmail},
+            company_name        = #{companyName},
+            billing_address     = #{billingAddress}::jsonb,
+            tax_id              = #{taxId},
+            tax_id_type         = #{taxIdType},
+            currency            = #{currency},
+            profile_owner_id    = #{profileOwnerId},
+            updated_at          = now()
         WHERE tenant_key = #{tenantKey}
     </update>
 

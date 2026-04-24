@@ -29,6 +29,8 @@ public interface BillingSettingsMapper {
 
   Optional<BillingSettings> findByTenantKey(String tenantKey);
 
+  Optional<BillingSettings> findByExternalCustomerId(String externalCustomerId);
+
   boolean existsByTenantKey(String tenantKey);
 
   void updateExternalCustomerId(@Param("tenantKey") String tenantKey,

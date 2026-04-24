@@ -47,6 +47,10 @@ public class MessagingService {
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CANCELLED, event);
   }
 
+  public void publishNotification(final NotificationEvent event) {
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_NOTIFICATION_BILLING_EMAIL, event);
+  }
+
   private void publish(final String exchange, final String routingKey, final Object payload) {
     try {
       rabbitTemplate.convertAndSend(exchange, routingKey, payload);
