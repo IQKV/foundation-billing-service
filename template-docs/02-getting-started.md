@@ -60,21 +60,17 @@ After creating your repository from the template:
 
 ## Development Profiles
 
-| Maven Profile   | Spring Profile | Purpose                                    |
-| --------------- | -------------- | ------------------------------------------ |
-| `default`       | —              | Standard build, active by default          |
-| `dev`           | `dev`          | Adds `spring-boot-devtools` for hot reload |
-| `modulith-test` | —              | Runs Modulith-specific tests only          |
-| `use-qulice`    | —              | Enables Qulice static analysis             |
+| Maven Profile | Spring Profile | Purpose                                    |
+| ------------- | -------------- | ------------------------------------------ |
+| `default`     | —              | Standard build, active by default          |
+| `dev`         | `dev`          | Adds `spring-boot-devtools` for hot reload |
+| `use-qulice`  | —              | Enables Qulice static analysis             |
 
 ## Running Tests
 
 ```bash
 # Unit + architecture tests (fast)
 ./mvnw clean test -Dcheckstyle.skip=true
-
-# Modulith verification tests
-./mvnw test -P modulith-test -Dcheckstyle.skip=true
 
 # Full verify (includes JaCoCo 90% coverage gate)
 ./mvnw clean verify -Dcheckstyle.skip=true

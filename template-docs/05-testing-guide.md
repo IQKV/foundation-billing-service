@@ -4,14 +4,11 @@
 
 The template follows the [Test Pyramid](https://martinfowler.com/bliki/TestPyramid.html) and ships with five pre-built test categories:
 
-| Test class                       | Type                 | Purpose                                      |
-| -------------------------------- | -------------------- | -------------------------------------------- |
-| `BillingServiceApplicationTests` | Smoke                | Spring context loads without errors          |
-| `TechnicalStructureTest`         | Architecture         | ArchUnit enforces layered architecture rules |
-| `ModulithTest`                   | Modulith             | Verifies Spring Modulith module boundaries   |
-| `ModulithIntegrationTest`        | Modulith integration | Tests cross-module interactions              |
-| `ModulithScenarioTest`           | Modulith scenario    | Event-driven workflow testing                |
-| `IntegrationTest` (base class)   | Integration          | Base class for service integration tests     |
+| Test class                       | Type         | Purpose                                      |
+| -------------------------------- | ------------ | -------------------------------------------- |
+| `BillingServiceApplicationTests` | Smoke        | Spring context loads without errors          |
+| `TechnicalStructureTest`         | Architecture | ArchUnit enforces layered architecture rules |
+| `IntegrationTest` (base class)   | Integration  | Base class for service integration tests     |
 
 ## Running Tests
 
@@ -21,19 +18,7 @@ The template follows the [Test Pyramid](https://martinfowler.com/bliki/TestPyram
 ./mvnw clean test -Dcheckstyle.skip=true
 ```
 
-Runs everything **except** Modulith-scoped tests. Includes `TechnicalStructureTest` (ArchUnit).
-
-### Modulith Tests Only
-
-```bash
-./mvnw test -P modulith-test -Dcheckstyle.skip=true
-```
-
-The `modulith-test` Maven profile configures Surefire to include only:
-
-- `**/*ModulithTest.java`
-- `**/*ModulithIntegrationTest.java`
-- `**/*ModulithScenarioTest.java`
+Runs everything. Includes `TechnicalStructureTest` (ArchUnit).
 
 ### Full Build with Coverage Gate
 
@@ -84,16 +69,6 @@ shared           → accessed by all layers
 `BillingServiceApplication` is excluded from all access checks.
 
 These rules run automatically on every `mvn test` invocation — no separate step needed.
-
-## Spring Modulith Tests
-
-| Class                     | What it verifies                                                                                    |
-| ------------------------- | --------------------------------------------------------------------------------------------------- |
-| `ModulithTest`            | All application modules conform to Spring Modulith conventions (no illegal cross-module references) |
-| `ModulithIntegrationTest` | Module interactions via published/consumed events work correctly                                    |
-| `ModulithScenarioTest`    | End-to-end scenario testing using Spring Modulith's `Scenario` API                                  |
-
-Reference: [Spring Modulith documentation](https://docs.spring.io/spring-modulith/docs/current/reference/html/)
 
 ## Unit Testing Standards
 

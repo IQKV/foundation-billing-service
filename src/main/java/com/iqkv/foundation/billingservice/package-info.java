@@ -15,6 +15,6 @@
  */
 
 /**
- * Application root package for the Servicename service.
+ * Application root package for the Billing service.
  */
 package com.iqkv.foundation.billingservice;

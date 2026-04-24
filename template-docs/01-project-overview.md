@@ -7,7 +7,7 @@
 ## Key Features
 
 - **Custom Parent POM**: Inherits `com.iqkv:boot-parent-pom` — versions for all plugins and third-party libraries are managed centrally
-- **Spring Boot 4 + Java 25**: Pre-wired for modern Spring Boot with Modulith support
+- **Spring Boot 4 + Java 25**: Pre-wired for modern Spring Boot
 - **Observability**: Micrometer + Prometheus metrics (`micrometer-registry-prometheus`) and structured JSON logging via `logstash-logback-encoder`
 - **Git Build Info**: `git-commit-id-maven-plugin` injects build metadata (commit SHA, build time) into the `/info` actuator endpoint automatically
 - **Architecture Tests**: ArchUnit (`archunit-junit5-api/engine`) + `TechnicalStructureTest` enforce layered architecture rules at compile-time
@@ -31,7 +31,7 @@ project-root/
 │       └── auto-approve-dependabot-pr.yml
 ├── src/
 │   ├── main/
-│   │   ├── java/com/iqkv/servicename/
+│   │   ├── java/com/iqkv/foundation/billingservice/
 │   │   │   ├── shared/                   # Shared kernel (cross-cutting concerns)
 │   │   │   │   ├── domain/               # Shared domain primitives
 │   │   │   │   ├── exception/            # Common exceptions
@@ -63,7 +63,7 @@ project-root/
 │   │       ├── logback-spring.xml            # Structured JSON logging (logstash encoder)
 │   │       └── db/changelog/                 # Database migrations (Liquibase)
 │   └── test/
-│       └── java/com/iqkv/servicename/
+│       └── java/com/iqkv/foundation/billingservice/
 │           ├── [bounded-context]/
 │           │   ├── domain/                       # Domain model tests
 │           │   ├── application/                  # Application service tests
@@ -71,9 +71,6 @@ project-root/
 │           ├── architecture/                     # ArchUnit tests
 │           │   └── TechnicalStructureTest.java   # ArchUnit layered arch rules
 │           ├── BillingServiceApplicationTests.java  # Context load smoke test
-│           ├── ModulithTest.java                 # Spring Modulith module verification
-│           ├── ModulithIntegrationTest.java      # Modulith integration tests
-│           ├── ModulithScenarioTest.java         # Modulith scenario tests
 │           └── IntegrationTest.java              # Base integration test class
 ├── .mvn/                                 # Maven wrapper configuration
 ├── .husky/                               # Git hook scripts
@@ -101,7 +98,6 @@ project-root/
 | -------------------- | --------------------------------------------------- |
 | Language             | Java 25 (OpenJDK)                                   |
 | Framework            | Spring Boot 4.x (via `boot-parent-pom`)             |
-| Modularity           | Spring Modulith                                     |
 | Build                | Maven 3.9+, `boot-parent-pom` BOM                   |
 | Logging              | Logback + `logstash-logback-encoder` (JSON)         |
 | Metrics              | Micrometer + Prometheus                             |
@@ -117,12 +113,11 @@ project-root/
 
 ## Maven Profiles
 
-| Profile         | Purpose                                                                        |
-| --------------- | ------------------------------------------------------------------------------ |
-| `default`       | Active by default — standard build                                             |
-| `dev`           | Adds `spring-boot-devtools` for local development                              |
-| `modulith-test` | Runs only `*ModulithTest`, `*ModulithIntegrationTest`, `*ModulithScenarioTest` |
-| `use-qulice`    | Enables Qulice static analysis (license header checks etc.)                    |
+| Profile      | Purpose                                                     |
+| ------------ | ----------------------------------------------------------- |
+| `default`    | Active by default — standard build                          |
+| `dev`        | Adds `spring-boot-devtools` for local development           |
+| `use-qulice` | Enables Qulice static analysis (license header checks etc.) |
 
 ## Actuator / Info Endpoint
 

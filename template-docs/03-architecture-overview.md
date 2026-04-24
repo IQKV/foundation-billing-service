@@ -5,7 +5,7 @@
 This template follows a **Tactical DDD** layout with hexagonal architecture, enforced at test time by ArchUnit (`TechnicalStructureTest`):
 
 ```
-src/main/java/com/iqkv/{servicename}/
+src/main/java/com/iqkv/foundation/billingservice/
 ├── shared/                   # Shared kernel (cross-cutting concerns)
 │   ├── domain/               # Shared domain primitives
 │   ├── exception/            # Common exceptions
@@ -43,29 +43,12 @@ src/main/java/com/iqkv/{servicename}/
 | `domain`                    | by all layers above                |
 | `shared`                    | by all layers                      |
 
-## Spring Modulith
-
-The project includes `spring-modulith-starter-core`, which enables:
-
-- **Module boundary detection** — packages directly under the root package are treated as application modules
-- **Module verification** (`ModulithTest`) — asserts no unwanted cross-module dependencies
-- **Integration testing by module** (`ModulithIntegrationTest`)
-- **Scenario testing** (`ModulithScenarioTest`) — event-based workflow testing
-- **Runtime actuator endpoint** — `spring-modulith-actuator` exposes module metadata at `/actuator/modulith`
-
-Run Modulith-specific tests with:
-
-```bash
-./mvnw test -P modulith-test
-```
-
 ## Key Components
 
 | Component             | Technology                         | Notes                               |
 | --------------------- | ---------------------------------- | ----------------------------------- |
 | Application framework | Spring Boot 4.x                    | Via `com.iqkv:boot-parent-pom`      |
-| Module system         | Spring Modulith                    | Module verification + actuator      |
-| Persistence           | Spring Data JPA                    | Added per-service as needed         |
+| Persistence           | MyBatis                            | Added per-service as needed         |
 | Logging               | Logback + logstash-logback-encoder | Structured JSON output              |
 | Metrics               | Micrometer + Prometheus            | Scraped by `/actuator/prometheus`   |
 | Build info            | `git-commit-id-maven-plugin`       | Exposed via `/actuator/info`        |
@@ -75,13 +58,13 @@ Run Modulith-specific tests with:
 
 ## Configuration Management
 
-| File                                     | Purpose                                                       |
-| ---------------------------------------- | ------------------------------------------------------------- |
-| `src/main/resources/application.yml`     | Base config; git build metadata placeholders                  |
-| `src/main/resources/application-dev.yml` | Dev profile overrides (devtools, relaxed settings)            |
-| `src/main/resources/logback-spring.xml`  | JSON structured logging via logstash encoder                  |
-| `compose.yaml`                           | Local SonarQube 25.3 instance                                 |
-| `pom.xml` profiles                       | `default`, `dev`, `production`, `modulith-test`, `use-qulice` |
+| File                                     | Purpose                                            |
+| ---------------------------------------- | -------------------------------------------------- |
+| `src/main/resources/application.yml`     | Base config; git build metadata placeholders       |
+| `src/main/resources/application-dev.yml` | Dev profile overrides (devtools, relaxed settings) |
+| `src/main/resources/logback-spring.xml`  | JSON structured logging via logstash encoder       |
+| `compose.yaml`                           | Local SonarQube 25.3 instance                      |
+| `pom.xml` profiles                       | `default`, `dev`, `production`, `use-qulice`       |
 
 `maven-resources-plugin` uses `@` as the resource filter delimiter to resolve `@project.version@` and `@git.commit.id.abbrev@` into `application.yml` at build time.
 

@@ -72,9 +72,6 @@ docker compose up -d                 # start local SonarQube
 # Unit + architecture tests
 ./mvnw clean test -Dcheckstyle.skip=true
 
-# Modulith verification
-./mvnw test -P modulith-test -Dcheckstyle.skip=true
-
 # Full build with JaCoCo coverage gate (90%)
 ./mvnw clean verify -Dcheckstyle.skip=true
 ```
