@@ -56,15 +56,18 @@ public class TenantEventConsumer {
   private final PaymentGatewayClient paymentGatewayClient;
   private final MessagingService messagingService;
   private final NotificationConfigurationProperties notificationProps;
+  private final BillingContactResolver billingContactResolver;
 
   public TenantEventConsumer(final BillingSettingsMapper billingSettingsMapper,
                               final PaymentGatewayClient paymentGatewayClient,
                               final MessagingService messagingService,
-                              final NotificationConfigurationProperties notificationProps) {
+                              final NotificationConfigurationProperties notificationProps,
+                              final BillingContactResolver billingContactResolver) {
     this.billingSettingsMapper = billingSettingsMapper;
     this.paymentGatewayClient = paymentGatewayClient;
     this.messagingService = messagingService;
     this.notificationProps = notificationProps;
+    this.billingContactResolver = billingContactResolver;
   }
 
   @RabbitListener(queues = RabbitMQConfig.TENANT_EVENTS_QUEUE)
@@ -90,21 +93,18 @@ public class TenantEventConsumer {
   private void handleTenantCreated(final TenantEvent event) {
     final String tenantKey = event.getTenantKey();
     final String tenantName = event.getTenantName();
-    final String ownerEmail = event.getOwnerEmail();
-
-    if (ownerEmail == null) {
-      throw new IllegalArgumentException(
-          "tenant.created event for tenantKey=" + tenantKey + " is missing ownerEmail");
-    }
 
     if (billingSettingsMapper.existsByTenantKey(tenantKey)) {
       log.warn("BillingSettings already exist for tenantKey={}, skipping duplicate tenant.created", tenantKey);
       return;
     }
 
+    // Resolve billing contact email via fallback chain (ownerEmail → default config → null)
+    final String resolvedEmail = billingContactResolver.resolveBillingContact(event);
+
     final String externalCustomerId;
     try {
-      externalCustomerId = paymentGatewayClient.createCustomer(tenantName, ownerEmail);
+      externalCustomerId = paymentGatewayClient.createCustomer(tenantName, resolvedEmail);
     } catch (final StripeException e) {
       throw new PaymentGatewayException(
           "Failed to create payment gateway customer for tenantKey=" + tenantKey, e);
@@ -112,7 +112,7 @@ public class TenantEventConsumer {
 
     final LocalDateTime now = LocalDateTime.now();
     billingSettingsMapper.insert(new BillingSettings(
-        UUID.randomUUID(), tenantKey, externalCustomerId, ownerEmail, tenantName,
+        UUID.randomUUID(), tenantKey, externalCustomerId, resolvedEmail, tenantName,
         null, null, null, "USD", null, now, now));
     log.info("BillingSettings created: tenantKey={}, externalCustomerId={}", tenantKey, externalCustomerId);
   }

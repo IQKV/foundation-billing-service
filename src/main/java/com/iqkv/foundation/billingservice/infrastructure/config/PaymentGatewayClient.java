@@ -38,18 +38,20 @@ public class PaymentGatewayClient {
    * Creates a new customer in Stripe.
    *
    * @param name  the customer name (tenant name)
-   * @param email the customer email (owner email)
+   * @param email the customer email (owner email); may be {@code null} or blank in single-tenant mode
    * @return the Stripe customer ID
    * @throws StripeException if the creation fails
    */
   public String createCustomer(final String name, final String email) throws StripeException {
-    final CustomerCreateParams params = CustomerCreateParams.builder()
+    final CustomerCreateParams.Builder builder = CustomerCreateParams.builder()
         .setName(name)
-        .setEmail(email)
-        .putMetadata("managed_by", "foundation-billing-service")
-        .build();
+        .putMetadata("managed_by", "foundation-billing-service");
 
-    final Customer customer = Customer.create(params);
+    if (email != null && !email.isBlank()) {
+      builder.setEmail(email);
+    }
+
+    final Customer customer = Customer.create(builder.build());
     return customer.getId();
   }
 }
