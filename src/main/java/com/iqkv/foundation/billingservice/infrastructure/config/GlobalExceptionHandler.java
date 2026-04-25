@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.plan.PlanScopeMismatchException;
 import com.iqkv.foundation.billingservice.shared.exception.DuplicateResourceException;
 import com.iqkv.foundation.billingservice.shared.exception.MessagingException;
 import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException;
@@ -128,6 +129,15 @@ public class GlobalExceptionHandler {
     final ProblemDetail pd = problem("about:blank", "Conflict", 409,
         ex.getMessage(), request);
     return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);
+  }
+
+  @ExceptionHandler(PlanScopeMismatchException.class)
+  public ResponseEntity<ProblemDetail> handlePlanScopeMismatch(final PlanScopeMismatchException ex,
+                                                               final HttpServletRequest request) {
+    log.warn("Plan scope mismatch: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Unprocessable Entity", 422,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(pd);
   }
 
   @ExceptionHandler(WebhookProcessingException.class)

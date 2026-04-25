@@ -27,8 +27,11 @@ import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationE
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.WebhookLogMapper;
+import com.iqkv.foundation.billingservice.plan.PlanEligibilityPolicy;
 import com.iqkv.foundation.billingservice.settings.BillingSettings;
 import com.iqkv.foundation.billingservice.subscription.Subscription;
+import com.iqkv.foundation.billingservice.subscription.SubscriptionSubject;
+import com.iqkv.foundation.billingservice.subscription.SubscriptionSubjectResolver;
 import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
 import com.stripe.model.Event;
 import com.stripe.model.Invoice;
@@ -65,17 +68,23 @@ public class WebhookProcessingService {
   private final BillingSettingsMapper billingSettingsMapper;
   private final MessagingService messagingService;
   private final NotificationConfigurationProperties notificationProps;
+  private final SubscriptionSubjectResolver subjectResolver;
+  private final PlanEligibilityPolicy planEligibilityPolicy;
 
   public WebhookProcessingService(final WebhookLogMapper webhookLogMapper,
                                   final SubscriptionMapper subscriptionMapper,
                                   final BillingSettingsMapper billingSettingsMapper,
                                   final MessagingService messagingService,
-                                  final NotificationConfigurationProperties notificationProps) {
+                                  final NotificationConfigurationProperties notificationProps,
+                                  final SubscriptionSubjectResolver subjectResolver,
+                                  final PlanEligibilityPolicy planEligibilityPolicy) {
     this.webhookLogMapper = webhookLogMapper;
     this.subscriptionMapper = subscriptionMapper;
     this.billingSettingsMapper = billingSettingsMapper;
     this.messagingService = messagingService;
     this.notificationProps = notificationProps;
+    this.subjectResolver = subjectResolver;
+    this.planEligibilityPolicy = planEligibilityPolicy;
   }
 
   /**
@@ -129,9 +138,23 @@ public class WebhookProcessingService {
   private void handleSubscriptionCreated(final Event event) {
     final var stripeSubscription = deserializeSubscription(event);
     final var subscription = mapToSubscription(stripeSubscription);
-    subscriptionMapper.upsert(subscription);
 
+    // Resolve subscription subject (TENANT or USER depending on rollout mode)
     final String tenantKey = subscription.getTenantKey();
+    final UUID userId = resolveUserId(stripeSubscription);
+    final SubscriptionSubject subject = subjectResolver.resolveSubject(tenantKey, userId);
+
+    // Validate plan eligibility before persisting
+    final String planCode = resolvePlanCode(stripeSubscription);
+    if (planCode != null) {
+      planEligibilityPolicy.validatePlanEligibility(planCode, subject.type());
+    }
+
+    // Populate subject fields on the subscription
+    subscription.setSubjectType(subject.type().name());
+    subscription.setSubjectKey(subject.key());
+
+    subscriptionMapper.upsert(subscription);
     if (tenantKey == null || tenantKey.isBlank()) {
       log.warn("Cannot send subscription activated notification — tenantKey absent. "
                + "externalSubscriptionId={}", subscription.getExternalSubscriptionId());
@@ -311,5 +334,36 @@ public class WebhookProcessingService {
     }
 
     return sub;
+  }
+
+  /**
+   * Resolves the user ID from Stripe subscription metadata.
+   * Returns {@code null} if the metadata key is absent or unparseable.
+   */
+  private UUID resolveUserId(final com.stripe.model.Subscription stripe) {
+    if (stripe.getMetadata() == null) {
+      return null;
+    }
+    final String userIdStr = stripe.getMetadata().get("userId");
+    if (userIdStr == null || userIdStr.isBlank()) {
+      return null;
+    }
+    try {
+      return UUID.fromString(userIdStr);
+    } catch (final IllegalArgumentException e) {
+      log.warn("Invalid userId in Stripe subscription metadata: {}", userIdStr);
+      return null;
+    }
+  }
+
+  /**
+   * Resolves the plan code from Stripe subscription metadata.
+   * Returns {@code null} if the metadata key is absent.
+   */
+  private String resolvePlanCode(final com.stripe.model.Subscription stripe) {
+    if (stripe.getMetadata() == null) {
+      return null;
+    }
+    return stripe.getMetadata().get("planCode");
   }
 }
