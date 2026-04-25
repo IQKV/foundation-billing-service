@@ -19,14 +19,16 @@ package com.iqkv.foundation.billingservice.subscription;
 import java.util.UUID;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 /**
  * {@link SubscriptionSubjectResolver} for {@code MULTI_TENANT} mode.
  * Subscriptions are scoped to the tenant: {@code subject_type = TENANT}, {@code subject_key = tenantKey}.
  */
+@Primary
 @Component
-@ConditionalOnProperty(name = "iqkv.platform.rollout-mode", havingValue = "MULTI_TENANT")
+@ConditionalOnProperty(name = "iqkv.platform.rollout-mode", havingValue = "MULTI_TENANT", matchIfMissing = true)
 public class MultiTenantSubscriptionSubjectResolver implements SubscriptionSubjectResolver {
 
   @Override

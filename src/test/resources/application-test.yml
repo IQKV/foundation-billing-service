@@ -19,6 +19,8 @@ spring:
     password: guest
 
 iqkv:
+  platform:
+    rollout-mode: MULTI_TENANT
   stripe:
     secret-key: sk_test_placeholder
     webhook-secret: whsec_placeholder
