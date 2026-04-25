@@ -189,10 +189,13 @@ src/main/java/com/iqkv/foundation/billingservice/
 
 ## 🧩 Boilerplate Architecture
 
-- **Persistence**: MyBatis with XML mappers + PostgreSQL; Liquibase manages schema migrations
-- **Messaging**: RabbitMQ consumer for `tenant.provisioned` lifecycle events; publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, `payment.failed`
+- **Persistence**: MyBatis with XML mappers + PostgreSQL; Liquibase manages schema migrations; `user_billing_settings` table supports per-user billing in single-tenant mode; `subscriptions` table carries `subject_type` (`TENANT` | `USER`) and `subject_key` for mode-aware entitlement evaluation
+- **Messaging**: RabbitMQ consumer for tenant lifecycle events (`TENANT_CREATED`, `TENANT_PROVISIONED`, `TENANT_SUSPENDED`, `TENANT_DELETED`); publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, `payment.failed`; `ownerEmail` in `TENANT_CREATED` is optional — `BillingContactResolver` applies a fallback chain (event → `iqkv.billing.default-contact-email` → null)
 - **Security**: Spring Security + JWT RS256 validation (tokens issued by IAM, validated locally)
-- **Stripe integration**: Stripe Connect wrapper — no custom billing logic; subscriptions and invoices managed on Stripe's side; webhook processing is idempotent
+- **Platform rollout mode**: Controlled via `iqkv.platform.rollout-mode` (`MULTI_TENANT` | `SINGLE_TENANT`); must be identical across IAM, Billing, and Gateway; service fails readiness on invalid/missing mode; `SubscriptionSubjectResolver` selects `TENANT` or `USER` subject scope based on active mode
+- **Single-tenant mode**: `UserBillingSettingsServiceImpl` handles per-user billing settings; `SingleTenantSubscriptionSubjectResolver` scopes subscriptions to `subject_type=USER`; `BillingContactResolver` uses configured fallback email when `ownerEmail` is absent
+- **Stripe integration**: Stripe Connect wrapper — no custom billing logic; subscriptions and invoices managed on Stripe's side; webhook processing is idempotent; `PaymentGatewayClient.createCustomer` accepts null email safely
+- **Plan catalog**: Operator-managed only (`plan_catalog` table); no end-user plan CRUD; `PlanEligibilityPolicy` validates plan scope against active rollout mode
 - **Observability**: Micrometer + Prometheus; structured JSON logging with Logstash encoder; health probes for Kubernetes
 - **GitHub Integration**: Issue templates, labels, Dependabot, and CI workflows
 - **Quality Tools**: Checkstyle, JaCoCo (90% gate), ArchUnit, commit convention enforcement
