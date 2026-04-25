@@ -20,23 +20,30 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
+import java.util.Optional;
+
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEvent;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEventType;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.WebhookLogMapper;
 import com.iqkv.foundation.billingservice.plan.PlanEligibilityPolicy;
 import com.iqkv.foundation.billingservice.settings.BillingSettings;
 import com.iqkv.foundation.billingservice.subscription.Subscription;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubject;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubjectResolver;
+import com.iqkv.foundation.billingservice.subscription.SubjectType;
 import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
+import com.iqkv.foundation.billingservice.userbilling.UserBillingSettings;
+import com.iqkv.foundation.billingservice.userbilling.UserBillingSettingsService;
 import com.stripe.model.Event;
 import com.stripe.model.Invoice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -66,14 +73,24 @@ public class WebhookProcessingService {
   private final WebhookLogMapper webhookLogMapper;
   private final SubscriptionMapper subscriptionMapper;
   private final BillingSettingsMapper billingSettingsMapper;
+  private final UserBillingSettingsMapper userBillingSettingsMapper;
   private final MessagingService messagingService;
   private final NotificationConfigurationProperties notificationProps;
   private final SubscriptionSubjectResolver subjectResolver;
   private final PlanEligibilityPolicy planEligibilityPolicy;
 
+  /**
+   * Optional — only present in {@code SINGLE_TENANT} mode.
+   * Injected via {@code @Autowired(required = false)} so the service remains constructable
+   * in {@code MULTI_TENANT} mode where the bean is not registered.
+   */
+  @Autowired(required = false)
+  private UserBillingSettingsService userBillingSettingsService;
+
   public WebhookProcessingService(final WebhookLogMapper webhookLogMapper,
                                   final SubscriptionMapper subscriptionMapper,
                                   final BillingSettingsMapper billingSettingsMapper,
+                                  final UserBillingSettingsMapper userBillingSettingsMapper,
                                   final MessagingService messagingService,
                                   final NotificationConfigurationProperties notificationProps,
                                   final SubscriptionSubjectResolver subjectResolver,
@@ -81,6 +98,7 @@ public class WebhookProcessingService {
     this.webhookLogMapper = webhookLogMapper;
     this.subscriptionMapper = subscriptionMapper;
     this.billingSettingsMapper = billingSettingsMapper;
+    this.userBillingSettingsMapper = userBillingSettingsMapper;
     this.messagingService = messagingService;
     this.notificationProps = notificationProps;
     this.subjectResolver = subjectResolver;
@@ -144,6 +162,12 @@ public class WebhookProcessingService {
     final UUID userId = resolveUserId(stripeSubscription);
     final SubscriptionSubject subject = subjectResolver.resolveSubject(tenantKey, userId);
 
+    // In SINGLE_TENANT mode, ensure user billing settings exist before persisting subscription
+    if (SubjectType.USER.equals(subject.type()) && userId != null
+        && userBillingSettingsService != null) {
+      userBillingSettingsService.getOrCreateUserBillingSettings(userId);
+    }
+
     // Validate plan eligibility before persisting
     final String planCode = resolvePlanCode(stripeSubscription);
     if (planCode != null) {
@@ -155,30 +179,51 @@ public class WebhookProcessingService {
     subscription.setSubjectKey(subject.key());
 
     subscriptionMapper.upsert(subscription);
-    if (tenantKey == null || tenantKey.isBlank()) {
-      log.warn("Cannot send subscription activated notification — tenantKey absent. "
-               + "externalSubscriptionId={}", subscription.getExternalSubscriptionId());
-      return;
+
+    // Send activation notification using the appropriate billing settings source
+    if (SubjectType.USER.equals(subject.type()) && userId != null) {
+      // SINGLE_TENANT mode: look up user billing settings for notification email
+      userBillingSettingsMapper.findByUserId(userId).ifPresent(userSettings -> {
+        final String email = userSettings.getBillingEmail();
+        if (email != null && !email.isBlank()) {
+          publishNotification(new NotificationEvent(
+              email,
+              notificationProps.defaultLocale(),
+              NotificationEventType.SUBSCRIPTION_ACTIVATED,
+              Map.of(
+                  "companyName", userSettings.getCompanyName() != null ? userSettings.getCompanyName() : "",
+                  "planId", subscription.getPlanId() != null ? subscription.getPlanId() : "",
+                  "externalSubscriptionId", subscription.getExternalSubscriptionId()
+              ),
+              Instant.now()));
+        }
+      });
+    } else {
+      // MULTI_TENANT mode: look up tenant billing settings for notification email
+      if (tenantKey == null || tenantKey.isBlank()) {
+        log.warn("Cannot send subscription activated notification — tenantKey absent. "
+                 + "externalSubscriptionId={}", subscription.getExternalSubscriptionId());
+        return;
+      }
+      billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
+        final String email = resolveEmail(settings);
+        if (email != null) {
+          publishNotification(new NotificationEvent(
+              email,
+              notificationProps.defaultLocale(),
+              NotificationEventType.SUBSCRIPTION_ACTIVATED,
+              Map.of(
+                  "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
+                  "planId", subscription.getPlanId() != null ? subscription.getPlanId() : "",
+                  "externalSubscriptionId", subscription.getExternalSubscriptionId()
+              ),
+              Instant.now()));
+        }
+      });
     }
 
-    billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
-      final String email = resolveEmail(settings);
-      if (email != null) {
-        publishNotification(new NotificationEvent(
-            email,
-            notificationProps.defaultLocale(),
-            NotificationEventType.SUBSCRIPTION_ACTIVATED,
-            Map.of(
-                "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
-                "planId", subscription.getPlanId() != null ? subscription.getPlanId() : "",
-                "externalSubscriptionId", subscription.getExternalSubscriptionId()
-            ),
-            Instant.now()));
-      }
-    });
-
-    log.debug("Upserted subscription {} for tenant {}",
-        subscription.getExternalSubscriptionId(), tenantKey);
+    log.debug("Upserted subscription {} for subject type={} key={}",
+        subscription.getExternalSubscriptionId(), subject.type(), subject.key());
   }
 
   private void handleSubscriptionUpsert(final Event event) {
