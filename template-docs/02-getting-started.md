@@ -3,7 +3,7 @@
 ## Prerequisites
 
 | Tool             | Minimum Version | Notes                               |
-| ---------------- |-----------------| ----------------------------------- |
+| ---------------- | --------------- | ----------------------------------- |
 | Java (OpenJDK)   | 25              | LTS — required                      |
 | Maven            | 3.9+            | or use the bundled `./mvnw` wrapper |
 | Node.js          | 22.15.0         | required for Git hooks toolchain    |
