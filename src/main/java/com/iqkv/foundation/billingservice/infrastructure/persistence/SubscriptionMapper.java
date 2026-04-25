@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import com.iqkv.foundation.billingservice.subscription.Subscription;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface SubscriptionMapper {
@@ -41,4 +42,18 @@ public interface SubscriptionMapper {
    * Returns all subscription records for the given tenant, ordered by {@code created_at DESC}.
    */
   List<Subscription> findAllByTenantKey(String tenantKey);
+
+  /**
+   * Returns all subscription records for the given subject (type + key),
+   * ordered by {@code created_at DESC}.
+   */
+  List<Subscription> findBySubject(@Param("subjectType") String subjectType,
+                                   @Param("subjectKey") String subjectKey);
+
+  /**
+   * Returns the active subscription for the given subject (type + key), or empty if none exists.
+   * Active means {@code status = 'ACTIVE'}.
+   */
+  Optional<Subscription> findActiveBySubject(@Param("subjectType") String subjectType,
+                                             @Param("subjectKey") String subjectKey);
 }

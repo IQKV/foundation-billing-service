@@ -15,6 +15,8 @@
         <result property="currentPeriodEnd"         column="current_period_end"/>
         <result property="cancelAtPeriodEnd"        column="cancel_at_period_end"/>
         <result property="canceledAt"               column="canceled_at"/>
+        <result property="subjectType"              column="subject_type"/>
+        <result property="subjectKey"               column="subject_key"/>
         <result property="createdAt"                column="created_at"/>
         <result property="updatedAt"                column="updated_at"/>
     </resultMap>
@@ -23,13 +25,17 @@
         INSERT INTO subscriptions
             (id, tenant_key, external_subscription_id, external_customer_id,
              status, plan_id, current_period_start, current_period_end,
-             cancel_at_period_end, canceled_at, created_at, updated_at)
+             cancel_at_period_end, canceled_at,
+             subject_type, subject_key,
+             created_at, updated_at)
         VALUES
             (COALESCE(#{id}::uuid, gen_random_uuid()),
              #{tenantKey}, #{externalSubscriptionId}, #{externalCustomerId},
              #{status}, #{planId},
              #{currentPeriodStart}, #{currentPeriodEnd},
              #{cancelAtPeriodEnd}, #{canceledAt},
+             COALESCE(#{subjectType}, 'TENANT'),
+             COALESCE(#{subjectKey}, #{tenantKey}),
              COALESCE(#{createdAt}, now()),
              COALESCE(#{updatedAt}, now()))
         ON CONFLICT (external_subscription_id) DO UPDATE
@@ -38,13 +44,17 @@
                 current_period_end    = EXCLUDED.current_period_end,
                 cancel_at_period_end  = EXCLUDED.cancel_at_period_end,
                 canceled_at           = EXCLUDED.canceled_at,
+                subject_type          = EXCLUDED.subject_type,
+                subject_key           = EXCLUDED.subject_key,
                 updated_at            = now()
     </insert>
 
     <select id="findActiveByTenantKey" resultMap="subscriptionResultMap">
         SELECT id, tenant_key, external_subscription_id, external_customer_id,
                status, plan_id, current_period_start, current_period_end,
-               cancel_at_period_end, canceled_at, created_at, updated_at
+               cancel_at_period_end, canceled_at,
+               subject_type, subject_key,
+               created_at, updated_at
         FROM subscriptions
         WHERE tenant_key = #{tenantKey}
           AND status NOT IN ('canceled', 'unpaid')
@@ -55,10 +65,37 @@
     <select id="findAllByTenantKey" resultMap="subscriptionResultMap">
         SELECT id, tenant_key, external_subscription_id, external_customer_id,
                status, plan_id, current_period_start, current_period_end,
-               cancel_at_period_end, canceled_at, created_at, updated_at
+               cancel_at_period_end, canceled_at,
+               subject_type, subject_key,
+               created_at, updated_at
         FROM subscriptions
         WHERE tenant_key = #{tenantKey}
         ORDER BY created_at DESC
+    </select>
+
+    <select id="findBySubject" resultMap="subscriptionResultMap">
+        SELECT id, tenant_key, external_subscription_id, external_customer_id,
+               status, plan_id, current_period_start, current_period_end,
+               cancel_at_period_end, canceled_at,
+               subject_type, subject_key,
+               created_at, updated_at
+        FROM subscriptions
+        WHERE subject_type = #{subjectType}
+          AND subject_key  = #{subjectKey}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findActiveBySubject" resultMap="subscriptionResultMap">
+        SELECT id, tenant_key, external_subscription_id, external_customer_id,
+               status, plan_id, current_period_start, current_period_end,
+               cancel_at_period_end, canceled_at,
+               subject_type, subject_key,
+               created_at, updated_at
+        FROM subscriptions
+        WHERE subject_type = #{subjectType}
+          AND subject_key  = #{subjectKey}
+          AND status = 'ACTIVE'
+        LIMIT 1
     </select>
 
 </mapper>

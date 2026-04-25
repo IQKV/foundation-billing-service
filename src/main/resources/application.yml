@@ -95,6 +95,10 @@ iqkv:
     from: ${MAIL_FROM:noreply@iqkv.com}
     from-name: ${MAIL_FROM_NAME:IQ Key Value}
     reply-to: ${MAIL_REPLY_TO:}
+  platform:
+    rollout-mode: ${ROLLOUT_MODE:MULTI_TENANT}  # MULTI_TENANT | SINGLE_TENANT
+  billing:
+    default-contact-email: ${DEFAULT_BILLING_EMAIL:}  # Fallback email for single-tenant mode (optional)
   auth:
     jwt:
       public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public.pem}

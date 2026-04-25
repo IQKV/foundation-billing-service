@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="20250425120000-add-subscription-subject-scope-1" author="iqkv">
+        <!-- Step 1: Add subject_type with a default so existing rows get a value -->
+        <addColumn tableName="subscriptions" schemaName="public">
+            <column name="subject_type" type="VARCHAR(16)" defaultValue="TENANT">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20250425120000-add-subscription-subject-scope-2" author="iqkv">
+        <!-- Step 2: Add subject_key as nullable first to allow backfill -->
+        <addColumn tableName="subscriptions" schemaName="public">
+            <column name="subject_key" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20250425120000-add-subscription-subject-scope-3" author="iqkv">
+        <!-- Step 3: Backfill subject_key from tenant_key for existing rows -->
+        <sql>
+            UPDATE subscriptions
+            SET subject_key = tenant_key
+            WHERE subject_key IS NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250425120000-add-subscription-subject-scope-4" author="iqkv">
+        <!-- Step 4: Now enforce NOT NULL on subject_key -->
+        <addNotNullConstraint tableName="subscriptions" schemaName="public"
+                              columnName="subject_key" columnDataType="VARCHAR(255)"/>
+    </changeSet>
+
+    <changeSet id="20250425120000-add-subscription-subject-scope-5" author="iqkv">
+        <!-- Step 5: Add check constraint for subject_type values -->
+        <sql>
+            ALTER TABLE subscriptions
+            ADD CONSTRAINT chk_subscriptions_subject_type
+            CHECK (subject_type IN ('TENANT', 'USER'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="20250425120000-add-subscription-subject-scope-6" author="iqkv">
+        <!-- Step 6: Create unique partial index for one active subscription per subject -->
+        <sql>
+            CREATE UNIQUE INDEX idx_subscriptions_subject_active_unique
+            ON subscriptions (subject_type, subject_key)
+            WHERE status = 'ACTIVE';
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

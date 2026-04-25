@@ -24,8 +24,13 @@ import java.util.UUID;
  * Domain class representing a cached payment gateway subscription record.
  * Acts as a local cache of subscription state — readable without a payment gateway round-trip.
  *
- * <p>One tenant can have multiple subscription rows (plan upgrades, add-ons).
- * Populated and updated by {@code PaymentWebhookRestResource} on subscription webhook events.
+ * <p>One tenant (or user in single-tenant mode) can have multiple subscription rows
+ * (plan upgrades, add-ons). Populated and updated by {@code PaymentWebhookRestResource}
+ * on subscription webhook events.
+ *
+ * <p>{@code subjectType} and {@code subjectKey} identify the subscription owner:
+ * {@code TENANT}/{@code tenantKey} in multi-tenant mode, or {@code USER}/{@code userId}
+ * in single-tenant mode.
  */
 public class Subscription {
 
@@ -39,6 +44,8 @@ public class Subscription {
   private Instant currentPeriodEnd;
   private boolean cancelAtPeriodEnd;
   private Instant canceledAt;             // nullable
+  private String subjectType;             // TENANT | USER
+  private String subjectKey;              // tenantKey or userId depending on subjectType
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -55,6 +62,8 @@ public class Subscription {
                       Instant currentPeriodEnd,
                       boolean cancelAtPeriodEnd,
                       Instant canceledAt,
+                      String subjectType,
+                      String subjectKey,
                       LocalDateTime createdAt,
                       LocalDateTime updatedAt) {
     this.id = id;
@@ -67,6 +76,8 @@ public class Subscription {
     this.currentPeriodEnd = currentPeriodEnd;
     this.cancelAtPeriodEnd = cancelAtPeriodEnd;
     this.canceledAt = canceledAt;
+    this.subjectType = subjectType;
+    this.subjectKey = subjectKey;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -165,5 +176,21 @@ public class Subscription {
 
   public void setUpdatedAt(LocalDateTime updatedAt) {
     this.updatedAt = updatedAt;
+  }
+
+  public String getSubjectType() {
+    return subjectType;
+  }
+
+  public void setSubjectType(String subjectType) {
+    this.subjectType = subjectType;
+  }
+
+  public String getSubjectKey() {
+    return subjectKey;
+  }
+
+  public void setSubjectKey(String subjectKey) {
+    this.subjectKey = subjectKey;
   }
 }

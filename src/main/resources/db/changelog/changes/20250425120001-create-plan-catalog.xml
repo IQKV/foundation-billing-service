@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="20250425120001-create-plan-catalog" author="iqkv">
+        <createTable tableName="plan_catalog" schemaName="public">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="plan_code" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_plan_catalog_plan_code"/>
+            </column>
+            <column name="display_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="billing_period" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price_minor" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)" defaultValue="USD">
+                <constraints nullable="false"/>
+            </column>
+            <column name="feature_set" type="TEXT"/>
+            <column name="scope" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql>
+            ALTER TABLE plan_catalog
+            ADD CONSTRAINT chk_plan_catalog_billing_period
+            CHECK (billing_period IN ('MONTHLY', 'ANNUAL'));
+        </sql>
+
+        <sql>
+            ALTER TABLE plan_catalog
+            ADD CONSTRAINT chk_plan_catalog_scope
+            CHECK (scope IN ('TENANT', 'USER'));
+        </sql>
+
+        <sql>
+            CREATE INDEX idx_plan_catalog_active
+            ON plan_catalog (active)
+            WHERE active = true;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
