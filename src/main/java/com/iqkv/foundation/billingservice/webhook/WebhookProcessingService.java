@@ -183,7 +183,9 @@ public class WebhookProcessingService {
       return;
     }
 
-    messagingService.publishSubscriptionCancelled(tenantKey, subscription.getExternalSubscriptionId());
+    messagingService.publishSubscriptionCancelled(tenantKey, subscription.getExternalSubscriptionId(),
+        subscription.getSubjectType() != null ? subscription.getSubjectType() : "TENANT",
+        subscription.getSubjectKey() != null ? subscription.getSubjectKey() : tenantKey);
     log.info("Published subscription.cancelled for tenant {}, subscription {}",
         tenantKey, subscription.getExternalSubscriptionId());
 

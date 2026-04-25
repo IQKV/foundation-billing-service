@@ -17,6 +17,7 @@
 package com.iqkv.foundation.billingservice.subscription;
 
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.validation.constraints.Pattern;
 
@@ -108,6 +109,52 @@ public class SubscriptionRestResource {
       @AuthenticationPrincipal final Jwt jwt) {
     enforceOwnership(tenantKey, jwt);
     final var subscriptions = subscriptionService.getAllByTenantKey(tenantKey)
+        .stream()
+        .map(SubscriptionDtoMapper::toResponse)
+        .toList();
+    return ResponseEntity.ok(subscriptions);
+  }
+
+  @GetMapping("/me/active")
+  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'MEMBER')")
+  @Operation(
+      summary = "Get active subscription for current subject",
+      description = "Returns the active subscription for the resolved subject (tenant in multi-tenant mode, "
+          + "user in single-tenant mode). Requires TENANT_OWNER or MEMBER authority.")
+  @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
+      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Active subscription returned"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied"),
+      @ApiResponse(responseCode = "404", description = "No active subscription found")
+  })
+  public ResponseEntity<SubscriptionDtos.SubscriptionResponse> getActiveForSubject(
+      @AuthenticationPrincipal final Jwt jwt) {
+    final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
+    final UUID userId = UUID.fromString(jwt.getSubject());
+    final var subscription = subscriptionService.getActiveBySubject(tenantKey, userId);
+    return ResponseEntity.ok(SubscriptionDtoMapper.toResponse(subscription));
+  }
+
+  @GetMapping("/me")
+  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'MEMBER')")
+  @Operation(
+      summary = "Get all subscriptions for current subject",
+      description = "Returns all subscriptions for the resolved subject (tenant in multi-tenant mode, "
+          + "user in single-tenant mode), ordered by created_at DESC. Requires TENANT_OWNER or MEMBER authority.")
+  @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
+      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Subscription list returned"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied")
+  })
+  public ResponseEntity<List<SubscriptionDtos.SubscriptionResponse>> getAllForSubject(
+      @AuthenticationPrincipal final Jwt jwt) {
+    final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
+    final UUID userId = UUID.fromString(jwt.getSubject());
+    final var subscriptions = subscriptionService.getAllBySubject(tenantKey, userId)
         .stream()
         .map(SubscriptionDtoMapper::toResponse)
         .toList();
