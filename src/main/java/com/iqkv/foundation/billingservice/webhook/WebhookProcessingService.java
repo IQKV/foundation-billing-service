@@ -321,9 +321,15 @@ public class WebhookProcessingService {
     // Resolve subject information for the event
     final String subjectType;
     final String subjectKey;
-    if (invoice.getSubscription() != null) {
+    // Access subscription field directly - it's an ExpandableField that returns ID when not expanded
+    final String subscriptionId = invoice.getLines() != null 
+        && !invoice.getLines().getData().isEmpty()
+        && invoice.getLines().getData().get(0).getSubscription() != null
+        ? invoice.getLines().getData().get(0).getSubscription()
+        : null;
+    if (subscriptionId != null) {
       // Try to get subject info from the subscription
-      final var subscriptionOpt = subscriptionMapper.findByExternalSubscriptionId(invoice.getSubscription());
+      final var subscriptionOpt = subscriptionMapper.findByExternalSubscriptionId(subscriptionId);
       if (subscriptionOpt.isPresent()) {
         final var subscription = subscriptionOpt.get();
         subjectType = subscription.getSubjectType() != null ? subscription.getSubjectType() : "TENANT";
@@ -344,7 +350,7 @@ public class WebhookProcessingService {
         tenantKey,
         invoice.getId(),
         invoice.getCustomer(),
-        invoice.getSubscription(),
+        subscriptionId,
         invoice.getAmountPaid(),
         billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD",
         subjectType,
@@ -389,9 +395,15 @@ public class WebhookProcessingService {
     // Resolve subject information for the event
     final String subjectType;
     final String subjectKey;
-    if (invoice.getSubscription() != null) {
+    // Access subscription field directly - it's an ExpandableField that returns ID when not expanded
+    final String subscriptionId = invoice.getLines() != null 
+        && !invoice.getLines().getData().isEmpty()
+        && invoice.getLines().getData().get(0).getSubscription() != null
+        ? invoice.getLines().getData().get(0).getSubscription()
+        : null;
+    if (subscriptionId != null) {
       // Try to get subject info from the subscription
-      final var subscriptionOpt = subscriptionMapper.findByExternalSubscriptionId(invoice.getSubscription());
+      final var subscriptionOpt = subscriptionMapper.findByExternalSubscriptionId(subscriptionId);
       if (subscriptionOpt.isPresent()) {
         final var subscription = subscriptionOpt.get();
         subjectType = subscription.getSubjectType() != null ? subscription.getSubjectType() : "TENANT";
@@ -408,16 +420,19 @@ public class WebhookProcessingService {
     }
 
     // Extract failure reason from invoice (if available)
-    final String failureReason = invoice.getLastPaymentError() != null 
-        ? invoice.getLastPaymentError().getMessage() 
-        : "Payment failed";
+    final String failureReason;
+    if (invoice.getLastFinalizationError() != null && invoice.getLastFinalizationError().getMessage() != null) {
+      failureReason = invoice.getLastFinalizationError().getMessage();
+    } else {
+      failureReason = "Payment failed";
+    }
 
     // Publish payment.failed lifecycle event
     messagingService.publishPaymentFailed(
         tenantKey,
         invoice.getId(),
         invoice.getCustomer(),
-        invoice.getSubscription(),
+        subscriptionId,
         invoice.getAmountDue(),
         billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD",
         failureReason,

@@ -151,8 +151,8 @@ public class TenantEventConsumer {
     
     // Send account suspension notification
     billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
-      final String email = resolveEmail(settings);
-      if (email != null) {
+      final String email = settings.getBillingEmail();
+      if (email != null && !email.isBlank()) {
         publishNotification(new NotificationEvent(
             email,
             notificationProps.defaultLocale(),

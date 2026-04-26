@@ -96,18 +96,28 @@ public class EmailService {
   private String resolveTemplate(final NotificationEventType type) {
     return switch (type) {
       case SUBSCRIPTION_ACTIVATED -> "email/billing/subscription-activated";
+      case SUBSCRIPTION_UPDATED -> "email/billing/subscription-updated";
       case SUBSCRIPTION_CANCELLED -> "email/billing/subscription-cancelled";
+      case TRIAL_ENDING -> "email/billing/trial-ending";
+      case PAYMENT_OVERDUE -> "email/billing/payment-overdue";
       case PAYMENT_FAILED -> "email/billing/payment-failed";
       case INVOICE_PAID -> "email/billing/invoice-paid";
+      case BILLING_UPDATED -> "email/billing/billing-updated";
+      case ACCOUNT_SUSPENDED -> "email/billing/account-suspended";
     };
   }
 
   private String resolveSubjectKey(final NotificationEventType type) {
     return switch (type) {
       case SUBSCRIPTION_ACTIVATED -> "email.subscription-activated.subject";
+      case SUBSCRIPTION_UPDATED -> "email.subscription-updated.subject";
       case SUBSCRIPTION_CANCELLED -> "email.subscription-cancelled.subject";
+      case TRIAL_ENDING -> "email.trial-ending.subject";
+      case PAYMENT_OVERDUE -> "email.payment-overdue.subject";
       case PAYMENT_FAILED -> "email.payment-failed.subject";
       case INVOICE_PAID -> "email.invoice-paid.subject";
+      case BILLING_UPDATED -> "email.billing-updated.subject";
+      case ACCOUNT_SUSPENDED -> "email.account-suspended.subject";
     };
   }
 }
