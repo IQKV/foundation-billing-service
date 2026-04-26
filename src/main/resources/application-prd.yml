@@ -12,9 +12,6 @@ spring:
     pathmatch:
       use-suffix-pattern: false
 
-server:
-  shutdown: graceful
-
 springdoc:
   api-docs:
     enabled: false

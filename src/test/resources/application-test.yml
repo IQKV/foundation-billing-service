@@ -12,23 +12,8 @@ spring:
     driver-class-name: org.h2.Driver
   liquibase:
     enabled: false
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
 
 iqkv:
-  platform:
-    rollout-mode: MULTI_TENANT
-  stripe:
-    secret-key: sk_test_placeholder
-    webhook-secret: whsec_placeholder
   messaging:
     rabbitmq:
       enabled: false
-
-logging:
-  level:
-    com.iqkv: DEBUG
-    liquibase: DEBUG

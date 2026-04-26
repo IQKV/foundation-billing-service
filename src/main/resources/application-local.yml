@@ -11,7 +11,6 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
     contexts: demo
   mail:
-    host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:1025}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
@@ -34,27 +33,5 @@ logging:
     org.springframework.security: DEBUG
 
 iqkv:
-  db:
-    host: ${DB_HOST:localhost}
-    port: ${DB_PORT:5432}
-    name: ${DB_NAME:billing}
-    username: ${DB_USERNAME:billing}
-    password: ${DB_PASSWORD:billing}
-  rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5673}
-    username: ${RABBITMQ_USERNAME:billing}
-    password: ${RABBITMQ_PASSWORD:billing}
   mail:
-    host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:1025}
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
-    from: ${MAIL_FROM:noreply@iqkv.com}
-    from-name: ${MAIL_FROM_NAME:IQ Key Value}
-    reply-to: ${MAIL_REPLY_TO:}
-  messaging:
-    rabbitmq:
-      enabled: ${MESSAGING_ENABLED:true}
-  liquibase:
-    contexts: demo
