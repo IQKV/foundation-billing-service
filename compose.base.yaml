@@ -10,7 +10,7 @@ services:
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5434:5432"
+      - "5432:5432"
     volumes:
       - postgres_billing_data:/var/lib/postgresql/data
     networks:
@@ -129,6 +129,17 @@ services:
         reservations:
           cpus: "0.25"
           memory: 384M
+
+  # MailHog for local email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: foundation-billing-mailhog-dev
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - billing-service-network
+    restart: unless-stopped
 
   # SonarQube for code quality analysis
   sonar:

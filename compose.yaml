@@ -11,6 +11,12 @@ services:
       file: compose.base.yaml
       service: rabbitmq-billing
 
+  # MailHog for local email testing
+  mailhog:
+    extends:
+      file: compose.base.yaml
+      service: mailhog
+
   # Billing Service - Full platform run including build phase
   billing-service:
     extends:

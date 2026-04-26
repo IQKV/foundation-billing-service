@@ -1,13 +1,23 @@
 # ===================================================================
 # Spring Boot configuration for the "local" profile.
 # Overrides base: enables Liquibase with demo data, relaxes actuator,
-# enables debug logging.
+# enables debug logging, uses MailHog for email.
+# Run infrastructure with: docker compose up postgres-billing rabbitmq-billing mailhog
 # ===================================================================
 
 spring:
   liquibase:
     enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
     contexts: demo
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
 
 management:
   endpoints:
@@ -19,13 +29,14 @@ logging:
   level:
     com.iqkv: DEBUG
     org.mybatis: DEBUG
+    liquibase: DEBUG
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
 
 iqkv:
   db:
     host: ${DB_HOST:localhost}
-    port: ${DB_PORT:5434}
+    port: ${DB_PORT:5432}
     name: ${DB_NAME:billing}
     username: ${DB_USERNAME:billing}
     password: ${DB_PASSWORD:billing}
@@ -34,3 +45,16 @@ iqkv:
     port: ${RABBITMQ_PORT:5673}
     username: ${RABBITMQ_USERNAME:billing}
     password: ${RABBITMQ_PASSWORD:billing}
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    from: ${MAIL_FROM:noreply@iqkv.com}
+    from-name: ${MAIL_FROM_NAME:IQ Key Value}
+    reply-to: ${MAIL_REPLY_TO:}
+  messaging:
+    rabbitmq:
+      enabled: ${MESSAGING_ENABLED:true}
+  liquibase:
+    contexts: demo

@@ -89,7 +89,7 @@ pnpm install
 cp .env.example .env.local
 # Edit .env.local with your local values
 
-# Start dependencies (PostgreSQL on :5434, RabbitMQ on :5673)
+# Start dependencies (PostgreSQL on :5432, RabbitMQ on :5673)
 docker compose up -d
 
 # Run the service
@@ -104,7 +104,7 @@ docker compose up -d
 | Variable                | Default     | Description                   |
 | ----------------------- | ----------- | ----------------------------- |
 | `DB_HOST`               | `localhost` | PostgreSQL host               |
-| `DB_PORT`               | `5434`      | PostgreSQL port               |
+| `DB_PORT`               | `5432`      | PostgreSQL port               |
 | `DB_NAME`               | `billing`   | Database name                 |
 | `DB_USERNAME`           | `billing`   | Database user                 |
 | `DB_PASSWORD`           | `billing`   | Database password             |
