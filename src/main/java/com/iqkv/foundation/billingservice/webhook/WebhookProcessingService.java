@@ -180,6 +180,12 @@ public class WebhookProcessingService {
 
     subscriptionMapper.upsert(subscription);
 
+    // Publish subscription.created lifecycle event
+    messagingService.publishSubscriptionCreated(tenantKey, subscription.getExternalSubscriptionId(),
+        subject.type().name(), subject.key());
+    log.info("Published subscription.created for tenant {}, subscription {}",
+        tenantKey, subscription.getExternalSubscriptionId());
+
     // Send activation notification using the appropriate billing settings source
     if (SubjectType.USER.equals(subject.type()) && userId != null) {
       // SINGLE_TENANT mode: look up user billing settings for notification email
@@ -230,6 +236,28 @@ public class WebhookProcessingService {
     final var stripeSubscription = deserializeSubscription(event);
     final var subscription = mapToSubscription(stripeSubscription);
     subscriptionMapper.upsert(subscription);
+    
+    // Publish subscription.updated email notification
+    final String tenantKey = subscription.getTenantKey();
+    if (tenantKey != null && !tenantKey.isBlank()) {
+      billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
+        final String email = resolveEmail(settings);
+        if (email != null) {
+          publishNotification(new NotificationEvent(
+              email,
+              notificationProps.defaultLocale(),
+              NotificationEventType.SUBSCRIPTION_UPDATED,
+              Map.of(
+                  "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
+                  "planId", subscription.getPlanId() != null ? subscription.getPlanId() : "",
+                  "status", subscription.getStatus() != null ? subscription.getStatus() : "",
+                  "externalSubscriptionId", subscription.getExternalSubscriptionId()
+              ),
+              Instant.now()));
+        }
+      });
+    }
+    
     log.debug("Upserted subscription {} for tenant {}",
         subscription.getExternalSubscriptionId(), subscription.getTenantKey());
   }
@@ -278,22 +306,67 @@ public class WebhookProcessingService {
     if (invoice == null) {
       return;
     }
-    billingSettingsMapper.findByExternalCustomerId(invoice.getCustomer()).ifPresent(settings -> {
-      final String email = resolveEmail(settings);
-      if (email != null) {
-        publishNotification(new NotificationEvent(
-            email,
-            notificationProps.defaultLocale(),
-            NotificationEventType.INVOICE_PAID,
-            Map.of(
-                "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
-                "invoiceId", invoice.getId() != null ? invoice.getId() : "",
-                "amountPaid", invoice.getAmountPaid() != null ? invoice.getAmountPaid() / 100.0 : 0.0,
-                "currency", settings.getCurrency() != null ? settings.getCurrency() : "USD"
-            ),
-            Instant.now()));
+
+    // Resolve tenant and subject information from billing settings
+    final var billingSettingsOpt = billingSettingsMapper.findByExternalCustomerId(invoice.getCustomer());
+    if (billingSettingsOpt.isEmpty()) {
+      log.warn("Cannot publish invoice.paid — no billing settings found for customer {}",
+          invoice.getCustomer());
+      return;
+    }
+
+    final var billingSettings = billingSettingsOpt.get();
+    final String tenantKey = billingSettings.getTenantKey();
+
+    // Resolve subject information for the event
+    final String subjectType;
+    final String subjectKey;
+    if (invoice.getSubscription() != null) {
+      // Try to get subject info from the subscription
+      final var subscriptionOpt = subscriptionMapper.findByExternalSubscriptionId(invoice.getSubscription());
+      if (subscriptionOpt.isPresent()) {
+        final var subscription = subscriptionOpt.get();
+        subjectType = subscription.getSubjectType() != null ? subscription.getSubjectType() : "TENANT";
+        subjectKey = subscription.getSubjectKey() != null ? subscription.getSubjectKey() : tenantKey;
+      } else {
+        // Fallback to tenant scope
+        subjectType = "TENANT";
+        subjectKey = tenantKey;
       }
-    });
+    } else {
+      // No subscription context, use tenant scope
+      subjectType = "TENANT";
+      subjectKey = tenantKey;
+    }
+
+    // Publish invoice.paid lifecycle event
+    messagingService.publishInvoicePaid(
+        tenantKey,
+        invoice.getId(),
+        invoice.getCustomer(),
+        invoice.getSubscription(),
+        invoice.getAmountPaid(),
+        billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD",
+        subjectType,
+        subjectKey
+    );
+    log.info("Published invoice.paid for tenant {}, invoice {}", tenantKey, invoice.getId());
+
+    // Send notification email
+    final String email = resolveEmail(billingSettings);
+    if (email != null) {
+      publishNotification(new NotificationEvent(
+          email,
+          notificationProps.defaultLocale(),
+          NotificationEventType.INVOICE_PAID,
+          Map.of(
+              "companyName", billingSettings.getCompanyName() != null ? billingSettings.getCompanyName() : "",
+              "invoiceId", invoice.getId() != null ? invoice.getId() : "",
+              "amountPaid", invoice.getAmountPaid() != null ? invoice.getAmountPaid() / 100.0 : 0.0,
+              "currency", billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD"
+          ),
+          Instant.now()));
+    }
   }
 
   private void handleInvoicePaymentFailed(final Event event) {
@@ -301,22 +374,73 @@ public class WebhookProcessingService {
     if (invoice == null) {
       return;
     }
-    billingSettingsMapper.findByExternalCustomerId(invoice.getCustomer()).ifPresent(settings -> {
-      final String email = resolveEmail(settings);
-      if (email != null) {
-        publishNotification(new NotificationEvent(
-            email,
-            notificationProps.defaultLocale(),
-            NotificationEventType.PAYMENT_FAILED,
-            Map.of(
-                "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
-                "invoiceId", invoice.getId() != null ? invoice.getId() : "",
-                "amountDue", invoice.getAmountDue() != null ? invoice.getAmountDue() / 100.0 : 0.0,
-                "currency", settings.getCurrency() != null ? settings.getCurrency() : "USD"
-            ),
-            Instant.now()));
+
+    // Resolve tenant and subject information from billing settings
+    final var billingSettingsOpt = billingSettingsMapper.findByExternalCustomerId(invoice.getCustomer());
+    if (billingSettingsOpt.isEmpty()) {
+      log.warn("Cannot publish payment.failed — no billing settings found for customer {}",
+          invoice.getCustomer());
+      return;
+    }
+
+    final var billingSettings = billingSettingsOpt.get();
+    final String tenantKey = billingSettings.getTenantKey();
+
+    // Resolve subject information for the event
+    final String subjectType;
+    final String subjectKey;
+    if (invoice.getSubscription() != null) {
+      // Try to get subject info from the subscription
+      final var subscriptionOpt = subscriptionMapper.findByExternalSubscriptionId(invoice.getSubscription());
+      if (subscriptionOpt.isPresent()) {
+        final var subscription = subscriptionOpt.get();
+        subjectType = subscription.getSubjectType() != null ? subscription.getSubjectType() : "TENANT";
+        subjectKey = subscription.getSubjectKey() != null ? subscription.getSubjectKey() : tenantKey;
+      } else {
+        // Fallback to tenant scope
+        subjectType = "TENANT";
+        subjectKey = tenantKey;
       }
-    });
+    } else {
+      // No subscription context, use tenant scope
+      subjectType = "TENANT";
+      subjectKey = tenantKey;
+    }
+
+    // Extract failure reason from invoice (if available)
+    final String failureReason = invoice.getLastPaymentError() != null 
+        ? invoice.getLastPaymentError().getMessage() 
+        : "Payment failed";
+
+    // Publish payment.failed lifecycle event
+    messagingService.publishPaymentFailed(
+        tenantKey,
+        invoice.getId(),
+        invoice.getCustomer(),
+        invoice.getSubscription(),
+        invoice.getAmountDue(),
+        billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD",
+        failureReason,
+        subjectType,
+        subjectKey
+    );
+    log.info("Published payment.failed for tenant {}, invoice {}", tenantKey, invoice.getId());
+
+    // Send notification email
+    final String email = resolveEmail(billingSettings);
+    if (email != null) {
+      publishNotification(new NotificationEvent(
+          email,
+          notificationProps.defaultLocale(),
+          NotificationEventType.PAYMENT_FAILED,
+          Map.of(
+              "companyName", billingSettings.getCompanyName() != null ? billingSettings.getCompanyName() : "",
+              "invoiceId", invoice.getId() != null ? invoice.getId() : "",
+              "amountDue", invoice.getAmountDue() != null ? invoice.getAmountDue() / 100.0 : 0.0,
+              "currency", billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD"
+          ),
+          Instant.now()));
+    }
   }
 
   private void publishNotification(final NotificationEvent event) {

@@ -23,10 +23,20 @@ package com.iqkv.foundation.billingservice.infrastructure.messaging;
 public enum NotificationEventType {
   /** Sent to the billing contact when a new subscription becomes active. */
   SUBSCRIPTION_ACTIVATED,
+  /** Sent to the billing contact when a subscription is updated (plan change, quantity, etc.). */
+  SUBSCRIPTION_UPDATED,
   /** Sent to the billing contact when a subscription is cancelled. */
   SUBSCRIPTION_CANCELLED,
+  /** Sent to the billing contact when a trial is about to expire. */
+  TRIAL_ENDING,
+  /** Sent to the billing contact when a payment is overdue. */
+  PAYMENT_OVERDUE,
   /** Sent to the billing contact when a payment fails. */
   PAYMENT_FAILED,
   /** Sent to the billing contact when a payment succeeds / invoice is paid. */
-  INVOICE_PAID
+  INVOICE_PAID,
+  /** Sent to the billing contact when billing settings are updated. */
+  BILLING_UPDATED,
+  /** Sent to the billing contact when account is suspended. */
+  ACCOUNT_SUSPENDED
 }

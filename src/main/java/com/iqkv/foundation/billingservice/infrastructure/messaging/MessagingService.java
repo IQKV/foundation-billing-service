@@ -37,6 +37,35 @@ public class MessagingService {
     this.rabbitTemplate = rabbitTemplate;
   }
 
+  public void publishSubscriptionCreated(final String tenantKey, final String externalSubscriptionId) {
+    final var event = new SubscriptionEvent(
+        tenantKey,
+        externalSubscriptionId,
+        SubscriptionEvent.EventType.SUBSCRIPTION_CREATED,
+        Instant.now(),
+        "TENANT",   // default: callers without subject context use tenant scope
+        tenantKey
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CREATED, event);
+  }
+
+  /**
+   * Publishes a subscription.created event with explicit subject scope.
+   * Prefer this overload when the subject type and key are known (e.g. from the Subscription entity).
+   */
+  public void publishSubscriptionCreated(final String tenantKey, final String externalSubscriptionId,
+                                         final String subjectType, final String subjectKey) {
+    final var event = new SubscriptionEvent(
+        tenantKey,
+        externalSubscriptionId,
+        SubscriptionEvent.EventType.SUBSCRIPTION_CREATED,
+        Instant.now(),
+        subjectType,
+        subjectKey
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CREATED, event);
+  }
+
   public void publishSubscriptionCancelled(final String tenantKey, final String externalSubscriptionId) {
     final var event = new SubscriptionEvent(
         tenantKey,
@@ -64,6 +93,88 @@ public class MessagingService {
         subjectKey
     );
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CANCELLED, event);
+  }
+
+  public void publishInvoicePaid(final String tenantKey, final String externalInvoiceId,
+                                 final String externalCustomerId, final String externalSubscriptionId,
+                                 final Long amountPaid, final String currency) {
+    final var event = new InvoiceEvent(
+        tenantKey,
+        externalInvoiceId,
+        externalCustomerId,
+        externalSubscriptionId,
+        InvoiceEvent.EventType.INVOICE_PAID,
+        amountPaid,
+        currency,
+        Instant.now(),
+        "TENANT",   // default: callers without subject context use tenant scope
+        tenantKey
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_INVOICE_PAID, event);
+  }
+
+  /**
+   * Publishes an invoice.paid event with explicit subject scope.
+   */
+  public void publishInvoicePaid(final String tenantKey, final String externalInvoiceId,
+                                 final String externalCustomerId, final String externalSubscriptionId,
+                                 final Long amountPaid, final String currency,
+                                 final String subjectType, final String subjectKey) {
+    final var event = new InvoiceEvent(
+        tenantKey,
+        externalInvoiceId,
+        externalCustomerId,
+        externalSubscriptionId,
+        InvoiceEvent.EventType.INVOICE_PAID,
+        amountPaid,
+        currency,
+        Instant.now(),
+        subjectType,
+        subjectKey
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_INVOICE_PAID, event);
+  }
+
+  public void publishPaymentFailed(final String tenantKey, final String externalInvoiceId,
+                                   final String externalCustomerId, final String externalSubscriptionId,
+                                   final Long amountDue, final String currency, final String failureReason) {
+    final var event = new PaymentEvent(
+        tenantKey,
+        externalInvoiceId,
+        externalCustomerId,
+        externalSubscriptionId,
+        PaymentEvent.EventType.PAYMENT_FAILED,
+        amountDue,
+        currency,
+        failureReason,
+        Instant.now(),
+        "TENANT",   // default: callers without subject context use tenant scope
+        tenantKey
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_PAYMENT_FAILED, event);
+  }
+
+  /**
+   * Publishes a payment.failed event with explicit subject scope.
+   */
+  public void publishPaymentFailed(final String tenantKey, final String externalInvoiceId,
+                                   final String externalCustomerId, final String externalSubscriptionId,
+                                   final Long amountDue, final String currency, final String failureReason,
+                                   final String subjectType, final String subjectKey) {
+    final var event = new PaymentEvent(
+        tenantKey,
+        externalInvoiceId,
+        externalCustomerId,
+        externalSubscriptionId,
+        PaymentEvent.EventType.PAYMENT_FAILED,
+        amountDue,
+        currency,
+        failureReason,
+        Instant.now(),
+        subjectType,
+        subjectKey
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_PAYMENT_FAILED, event);
   }
 
   public void publishNotification(final NotificationEvent event) {

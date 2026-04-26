@@ -148,6 +148,24 @@ public class TenantEventConsumer {
   private void handleTenantSuspended(final TenantEvent event) {
     final String tenantKey = event.getTenantKey();
     log.info("Tenant suspended: tenantKey={}", tenantKey);
+    
+    // Send account suspension notification
+    billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
+      final String email = resolveEmail(settings);
+      if (email != null) {
+        publishNotification(new NotificationEvent(
+            email,
+            notificationProps.defaultLocale(),
+            NotificationEventType.ACCOUNT_SUSPENDED,
+            Map.of(
+                "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
+                "tenantKey", tenantKey,
+                "suspendedAt", Instant.now().toString()
+            ),
+            Instant.now()));
+      }
+    });
+    
     // Future: pause invoicing, flag billing settings, etc.
   }
 

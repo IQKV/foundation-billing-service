@@ -16,11 +16,18 @@
 
 package com.iqkv.foundation.billingservice.settings;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Map;
 
+import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
+import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEvent;
+import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEventType;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -32,10 +39,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class BillingSettingsService {
 
-  private final BillingSettingsMapper billingSettingsMapper;
+  private static final Logger log = LoggerFactory.getLogger(BillingSettingsService.class);
 
-  public BillingSettingsService(final BillingSettingsMapper billingSettingsMapper) {
+  private final BillingSettingsMapper billingSettingsMapper;
+  private final MessagingService messagingService;
+
+  public BillingSettingsService(final BillingSettingsMapper billingSettingsMapper,
+                                final MessagingService messagingService) {
     this.billingSettingsMapper = billingSettingsMapper;
+    this.messagingService = messagingService;
   }
 
   /**
@@ -88,6 +100,37 @@ public class BillingSettingsService {
 
     settings.setUpdatedAt(LocalDateTime.now());
     billingSettingsMapper.update(settings);
+
+    // Send billing settings updated notification
+    final String email = resolveEmail(settings);
+    if (email != null) {
+      try {
+        messagingService.publishNotification(new NotificationEvent(
+            email,
+            "en", // TODO: get from user preferences or tenant settings
+            NotificationEventType.BILLING_UPDATED,
+            Map.of(
+                "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
+                "tenantKey", tenantKey,
+                "updatedAt", settings.getUpdatedAt().toString()
+            ),
+            Instant.now()));
+      } catch (final Exception e) {
+        log.warn("Failed to send billing updated notification for tenant {}: {}", tenantKey, e.getMessage());
+      }
+    }
+
     return settings;
+  }
+
+  /**
+   * Resolves the email address for billing notifications.
+   * Returns billingEmail if set, otherwise null.
+   */
+  private String resolveEmail(final BillingSettings settings) {
+    if (settings.getBillingEmail() != null && !settings.getBillingEmail().isBlank()) {
+      return settings.getBillingEmail();
+    }
+    return null;
   }
 }

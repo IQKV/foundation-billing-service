@@ -16,6 +16,7 @@
 
 package com.iqkv.foundation.billingservice.infrastructure.persistence;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,4 +57,22 @@ public interface SubscriptionMapper {
    */
   Optional<Subscription> findActiveBySubject(@Param("subjectType") String subjectType,
                                              @Param("subjectKey") String subjectKey);
+
+  /**
+   * Returns subscription by external subscription ID.
+   */
+  Optional<Subscription> findByExternalSubscriptionId(String externalSubscriptionId);
+
+  /**
+   * Returns subscriptions with status = 'trialing' that end between the given dates.
+   * Used for trial ending notifications.
+   */
+  List<Subscription> findTrialsEndingBetween(@Param("startDate") Instant startDate,
+                                             @Param("endDate") Instant endDate);
+
+  /**
+   * Returns subscriptions with the given status.
+   * Used for finding past_due subscriptions for overdue notifications.
+   */
+  List<Subscription> findByStatus(String status);
 }

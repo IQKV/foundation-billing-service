@@ -13,6 +13,7 @@ import java.time.Instant;
 public class SubscriptionEvent {
 
   public enum EventType {
+    SUBSCRIPTION_CREATED,
     SUBSCRIPTION_CANCELLED
   }
 

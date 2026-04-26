@@ -54,7 +54,10 @@ public class RabbitMQConfig {
   public static final String ROUTING_TENANT_SUSPENDED           = "tenant.suspended";
   public static final String ROUTING_USER_REMOVED               = "user.removed";
   public static final String ROUTING_USER_DELETED               = "user.deleted";
+  public static final String ROUTING_SUBSCRIPTION_CREATED      = "subscription.created";
   public static final String ROUTING_SUBSCRIPTION_CANCELLED     = "subscription.cancelled";
+  public static final String ROUTING_INVOICE_PAID               = "invoice.paid";
+  public static final String ROUTING_PAYMENT_FAILED             = "payment.failed";
 
   // -------------------------------------------------------------------------
   // Routing keys — billing notification emails (scoped to avoid conflicts)
