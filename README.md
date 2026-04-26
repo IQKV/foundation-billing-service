@@ -13,8 +13,6 @@
 
 Billing and subscription management microservice. Acts as a Stripe Connect wrapper — handles tenant-to-customer mapping, webhook ingestion, and lifecycle event publishing. No custom billing logic lives here.
 
-![CI](https://img.shields.io/github/actions/workflow/status/IQKV/foundation-billing-service/build-nodejs-project.yml?label=CI)
-![License](https://img.shields.io/github/license/IQKV/foundation-billing-service)
 
 ## About
 
