@@ -41,7 +41,7 @@ Starts a local **SonarQube 25.3 Community** instance at [http://localhost:9001](
 ### 4. Run the application
 
 ```bash
-./mvnw spring-boot:run -Dspring-boot.run.profiles=local -P dev
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local -P local
 ```
 
 The `dev` Maven profile adds `spring-boot-devtools`. The JVM timezone is forced to UTC by default.
