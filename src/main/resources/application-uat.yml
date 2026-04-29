@@ -1,0 +1,42 @@
+# ===================================================================
+# Spring Boot configuration for the "uat" profile (staging).
+# Overrides base: points to in-cluster service names, enables Liquibase with demo data,
+# all secrets via env vars (no defaults).
+# ===================================================================
+
+spring:
+  liquibase:
+    enabled: true
+    contexts: demo
+
+logging:
+  level:
+    com.iqkv: DEBUG
+
+iqkv:
+  db:
+    host: ${DB_HOST}
+    port: ${DB_PORT}
+    name: ${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    from: ${MAIL_FROM}
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+  auth:
+    jwt:
+      public-key-path: ${JWT_PUBLIC_KEY_PATH}
+  messaging:
+    rabbitmq:
+      enabled: true
