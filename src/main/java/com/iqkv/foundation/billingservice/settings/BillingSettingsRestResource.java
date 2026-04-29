@@ -19,6 +19,7 @@ package com.iqkv.foundation.billingservice.settings;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 
+import com.iqkv.foundation.billingservice.infrastructure.security.JwtClaimNames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -37,8 +38,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.iqkv.foundation.billingservice.infrastructure.security.JwtClaimNames;
 
 /**
  * REST resource for tenant billing settings.

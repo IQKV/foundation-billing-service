@@ -134,8 +134,8 @@ public class TrialNotificationService {
                 "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
                 "planId", subscription.getPlanId() != null ? subscription.getPlanId() : "",
                 "externalSubscriptionId", subscription.getExternalSubscriptionId(),
-                "trialEndDate", subscription.getCurrentPeriodEnd() != null ? 
-                    subscription.getCurrentPeriodEnd().toString() : ""
+                "trialEndDate", subscription.getCurrentPeriodEnd() != null
+                    ? subscription.getCurrentPeriodEnd().toString() : ""
             ),
             Instant.now()));
         
@@ -164,8 +164,8 @@ public class TrialNotificationService {
                 "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
                 "planId", subscription.getPlanId() != null ? subscription.getPlanId() : "",
                 "externalSubscriptionId", subscription.getExternalSubscriptionId(),
-                "overdueDate", subscription.getCurrentPeriodEnd() != null ? 
-                    subscription.getCurrentPeriodEnd().toString() : ""
+                "overdueDate", subscription.getCurrentPeriodEnd() != null
+                    ? subscription.getCurrentPeriodEnd().toString() : ""
             ),
             Instant.now()));
         

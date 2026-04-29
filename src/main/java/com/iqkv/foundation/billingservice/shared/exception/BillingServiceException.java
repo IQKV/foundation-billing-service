@@ -22,11 +22,11 @@ package com.iqkv.foundation.billingservice.shared.exception;
  */
 public abstract class BillingServiceException extends RuntimeException {
 
-  protected BillingServiceException(String message) {
+  protected BillingServiceException(final String message) {
     super(message);
   }
 
-  protected BillingServiceException(String message, Throwable cause) {
+  protected BillingServiceException(final String message, final Throwable cause) {
     super(message, cause);
   }
 }

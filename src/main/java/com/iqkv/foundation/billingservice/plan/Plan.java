@@ -45,17 +45,17 @@ public class Plan {
   public Plan() {
   }
 
-  public Plan(UUID id,
-              String planCode,
-              String displayName,
-              String billingPeriod,
-              Integer priceMinor,
-              String currency,
-              String featureSet,
-              String scope,
-              Boolean active,
-              LocalDateTime createdAt,
-              LocalDateTime updatedAt) {
+  public Plan(final UUID id,
+              final String planCode,
+              final String displayName,
+              final String billingPeriod,
+              final Integer priceMinor,
+              final String currency,
+              final String featureSet,
+              final String scope,
+              final Boolean active,
+              final LocalDateTime createdAt,
+              final LocalDateTime updatedAt) {
     this.id = id;
     this.planCode = planCode;
     this.displayName = displayName;

@@ -22,11 +22,11 @@ package com.iqkv.foundation.billingservice.shared.exception;
  */
 public class DuplicateResourceException extends BillingServiceException {
 
-  public DuplicateResourceException(String message) {
+  public DuplicateResourceException(final String message) {
     super(message);
   }
 
-  public DuplicateResourceException(String message, Throwable cause) {
+  public DuplicateResourceException(final String message, final Throwable cause) {
     super(message, cause);
   }
 }

@@ -23,11 +23,11 @@ package com.iqkv.foundation.billingservice.shared.exception;
  */
 public class WebhookProcessingException extends BillingServiceException {
 
-  public WebhookProcessingException(String message) {
+  public WebhookProcessingException(final String message) {
     super(message);
   }
 
-  public WebhookProcessingException(String message, Throwable cause) {
+  public WebhookProcessingException(final String message, final Throwable cause) {
     super(message, cause);
   }
 }

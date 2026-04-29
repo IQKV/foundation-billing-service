@@ -52,20 +52,20 @@ public class Subscription {
   public Subscription() {
   }
 
-  public Subscription(UUID id,
-                      String tenantKey,
-                      String externalSubscriptionId,
-                      String externalCustomerId,
-                      String status,
-                      String planId,
-                      Instant currentPeriodStart,
-                      Instant currentPeriodEnd,
-                      boolean cancelAtPeriodEnd,
-                      Instant canceledAt,
-                      String subjectType,
-                      String subjectKey,
-                      LocalDateTime createdAt,
-                      LocalDateTime updatedAt) {
+  public Subscription(final UUID id,
+                      final String tenantKey,
+                      final String externalSubscriptionId,
+                      final String externalCustomerId,
+                      final String status,
+                      final String planId,
+                      final Instant currentPeriodStart,
+                      final Instant currentPeriodEnd,
+                      final boolean cancelAtPeriodEnd,
+                      final Instant canceledAt,
+                      final String subjectType,
+                      final String subjectKey,
+                      final LocalDateTime createdAt,
+                      final LocalDateTime updatedAt) {
     this.id = id;
     this.tenantKey = tenantKey;
     this.externalSubscriptionId = externalSubscriptionId;

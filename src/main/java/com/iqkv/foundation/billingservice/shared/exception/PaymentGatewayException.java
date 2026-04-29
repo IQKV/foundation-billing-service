@@ -22,11 +22,11 @@ package com.iqkv.foundation.billingservice.shared.exception;
  */
 public class PaymentGatewayException extends BillingServiceException {
 
-  public PaymentGatewayException(String message) {
+  public PaymentGatewayException(final String message) {
     super(message);
   }
 
-  public PaymentGatewayException(String message, Throwable cause) {
+  public PaymentGatewayException(final String message, final Throwable cause) {
     super(message, cause);
   }
 }

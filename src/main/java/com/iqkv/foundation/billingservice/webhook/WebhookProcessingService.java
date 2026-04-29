@@ -20,8 +20,6 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-import java.util.Optional;
-
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEvent;
@@ -32,12 +30,11 @@ import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBilling
 import com.iqkv.foundation.billingservice.infrastructure.persistence.WebhookLogMapper;
 import com.iqkv.foundation.billingservice.plan.PlanEligibilityPolicy;
 import com.iqkv.foundation.billingservice.settings.BillingSettings;
+import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
+import com.iqkv.foundation.billingservice.subscription.SubjectType;
 import com.iqkv.foundation.billingservice.subscription.Subscription;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubject;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubjectResolver;
-import com.iqkv.foundation.billingservice.subscription.SubjectType;
-import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
-import com.iqkv.foundation.billingservice.userbilling.UserBillingSettings;
 import com.iqkv.foundation.billingservice.userbilling.UserBillingSettingsService;
 import com.stripe.model.Event;
 import com.stripe.model.Invoice;

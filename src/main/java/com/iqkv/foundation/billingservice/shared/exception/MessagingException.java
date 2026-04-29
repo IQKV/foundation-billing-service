@@ -22,11 +22,11 @@ package com.iqkv.foundation.billingservice.shared.exception;
  */
 public class MessagingException extends BillingServiceException {
 
-  public MessagingException(String message) {
+  public MessagingException(final String message) {
     super(message);
   }
 
-  public MessagingException(String message, Throwable cause) {
+  public MessagingException(final String message, final Throwable cause) {
     super(message, cause);
   }
 }

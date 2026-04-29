@@ -16,16 +16,15 @@
 
 package com.iqkv.foundation.billingservice.tenancy;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.UUID;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iqkv.foundation.billingservice.infrastructure.security.JwtClaimNames;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URI;
+import java.util.UUID;
+
+import com.iqkv.foundation.billingservice.infrastructure.security.JwtClaimNames;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;

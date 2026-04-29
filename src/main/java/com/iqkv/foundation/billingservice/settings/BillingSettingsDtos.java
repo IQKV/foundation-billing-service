@@ -16,13 +16,12 @@
 
 package com.iqkv.foundation.billingservice.settings;
 
-import java.time.Instant;
-import java.util.UUID;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.time.Instant;
+import java.util.UUID;
 
 /**
  * DTOs for the billing settings API surface.

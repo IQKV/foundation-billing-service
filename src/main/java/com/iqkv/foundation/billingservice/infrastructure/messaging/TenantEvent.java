@@ -40,8 +40,8 @@ public class TenantEvent {
    * @param eventType      the event type
    * @param occurredAt     the timestamp when the event occurred
    */
-  public TenantEvent(String tenantKey, String tenantName, String ownerEmail,
-                     String ownerFirstName, EventType eventType, Instant occurredAt) {
+  public TenantEvent(final String tenantKey, final String tenantName, final String ownerEmail,
+                     final String ownerFirstName, final EventType eventType, final Instant occurredAt) {
     this.tenantKey = tenantKey;
     this.tenantName = tenantName;
     this.ownerEmail = ownerEmail;

@@ -44,18 +44,18 @@ public class BillingSettings {
   public BillingSettings() {
   }
 
-  public BillingSettings(UUID id,
-                         String tenantKey,
-                         String externalCustomerId,
-                         String billingEmail,
-                         String companyName,
-                         String billingAddress,
-                         String taxId,
-                         String taxIdType,
-                         String currency,
-                         UUID profileOwnerId,
-                         LocalDateTime createdAt,
-                         LocalDateTime updatedAt) {
+  public BillingSettings(final UUID id,
+                         final String tenantKey,
+                         final String externalCustomerId,
+                         final String billingEmail,
+                         final String companyName,
+                         final String billingAddress,
+                         final String taxId,
+                         final String taxIdType,
+                         final String currency,
+                         final UUID profileOwnerId,
+                         final LocalDateTime createdAt,
+                         final LocalDateTime updatedAt) {
     this.id = id;
     this.tenantKey = tenantKey;
     this.externalCustomerId = externalCustomerId;

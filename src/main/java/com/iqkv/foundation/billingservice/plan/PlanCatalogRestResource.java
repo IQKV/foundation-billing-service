@@ -16,10 +16,10 @@
 
 package com.iqkv.foundation.billingservice.plan;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
-import jakarta.validation.Valid;
-
+import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -39,8 +39,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 
 /**
  * REST resource for plan catalog management.

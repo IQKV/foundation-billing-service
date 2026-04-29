@@ -42,13 +42,13 @@ public class WebhookLog {
   public WebhookLog() {
   }
 
-  public WebhookLog(UUID id,
-                    String externalEventId,
-                    String eventType,
-                    String status,
-                    String errorMessage,
-                    Instant receivedAt,
-                    Instant processedAt) {
+  public WebhookLog(final UUID id,
+                    final String externalEventId,
+                    final String eventType,
+                    final String status,
+                    final String errorMessage,
+                    final Instant receivedAt,
+                    final Instant processedAt) {
     this.id = id;
     this.externalEventId = externalEventId;
     this.eventType = eventType;

@@ -26,7 +26,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "iqkv.billing")
 public record BillingConfigurationProperties(
-    /**
+    /*
      * Fallback billing contact email used in single-tenant mode when the tenant.created event
      * does not carry an ownerEmail. Optional — if null, Stripe customer creation proceeds
      * without an email address.
