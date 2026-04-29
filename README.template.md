@@ -1,44 +1,20 @@
 # Foundation Billing Service 💳
 
-<!-- TEMPLATE: Copy relevant sections into README.md and replace placeholders. Remove guidance blocks when done. -->
-
-<details>
-  <summary><strong>How to use this template (click to expand)</strong></summary>
-
-1. Rename the title to your service name and add a logo if desired.
-2. Add badges (build, license) under the title.
-3. Fill each section with your actual service content.
-4. Update the API table to reflect actual endpoints and auth requirements.
-5. Update the environment variables table to match your `application.yml` bindings.
-6. Update the project structure tree if your bounded contexts differ.
-7. Remove this guidance block after customizing.
-
-</details>
-
-- Add your service logo.
-- Write a short introduction — what the service does and which platform it belongs to.
-- If you are using badges, add them here.
-
-<details>
-  <summary><strong>Badge examples (optional)</strong></summary>
-
-- Build: `![CI](https://img.shields.io/github/actions/workflow/status/ORG/REPO/build-nodejs-project.yml?label=CI)`
-- License: `![License](https://img.shields.io/github/license/ORG/REPO)`
-- Java: `![Java](https://img.shields.io/badge/java-25-blue)`
-- Spring Boot: `![Spring Boot](https://img.shields.io/badge/spring--boot-3.x-brightgreen)`
-
-</details>
+Billing and subscription management microservice for the IQKV platform. Acts as a Stripe Connect wrapper — handles tenant-to-customer mapping, plan catalog management, webhook ingestion, and lifecycle event publishing. No custom billing logic lives here.
 
 ## About
 
-The Foundation Billing Service manages subscription lifecycle and payment processing for the IQKV platform. It acts as the bridge between platform tenants (or users in single-tenant mode) and Stripe. Key business responsibilities:
+The Billing service owns the Stripe integration layer for the platform:
 
-- Provisions a Stripe customer automatically when a tenant is created
-- Tracks subscription state (active, trialing, past due, cancelled) as a local cache of Stripe
-- Enforces plan eligibility rules — plans are scoped to `MULTI_TENANT` or `SINGLE_TENANT` mode
-- Processes Stripe webhook events idempotently and publishes downstream lifecycle events
-- Sends transactional billing emails (payment receipts, trial reminders, overdue notices) via async notification events
-- Supports both per-tenant billing (multi-tenant) and per-user billing (single-tenant) through a strategy pattern
+- **Automatic customer provisioning** — listens for `tenant.created` and `tenant.provisioned` events on RabbitMQ and creates a Stripe customer per tenant; the `stripe_customer_id` is stored in `billing_settings`
+- **Plan catalog** — operator-managed plan definitions scoped to `MULTI_TENANT` or `SINGLE_TENANT` mode; `PlanEligibilityPolicy` validates scope against active rollout mode
+- **Billing settings** — each tenant has a 1:1 `billing_settings` record that is the single source of truth for Stripe customer metadata; decoupled from IAM users by design
+- **Billing email** — a separate `billing_email` field allows finance teams to receive invoices without a system account
+- **Tax ID / VAT/GST** — stored in `billing_settings` and synced to Stripe via `CustomerUpdateParams` for compliant B2B invoices
+- **Webhook processing** — Stripe webhooks are ingested and processed idempotently; duplicate delivery is safe
+- **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, and `payment.failed` to the platform event bus
+- **Email notifications** — publishes `notification.billing.email` events for async delivery by the notification service
+- **Subject-aware subscriptions** — `subjectType` (`TENANT` | `USER`) and `subjectKey` support both multi-tenant and single-tenant entitlement evaluation
 
 ## Quick Links
 
@@ -125,14 +101,13 @@ Base path: `/api/v1/billing`
 
 ## Tech Stack
 
-- Java 25 / Spring Boot 3.x
-- MyBatis 3.x + PostgreSQL
+- Java 25 / Spring Boot 4.0
+- MyBatis 3.x (no JPA) + PostgreSQL 17
 - Liquibase for schema migrations
 - RabbitMQ (event consumption and publishing)
 - Stripe Java SDK (subscription and customer management)
-- ShedLock (trial-ending and overdue-payment scheduled jobs)
+- ShedLock 7.x (trial-ending and overdue-payment scheduled jobs)
 - Micrometer + Prometheus
-- Thymeleaf (email templates)
 - springdoc-openapi (Swagger UI)
 
 ## Prerequisites
@@ -146,8 +121,8 @@ Base path: `/api/v1/billing`
 
 ```bash
 # Clone the repository
-git clone https://github.com/ORG/REPO.git
-cd REPO
+git clone https://github.com/IQKV/foundation-billing-service.git
+cd foundation-billing-service
 
 # Install git hooks
 pnpm install
@@ -215,7 +190,7 @@ docker compose up -d
 
 ```bash
 # Build image
-docker build -t ORG/REPO:latest .
+docker build -t iqkv/foundation-billing-service:latest .
 
 # Run full stack (service + dependencies)
 docker compose -f compose.container.yaml up -d
@@ -244,22 +219,13 @@ src/main/java/com/iqkv/foundation/billingservice/
 └── infrastructure/ # Spring config, security, MyBatis, RabbitMQ, Stripe setup
 ```
 
----
+## License
 
-<details>
-  <summary><strong>✅ Pre-publish checklist (remove in final README)</strong></summary>
+This project is licensed under the Apache License. See the [LICENSE](LICENSE) file for details.
 
-- [ ] Title updated and logo added
-- [ ] Badges added (CI, license)
-- [ ] About section completed
-- [ ] API table reflects actual endpoints and auth requirements
-- [ ] Tech stack updated (remove unused entries, add missing ones)
-- [ ] Environment variables table matches `application.yml` bindings
-- [ ] Project structure tree updated to match actual packages
-- [ ] Links verified (docs, external resources)
-- [ ] Guidance blocks removed before publishing
+## Contributing
 
-</details>
+Please read our [Contributing Guidelines](.github/CONTRIBUTING.md) and [Code of Conduct](.github/CODE_OF_CONDUCT.md).
 
 ---
 
@@ -276,4 +242,4 @@ src/main/java/com/iqkv/foundation/billingservice/
 - **GitHub Integration**: Issue templates, labels, Dependabot, and CI workflows
 - **Quality Tools**: Checkstyle, JaCoCo (90% gate), ArchUnit, commit convention enforcement
 
-> See [AGENTS.md](AGENTS.md) for detailed project structure, DDD patterns, and AI agent guidelines.
+> See [AGENTS.md](AGENTS.md) for repository structure, DDD patterns, and agent guidelines.

@@ -36,11 +36,37 @@ The Billing service owns the Stripe integration layer for the platform:
 
 Base path: `/api/v1/billing`
 
+### Billing Settings
+
 | Method  | Path                    | Auth               | Description                               |
 | ------- | ----------------------- | ------------------ | ----------------------------------------- |
 | `GET`   | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Get billing settings for a tenant         |
 | `PATCH` | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Update billing settings (syncs to Stripe) |
-| `POST`  | `/webhooks/stripe`      | Stripe signature   | Ingest Stripe webhook events              |
+
+### Subscriptions
+
+| Method | Path                                | Auth                           | Description                                 |
+| ------ | ----------------------------------- | ------------------------------ | ------------------------------------------- |
+| `GET`  | `/subscriptions/{tenantKey}/active` | JWT `TENANT_OWNER`             | Get active subscription for a tenant        |
+| `GET`  | `/subscriptions/{tenantKey}`        | JWT `TENANT_OWNER`             | Get all subscriptions for a tenant          |
+| `GET`  | `/subscriptions/me/active`          | JWT `TENANT_OWNER` or `MEMBER` | Get active subscription for current subject |
+| `GET`  | `/subscriptions/me`                 | JWT `TENANT_OWNER` or `MEMBER` | Get all subscriptions for current subject   |
+
+### Plan Catalog
+
+| Method   | Path                | Auth                    | Description                     |
+| -------- | ------------------- | ----------------------- | ------------------------------- |
+| `GET`    | `/plans`            | JWT (any authenticated) | List all active plans           |
+| `GET`    | `/plans/{planCode}` | JWT (any authenticated) | Get plan by planCode            |
+| `POST`   | `/plans`            | JWT `PLATFORM_OPERATOR` | Create a new plan               |
+| `PUT`    | `/plans/{planCode}` | JWT `PLATFORM_OPERATOR` | Replace a plan                  |
+| `DELETE` | `/plans/{planCode}` | JWT `PLATFORM_OPERATOR` | Deactivate a plan (soft-delete) |
+
+### Webhooks
+
+| Method | Path               | Auth             | Description                  |
+| ------ | ------------------ | ---------------- | ---------------------------- |
+| `POST` | `/webhooks/stripe` | Stripe signature | Ingest Stripe webhook events |
 
 ## Tech Stack
 
