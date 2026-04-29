@@ -5,8 +5,8 @@ services:
     container_name: foundation-billing-postgres-dev
     environment:
       POSTGRES_DB: billing
-      POSTGRES_USER: billing
-      POSTGRES_PASSWORD: billing
+      POSTGRES_USER: svc_billing_dba
+      POSTGRES_PASSWORD: svc_billing_dba
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
@@ -16,7 +16,7 @@ services:
     networks:
       - billing-service-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U billing -d billing -h localhost"]
+      test: ["CMD-SHELL", "pg_isready -U svc_billing_dba -d billing -h localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -44,8 +44,8 @@ services:
     image: rabbitmq:3.13-management-alpine
     container_name: foundation-billing-rabbitmq-dev
     environment:
-      RABBITMQ_DEFAULT_USER: billing
-      RABBITMQ_DEFAULT_PASS: billing
+      RABBITMQ_DEFAULT_USER: svc_billing_rmq
+      RABBITMQ_DEFAULT_PASS: svc_billing_rmq
       RABBITMQ_DEFAULT_VHOST: /
       RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit log_levels [{connection,error},{default,info}] disk_free_limit 2147483648
     ports:
@@ -80,14 +80,14 @@ services:
       DB_HOST: postgres-billing
       DB_PORT: 5432
       DB_NAME: billing
-      DB_USERNAME: billing
-      DB_PASSWORD: billing
+      DB_USERNAME: svc_billing_dba
+      DB_PASSWORD: svc_billing_dba
 
       # RabbitMQ Configuration
       RABBITMQ_HOST: rabbitmq-billing
       RABBITMQ_PORT: 5672
-      RABBITMQ_USERNAME: billing
-      RABBITMQ_PASSWORD: billing
+      RABBITMQ_USERNAME: svc_billing_rmq
+      RABBITMQ_PASSWORD: svc_billing_rmq
 
       # Observability
       OTEL_SERVICE_NAME: foundation-billing-service
