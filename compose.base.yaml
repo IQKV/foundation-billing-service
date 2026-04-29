@@ -69,11 +69,11 @@ services:
       context: .
       dockerfile: ./Dockerfile
       target: builder
-    image: iqkv/foundation-billing-service:dev
+    image: iqkv/foundation-billing-service:local
     container_name: foundation-billing-service-dev
     environment:
       # Spring Configuration
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: local
       SPRING_APPLICATION_NAME: foundation-billing-service
 
       # Database Configuration
