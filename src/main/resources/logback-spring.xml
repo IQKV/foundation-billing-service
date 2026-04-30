@@ -17,38 +17,6 @@
         </encoder>
     </appender>
     
-    <!-- Console Appender - JSON Format -->
-    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-            <providers>
-                <timestamp/>
-                <version/>
-                <logLevel/>
-                <message/>
-                <mdc/>
-                <arguments/>
-                <stackTrace/>
-                <pattern>
-                    <pattern>
-                        {
-                        "service": "${SERVICE_NAME}",
-                        "environment": "${ENVIRONMENT}",
-                        "thread": "%thread"
-                        }
-                    </pattern>
-                </pattern>
-            </providers>
-        </encoder>
-    </appender>
-    
-    <!-- Async wrapper for JSON appender -->
-    <appender name="ASYNC_CONSOLE_JSON" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="CONSOLE_JSON"/>
-        <queueSize>512</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <includeCallerData>false</includeCallerData>
-    </appender>
-    
     <!-- Application Loggers - controlled by environment variables -->
     <logger name="com.iqkv" level="${LOG_LEVEL_APP}"/>
     <logger name="org.springframework.security" level="${LOG_LEVEL_SECURITY}"/>
@@ -57,14 +25,46 @@
     <logger name="org.springframework.rabbit" level="${LOG_LEVEL_MESSAGING}"/>
     <logger name="org.mybatis" level="${LOG_LEVEL_SQL}"/>
     <logger name="liquibase" level="INFO"/>
-    
-    <!-- Default: Text format for local/dev -->
+
+    <!-- Default: Text format for local/dev/sit -->
     <root level="${LOG_LEVEL_ROOT}">
         <appender-ref ref="CONSOLE"/>
     </root>
-    
-    <!-- Override for uat/prd: Use JSON format -->
+
+    <!-- Override for uat/prd: Use async JSON format -->
     <springProfile name="uat,prd">
+        <!-- Console Appender - JSON Format -->
+        <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                <providers>
+                    <timestamp/>
+                    <version/>
+                    <logLevel/>
+                    <message/>
+                    <mdc/>
+                    <arguments/>
+                    <stackTrace/>
+                    <pattern>
+                        <pattern>
+                            {
+                            "service": "${SERVICE_NAME}",
+                            "environment": "${ENVIRONMENT}",
+                            "thread": "%thread"
+                            }
+                        </pattern>
+                    </pattern>
+                </providers>
+            </encoder>
+        </appender>
+
+        <!-- Async wrapper for JSON appender -->
+        <appender name="ASYNC_CONSOLE_JSON" class="ch.qos.logback.classic.AsyncAppender">
+            <appender-ref ref="CONSOLE_JSON"/>
+            <queueSize>512</queueSize>
+            <discardingThreshold>0</discardingThreshold>
+            <includeCallerData>false</includeCallerData>
+        </appender>
+
         <root level="${LOG_LEVEL_ROOT}">
             <appender-ref ref="ASYNC_CONSOLE_JSON"/>
         </root>
