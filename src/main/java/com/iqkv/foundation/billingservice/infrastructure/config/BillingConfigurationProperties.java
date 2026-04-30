@@ -16,6 +16,8 @@
 
 package com.iqkv.foundation.billingservice.infrastructure.config;
 
+import jakarta.validation.constraints.Email;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -31,6 +33,6 @@ public record BillingConfigurationProperties(
      * does not carry an ownerEmail. Optional — if null, Stripe customer creation proceeds
      * without an email address.
      */
-    String defaultContactEmail
+    @Email(message = "defaultContactEmail must be a valid email address") String defaultContactEmail
 ) {
 }

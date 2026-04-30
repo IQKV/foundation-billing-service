@@ -17,6 +17,7 @@
 package com.iqkv.foundation.billingservice.infrastructure.config;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -24,7 +25,9 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "iqkv.stripe")
 public record StripeConfigurationProperties(
-    @NotBlank String secretKey,
-    @NotBlank String webhookSecret
+    // Stripe live/test secret key — must start with sk_live_ or sk_test_
+    @NotBlank @Pattern(regexp = "^sk_(live|test)_.+", message = "Stripe secretKey must start with sk_live_ or sk_test_") String secretKey,
+    // Stripe webhook signing secret — must start with whsec_
+    @NotBlank @Pattern(regexp = "^whsec_.+", message = "Stripe webhookSecret must start with whsec_") String webhookSecret
 ) {
 }
