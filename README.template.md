@@ -1,6 +1,6 @@
 # Foundation Billing Service 💳
 
-Billing and subscription management microservice for the IQKV platform. Acts as a Stripe Connect wrapper — handles tenant-to-customer mapping, plan catalog management, webhook ingestion, and lifecycle event publishing. No custom billing logic lives here.
+Billing and subscription management microservice for the Key Value Platform. Acts as a Stripe Connect wrapper — handles tenant-to-customer mapping, plan catalog management, webhook ingestion, and lifecycle event publishing. No custom billing logic lives here.
 
 ## About
 
