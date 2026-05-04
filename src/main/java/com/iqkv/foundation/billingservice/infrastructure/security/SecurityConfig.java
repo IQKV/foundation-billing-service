@@ -76,6 +76,7 @@ public class SecurityConfig {
             .requestMatchers("/swagger-ui/**").permitAll()
             .requestMatchers("/swagger-ui.html").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/v1/billing/webhooks/stripe").permitAll()
+            .requestMatchers("/api/v1/billing/operator/**").hasAuthority("PLATFORM_OPERATOR")
             .anyRequest().authenticated()
         )
         .oauth2ResourceServer(oauth2 -> oauth2
