@@ -20,6 +20,7 @@ import java.util.UUID;
 import javax.sql.DataSource;
 
 import com.iqkv.foundation.billingservice.infrastructure.mybatis.UuidTypeHandler;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
@@ -31,7 +32,18 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
  * MyBatis configuration: registers type handlers and configures mapper locations.
  */
 @Configuration
-@MapperScan("com.iqkv.foundation.billingservice")
+@MapperScan(
+    basePackages = {
+        "com.iqkv.foundation.billingservice.infrastructure.persistence",
+        "com.iqkv.foundation.billingservice.plan",
+        "com.iqkv.foundation.billingservice.settings",
+        "com.iqkv.foundation.billingservice.subscription",
+        "com.iqkv.foundation.billingservice.tenancy",
+        "com.iqkv.foundation.billingservice.userbilling",
+        "com.iqkv.foundation.billingservice.webhook"
+    },
+    annotationClass = Mapper.class
+)
 public class MyBatisConfig {
 
   @Bean
