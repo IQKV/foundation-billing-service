@@ -1,7 +1,7 @@
 > ## 🤔 What is this service all about?
 >
 > - Billing and subscription management microservice for the IQ Key Value platform.
-> - Stripe Connect wrapper — no custom billing logic; subscriptions, invoices, and the dashboard are managed on Stripe's side.
+> - Payment gateway abstraction layer — supports multiple providers (Stripe implemented) via Strategy pattern; subscriptions, invoices, and the dashboard are managed on the gateway's side.
 > - Make the project easy to maintain with **8 issue templates**.
 > - Quick-start documentation
 > - Manage issues with **20 issue labels**.
@@ -11,19 +11,19 @@
 
 # 💳 IQ Key Value Billing Service
 
-Billing and subscription management microservice. Acts as a Stripe Connect wrapper — handles tenant-to-customer mapping, webhook ingestion, and lifecycle event publishing. No custom billing logic lives here.
+Billing and subscription management microservice. Provides a gateway-agnostic payment abstraction layer — handles tenant-to-customer mapping, webhook ingestion, and lifecycle event publishing. No custom billing logic lives here.
 
 ## About
 
-The Billing service owns the Stripe integration layer for the platform:
+The Billing service owns the payment gateway integration layer for the platform:
 
-- **Automatic customer provisioning** — listens for `tenant.provisioned` events on RabbitMQ and creates a Stripe customer per tenant; the `stripe_customer_id` is stored in `billing_settings`
-- **Billing settings** — each tenant has a 1:1 `billing_settings` record that is the single source of truth for Stripe customer metadata; decoupled from IAM users by design
+- **Automatic customer provisioning** — listens for `tenant.provisioned` events on RabbitMQ and creates a payment gateway customer per tenant; the `external_customer_id` is stored in `billing_settings`
+- **Billing settings** — each tenant has a 1:1 `billing_settings` record that is the single source of truth for payment gateway customer metadata; decoupled from IAM users by design
 - **Billing email** — a separate `billing_email` field allows finance teams to receive invoices without a system account
-- **Tax ID / VAT/GST** — stored in `billing_settings` and synced to Stripe via `CustomerUpdateParams` for compliant B2B invoices
-- **Webhook processing** — Stripe webhooks are ingested and processed idempotently; duplicate delivery is safe
+- **Tax ID / VAT/GST** — stored in `billing_settings` for compliant B2B invoices
+- **Webhook processing** — payment gateway webhooks are ingested and processed idempotently; duplicate delivery is safe
 - **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, and `payment.failed` to the platform event bus
-- **Outbox pattern** — any update to billing settings syncs to Stripe reliably via the transactional outbox; no silent failures
+- **Multi-gateway strategy** — `PaymentGatewayPort` interface decouples business logic from gateway SDKs; Stripe is the active implementation
 
 ## Quick Links
 
@@ -38,10 +38,10 @@ Base path: `/api/v1/billing`
 
 ### Billing Settings
 
-| Method  | Path                    | Auth               | Description                               |
-| ------- | ----------------------- | ------------------ | ----------------------------------------- |
-| `GET`   | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Get billing settings for a tenant         |
-| `PATCH` | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Update billing settings (syncs to Stripe) |
+| Method  | Path                    | Auth               | Description                                        |
+| ------- | ----------------------- | ------------------ | -------------------------------------------------- |
+| `GET`   | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Get billing settings for a tenant                  |
+| `PATCH` | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Update billing settings (syncs to payment gateway) |
 
 ### Subscriptions
 
@@ -64,9 +64,9 @@ Base path: `/api/v1/billing`
 
 ### Webhooks
 
-| Method | Path               | Auth             | Description                  |
-| ------ | ------------------ | ---------------- | ---------------------------- |
-| `POST` | `/webhooks/stripe` | Stripe signature | Ingest Stripe webhook events |
+| Method | Path               | Auth             | Description                               |
+| ------ | ------------------ | ---------------- | ----------------------------------------- |
+| `POST` | `/webhooks/stripe` | Stripe signature | Receive and process Stripe webhook events |
 
 ## Tech Stack
 
@@ -74,7 +74,7 @@ Base path: `/api/v1/billing`
 - MyBatis 3.x (no JPA) + PostgreSQL 17
 - Liquibase for schema migrations
 - RabbitMQ for async event consumption and publishing
-- Stripe Java SDK
+- Stripe Java SDK (active gateway adapter)
 - ShedLock 7.x for distributed scheduled jobs
 - Micrometer + Prometheus
 
@@ -111,19 +111,20 @@ docker compose up -d
 
 ## Environment Variables
 
-| Variable                | Default     | Description                   |
-| ----------------------- | ----------- | ----------------------------- |
-| `DB_HOST`               | `localhost` | PostgreSQL host               |
-| `DB_PORT`               | `5432`      | PostgreSQL port               |
-| `DB_NAME`               | `billing`   | Database name                 |
-| `DB_USERNAME`           | `billing`   | Database user                 |
-| `DB_PASSWORD`           | `billing`   | Database password             |
-| `RABBITMQ_HOST`         | `localhost` | RabbitMQ host                 |
-| `RABBITMQ_PORT`         | `5673`      | RabbitMQ AMQP port            |
-| `RABBITMQ_USERNAME`     | `billing`   | RabbitMQ user                 |
-| `RABBITMQ_PASSWORD`     | `billing`   | RabbitMQ password             |
-| `STRIPE_API_KEY`        | —           | Stripe secret key             |
-| `STRIPE_WEBHOOK_SECRET` | —           | Stripe webhook signing secret |
+| Variable                | Default               | Description                                      |
+| ----------------------- | --------------------- | ------------------------------------------------ |
+| `PAYMENT_GATEWAY_TYPE`  | `STRIPE`              | Active payment gateway (`STRIPE`)                |
+| `DB_HOST`               | `localhost`           | PostgreSQL host                                  |
+| `DB_PORT`               | `5432`                | PostgreSQL port                                  |
+| `DB_NAME`               | `billing`             | Database name                                    |
+| `DB_USERNAME`           | `billing`             | Database user                                    |
+| `DB_PASSWORD`           | `billing`             | Database password                                |
+| `RABBITMQ_HOST`         | `localhost`           | RabbitMQ host                                    |
+| `RABBITMQ_PORT`         | `5673`                | RabbitMQ AMQP port                               |
+| `RABBITMQ_USERNAME`     | `billing`             | RabbitMQ user                                    |
+| `RABBITMQ_PASSWORD`     | `billing`             | RabbitMQ password                                |
+| `STRIPE_SECRET_KEY`     | `sk_test_placeholder` | Stripe secret key (required when gateway=STRIPE) |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_placeholder`   | Stripe webhook signing secret                    |
 
 Copy `.env.example` to `.env.local` (or `.env.uat` / `.env.prd`) and fill in production values.
 
@@ -173,8 +174,13 @@ A Grafana dashboard (`docker/grafana/`) provides real-time visibility into servi
 
 ```
 src/main/java/com/iqkv/foundation/billingservice/
-├── settings/           # Billing settings — Stripe customer metadata, tax IDs, billing email
-├── webhook/            # Stripe webhook ingestion and idempotent event processing
+├── gateway/            # Payment gateway abstraction (Strategy pattern + Hexagonal Architecture)
+│   ├── port/           # PaymentGatewayPort interface
+│   ├── event/          # Gateway-agnostic webhook event models
+│   ├── command/        # Gateway-agnostic command models
+│   └── adapter/stripe/ # Stripe implementation of PaymentGatewayPort
+├── settings/           # Billing settings — customer metadata, tax IDs, billing email
+├── webhook/            # Webhook ingestion and idempotent gateway-agnostic processing
 ├── subscription/       # Subscription lifecycle — event publishing on status changes
 ├── infrastructure/     # Spring config, security, MyBatis, RabbitMQ setup
 └── shared/             # Common exceptions, utilities, value objects
