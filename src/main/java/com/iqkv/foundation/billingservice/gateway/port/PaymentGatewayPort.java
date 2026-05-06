@@ -1,0 +1,66 @@
+/*
+ * Copyright 2026 IQKV Foundation Team.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.iqkv.foundation.billingservice.gateway.port;
+
+import java.util.Optional;
+
+import com.iqkv.foundation.billingservice.gateway.GatewayType;
+import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
+import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
+
+/**
+ * Port interface for payment gateway operations (Strategy pattern).
+ *
+ * <p>Defines the contract for interacting with payment gateways in a gateway-agnostic manner.
+ * Implementations provide gateway-specific logic for Stripe, PayPal, etc.
+ *
+ * <p>This interface follows the Hexagonal Architecture pattern, where the domain layer
+ * defines ports (interfaces) and the infrastructure layer provides adapters (implementations).
+ */
+public interface PaymentGatewayPort {
+
+  /**
+   * Returns the gateway type identifier.
+   *
+   * @return the gateway type (e.g., STRIPE, PAYPAL)
+   */
+  GatewayType getGatewayType();
+
+  /**
+   * Creates a customer in the payment gateway.
+   *
+   * @param command the customer creation command
+   * @return the external customer ID from the gateway
+   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if creation fails
+   */
+  String createCustomer(CreateCustomerCommand command);
+
+  /**
+   * Verifies the webhook signature and, if valid, parses the payload into a normalized domain event.
+   *
+   * <p>Combines signature verification and parsing into a single step so that gateway adapters
+   * can use the already-verified event object for parsing (avoiding double deserialization).
+   *
+   * @param payload   the raw webhook payload
+   * @param signature the signature header value from the webhook request
+   * @return an optional containing the parsed event if the signature is valid and the event type
+   *         is supported; empty if the event type is not handled
+   * @throws com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException
+   *         if the signature is invalid or the payload cannot be deserialized
+   */
+  Optional<GatewayWebhookEvent> verifyAndParseWebhookEvent(String payload, String signature);
+}

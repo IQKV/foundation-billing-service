@@ -20,6 +20,10 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.gateway.event.GatewayInvoiceEvent;
+import com.iqkv.foundation.billingservice.gateway.event.GatewayPaymentFailureEvent;
+import com.iqkv.foundation.billingservice.gateway.event.GatewaySubscriptionEvent;
+import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEvent;
@@ -30,24 +34,23 @@ import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBilling
 import com.iqkv.foundation.billingservice.infrastructure.persistence.WebhookLogMapper;
 import com.iqkv.foundation.billingservice.plan.PlanEligibilityPolicy;
 import com.iqkv.foundation.billingservice.settings.BillingSettings;
-import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
 import com.iqkv.foundation.billingservice.subscription.SubjectType;
 import com.iqkv.foundation.billingservice.subscription.Subscription;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubject;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubjectResolver;
 import com.iqkv.foundation.billingservice.userbilling.UserBillingSettingsService;
-import com.stripe.model.Event;
-import com.stripe.model.Invoice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
- * Processes inbound Stripe webhook events.
+ * Gateway-agnostic webhook processing orchestrator.
  *
  * <p>Handles idempotency via {@code webhook_log}, dispatches subscription lifecycle
  * events, and publishes domain events and notification emails to RabbitMQ.
+ * Operates on normalized {@link GatewayWebhookEvent} instances — no payment gateway
+ * SDK types are referenced here.
  *
  * <p>Status lifecycle: {@code RECEIVED} → {@code PROCESSED} on success,
  * or {@code RECEIVED} → {@code FAILED} on error.
@@ -56,12 +59,6 @@ import org.springframework.stereotype.Service;
 public class WebhookProcessingService {
 
   private static final Logger log = LoggerFactory.getLogger(WebhookProcessingService.class);
-
-  private static final String EVENT_SUBSCRIPTION_CREATED  = "customer.subscription.created";
-  private static final String EVENT_SUBSCRIPTION_UPDATED  = "customer.subscription.updated";
-  private static final String EVENT_SUBSCRIPTION_DELETED  = "customer.subscription.deleted";
-  private static final String EVENT_INVOICE_PAID          = "invoice.payment_succeeded";
-  private static final String EVENT_INVOICE_PAYMENT_FAILED = "invoice.payment_failed";
 
   static final String STATUS_RECEIVED  = "RECEIVED";
   static final String STATUS_PROCESSED = "PROCESSED";
@@ -103,21 +100,21 @@ public class WebhookProcessingService {
   }
 
   /**
-   * Processes a verified Stripe event idempotently.
+   * Processes a normalized gateway webhook event idempotently.
    *
-   * @param event the verified Stripe event
+   * @param event the normalized gateway event
    * @return {@code true} if the event was already processed (duplicate), {@code false} otherwise
    */
-  public boolean process(final Event event) {
-    final String externalEventId = event.getId();
-    final String eventType = event.getType();
+  public boolean process(final GatewayWebhookEvent event) {
+    final String externalEventId = event.eventId();
+    final String eventType = event.eventType();
 
     if (webhookLogMapper.existsByExternalEventId(externalEventId)) {
-      log.debug("Duplicate Stripe webhook event received, skipping: {}", externalEventId);
+      log.debug("Duplicate webhook event received, skipping: {}", externalEventId);
       return true;
     }
 
-    final var webhookLog = new WebhookLog(
+    webhookLogMapper.insert(new WebhookLog(
         UUID.randomUUID(),
         externalEventId,
         eventType,
@@ -125,38 +122,43 @@ public class WebhookProcessingService {
         null,
         Instant.now(),
         null
-    );
-    webhookLogMapper.insert(webhookLog);
+    ));
 
     try {
       dispatch(event);
       webhookLogMapper.updateStatus(externalEventId, STATUS_PROCESSED, null, Instant.now());
     } catch (final Exception e) {
-      log.error("Failed to process Stripe webhook event {}: {}", externalEventId, e.getMessage(), e);
+      log.error("Failed to process webhook event {}: {}", externalEventId, e.getMessage(), e);
       webhookLogMapper.updateStatus(externalEventId, STATUS_FAILED, e.getMessage(), null);
     }
 
     return false;
   }
 
-  private void dispatch(final Event event) {
-    switch (event.getType()) {
-      case EVENT_SUBSCRIPTION_CREATED  -> handleSubscriptionCreated(event);
-      case EVENT_SUBSCRIPTION_UPDATED  -> handleSubscriptionUpsert(event);
-      case EVENT_SUBSCRIPTION_DELETED  -> handleSubscriptionDeleted(event);
-      case EVENT_INVOICE_PAID          -> handleInvoicePaid(event);
-      case EVENT_INVOICE_PAYMENT_FAILED -> handleInvoicePaymentFailed(event);
-      default -> log.debug("Unhandled Stripe event type: {}", event.getType());
+  // -------------------------------------------------------------------------
+  // Dispatch
+  // -------------------------------------------------------------------------
+
+  private void dispatch(final GatewayWebhookEvent event) {
+    switch (event) {
+      case GatewaySubscriptionEvent sub when sub.isCreated()  -> handleSubscriptionCreated(sub);
+      case GatewaySubscriptionEvent sub when sub.isUpdated()  -> handleSubscriptionUpdated(sub);
+      case GatewaySubscriptionEvent sub when sub.isDeleted()  -> handleSubscriptionDeleted(sub);
+      case GatewaySubscriptionEvent sub                       -> log.debug("Unhandled subscription event type: {}", sub.eventType());
+      case GatewayInvoiceEvent inv                            -> handleInvoicePaid(inv);
+      case GatewayPaymentFailureEvent pay                     -> handlePaymentFailed(pay);
     }
   }
 
-  private void handleSubscriptionCreated(final Event event) {
-    final var stripeSubscription = deserializeSubscription(event);
-    final var subscription = mapToSubscription(stripeSubscription);
+  // -------------------------------------------------------------------------
+  // Subscription handlers
+  // -------------------------------------------------------------------------
 
-    // Resolve subscription subject (TENANT or USER depending on rollout mode)
+  private void handleSubscriptionCreated(final GatewaySubscriptionEvent event) {
+    final var subscription = toSubscription(event);
+
     final String tenantKey = subscription.getTenantKey();
-    final UUID userId = resolveUserId(stripeSubscription);
+    final UUID userId = resolveUserId(event.metadata());
     final SubscriptionSubject subject = subjectResolver.resolveSubject(tenantKey, userId);
 
     // In SINGLE_TENANT mode, ensure user billing settings exist before persisting subscription
@@ -166,26 +168,186 @@ public class WebhookProcessingService {
     }
 
     // Validate plan eligibility before persisting
-    final String planCode = resolvePlanCode(stripeSubscription);
+    final String planCode = event.metadata().get("planCode");
     if (planCode != null) {
       planEligibilityPolicy.validatePlanEligibility(planCode, subject.type());
     }
 
-    // Populate subject fields on the subscription
     subscription.setSubjectType(subject.type().name());
     subscription.setSubjectKey(subject.key());
-
     subscriptionMapper.upsert(subscription);
 
-    // Publish subscription.created lifecycle event
-    messagingService.publishSubscriptionCreated(tenantKey, subscription.getExternalSubscriptionId(),
-        subject.type().name(), subject.key());
-    log.info("Published subscription.created for tenant {}, subscription {}",
+    messagingService.publishSubscriptionCreated(
+        tenantKey,
+        subscription.getExternalSubscriptionId(),
+        subject.type().name(),
+        subject.key()
+    );
+    log.info("Published subscription.created for tenant={}, subscription={}",
         tenantKey, subscription.getExternalSubscriptionId());
 
-    // Send activation notification using the appropriate billing settings source
+    publishSubscriptionActivatedNotification(subscription, subject, userId);
+  }
+
+  private void handleSubscriptionUpdated(final GatewaySubscriptionEvent event) {
+    final var subscription = toSubscription(event);
+    subscriptionMapper.upsert(subscription);
+
+    final String tenantKey = subscription.getTenantKey();
+    if (tenantKey != null && !tenantKey.isBlank()) {
+      billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
+        final String email = resolveEmail(settings);
+        if (email != null) {
+          publishNotification(new NotificationEvent(
+              email,
+              notificationProps.defaultLocale(),
+              NotificationEventType.SUBSCRIPTION_UPDATED,
+              Map.of(
+                  "companyName", nullToEmpty(settings.getCompanyName()),
+                  "planId", nullToEmpty(subscription.getPlanId()),
+                  "status", nullToEmpty(subscription.getStatus()),
+                  "externalSubscriptionId", subscription.getExternalSubscriptionId()
+              ),
+              Instant.now()));
+        }
+      });
+    }
+
+    log.debug("Upserted subscription {} for tenant {}",
+        subscription.getExternalSubscriptionId(), tenantKey);
+  }
+
+  private void handleSubscriptionDeleted(final GatewaySubscriptionEvent event) {
+    final var subscription = toSubscription(event);
+    subscription.setStatus("canceled");
+    subscription.setCanceledAt(event.canceledAt() != null ? event.canceledAt() : Instant.now());
+    subscriptionMapper.upsert(subscription);
+
+    final String tenantKey = event.metadata().get("tenantKey");
+    if (tenantKey == null || tenantKey.isBlank()) {
+      log.error("Cannot publish subscription.cancelled — tenantKey absent from metadata. "
+                + "externalSubscriptionId={}", subscription.getExternalSubscriptionId());
+      return;
+    }
+
+    messagingService.publishSubscriptionCancelled(
+        tenantKey,
+        subscription.getExternalSubscriptionId(),
+        subscription.getSubjectType() != null ? subscription.getSubjectType() : SubjectType.TENANT.name(),
+        subscription.getSubjectKey() != null ? subscription.getSubjectKey() : tenantKey
+    );
+    log.info("Published subscription.cancelled for tenant={}, subscription={}",
+        tenantKey, subscription.getExternalSubscriptionId());
+
+    billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
+      final String email = resolveEmail(settings);
+      if (email != null) {
+        publishNotification(new NotificationEvent(
+            email,
+            notificationProps.defaultLocale(),
+            NotificationEventType.SUBSCRIPTION_CANCELLED,
+            Map.of(
+                "companyName", nullToEmpty(settings.getCompanyName()),
+                "externalSubscriptionId", subscription.getExternalSubscriptionId()
+            ),
+            Instant.now()));
+      }
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Invoice / payment handlers
+  // -------------------------------------------------------------------------
+
+  private void handleInvoicePaid(final GatewayInvoiceEvent event) {
+    final var billingSettingsOpt = billingSettingsMapper.findByExternalCustomerId(event.externalCustomerId());
+    if (billingSettingsOpt.isEmpty()) {
+      log.warn("Cannot publish invoice.paid — no billing settings found for customer={}",
+          event.externalCustomerId());
+      return;
+    }
+
+    final var billingSettings = billingSettingsOpt.get();
+    final String tenantKey = billingSettings.getTenantKey();
+    final var subjectContext = resolveSubjectFromSubscription(event.externalSubscriptionId(), tenantKey);
+
+    messagingService.publishInvoicePaid(
+        tenantKey,
+        event.externalInvoiceId(),
+        event.externalCustomerId(),
+        event.externalSubscriptionId(),
+        event.amountPaid(),
+        billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD",
+        subjectContext.type().name(),
+        subjectContext.key()
+    );
+    log.info("Published invoice.paid for tenant={}, invoice={}", tenantKey, event.externalInvoiceId());
+
+    final String email = resolveEmail(billingSettings);
+    if (email != null) {
+      publishNotification(new NotificationEvent(
+          email,
+          notificationProps.defaultLocale(),
+          NotificationEventType.INVOICE_PAID,
+          Map.of(
+              "companyName", nullToEmpty(billingSettings.getCompanyName()),
+              "invoiceId", nullToEmpty(event.externalInvoiceId()),
+              "amountPaid", event.amountPaid() != null ? event.amountPaid() / 100.0 : 0.0,
+              "currency", billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD"
+          ),
+          Instant.now()));
+    }
+  }
+
+  private void handlePaymentFailed(final GatewayPaymentFailureEvent event) {
+    final var billingSettingsOpt = billingSettingsMapper.findByExternalCustomerId(event.externalCustomerId());
+    if (billingSettingsOpt.isEmpty()) {
+      log.warn("Cannot publish payment.failed — no billing settings found for customer={}",
+          event.externalCustomerId());
+      return;
+    }
+
+    final var billingSettings = billingSettingsOpt.get();
+    final String tenantKey = billingSettings.getTenantKey();
+    final var subjectContext = resolveSubjectFromSubscription(event.externalSubscriptionId(), tenantKey);
+
+    messagingService.publishPaymentFailed(
+        tenantKey,
+        event.externalInvoiceId(),
+        event.externalCustomerId(),
+        event.externalSubscriptionId(),
+        event.amountDue(),
+        billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD",
+        event.failureReason(),
+        subjectContext.type().name(),
+        subjectContext.key()
+    );
+    log.info("Published payment.failed for tenant={}, invoice={}", tenantKey, event.externalInvoiceId());
+
+    final String email = resolveEmail(billingSettings);
+    if (email != null) {
+      publishNotification(new NotificationEvent(
+          email,
+          notificationProps.defaultLocale(),
+          NotificationEventType.PAYMENT_FAILED,
+          Map.of(
+              "companyName", nullToEmpty(billingSettings.getCompanyName()),
+              "invoiceId", nullToEmpty(event.externalInvoiceId()),
+              "amountDue", event.amountDue() != null ? event.amountDue() / 100.0 : 0.0,
+              "currency", billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD"
+          ),
+          Instant.now()));
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Notification helpers
+  // -------------------------------------------------------------------------
+
+  private void publishSubscriptionActivatedNotification(final Subscription subscription,
+                                                        final SubscriptionSubject subject,
+                                                        final UUID userId) {
     if (SubjectType.USER.equals(subject.type()) && userId != null) {
-      // SINGLE_TENANT mode: look up user billing settings for notification email
       userBillingSettingsMapper.findByUserId(userId).ifPresent(userSettings -> {
         final String email = userSettings.getBillingEmail();
         if (email != null && !email.isBlank()) {
@@ -194,15 +356,15 @@ public class WebhookProcessingService {
               notificationProps.defaultLocale(),
               NotificationEventType.SUBSCRIPTION_ACTIVATED,
               Map.of(
-                  "companyName", userSettings.getCompanyName() != null ? userSettings.getCompanyName() : "",
-                  "planId", subscription.getPlanId() != null ? subscription.getPlanId() : "",
+                  "companyName", nullToEmpty(userSettings.getCompanyName()),
+                  "planId", nullToEmpty(subscription.getPlanId()),
                   "externalSubscriptionId", subscription.getExternalSubscriptionId()
               ),
               Instant.now()));
         }
       });
     } else {
-      // MULTI_TENANT mode: look up tenant billing settings for notification email
+      final String tenantKey = subscription.getTenantKey();
       if (tenantKey == null || tenantKey.isBlank()) {
         log.warn("Cannot send subscription activated notification — tenantKey absent. "
                  + "externalSubscriptionId={}", subscription.getExternalSubscriptionId());
@@ -216,242 +378,13 @@ public class WebhookProcessingService {
               notificationProps.defaultLocale(),
               NotificationEventType.SUBSCRIPTION_ACTIVATED,
               Map.of(
-                  "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
-                  "planId", subscription.getPlanId() != null ? subscription.getPlanId() : "",
+                  "companyName", nullToEmpty(settings.getCompanyName()),
+                  "planId", nullToEmpty(subscription.getPlanId()),
                   "externalSubscriptionId", subscription.getExternalSubscriptionId()
               ),
               Instant.now()));
         }
       });
-    }
-
-    log.debug("Upserted subscription {} for subject type={} key={}",
-        subscription.getExternalSubscriptionId(), subject.type(), subject.key());
-  }
-
-  private void handleSubscriptionUpsert(final Event event) {
-    final var stripeSubscription = deserializeSubscription(event);
-    final var subscription = mapToSubscription(stripeSubscription);
-    subscriptionMapper.upsert(subscription);
-    
-    // Publish subscription.updated email notification
-    final String tenantKey = subscription.getTenantKey();
-    if (tenantKey != null && !tenantKey.isBlank()) {
-      billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
-        final String email = resolveEmail(settings);
-        if (email != null) {
-          publishNotification(new NotificationEvent(
-              email,
-              notificationProps.defaultLocale(),
-              NotificationEventType.SUBSCRIPTION_UPDATED,
-              Map.of(
-                  "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
-                  "planId", subscription.getPlanId() != null ? subscription.getPlanId() : "",
-                  "status", subscription.getStatus() != null ? subscription.getStatus() : "",
-                  "externalSubscriptionId", subscription.getExternalSubscriptionId()
-              ),
-              Instant.now()));
-        }
-      });
-    }
-    
-    log.debug("Upserted subscription {} for tenant {}",
-        subscription.getExternalSubscriptionId(), subscription.getTenantKey());
-  }
-
-  private void handleSubscriptionDeleted(final Event event) {
-    final var stripeSubscription = deserializeSubscription(event);
-    final var subscription = mapToSubscription(stripeSubscription);
-    subscription.setStatus("canceled");
-    subscription.setCanceledAt(Instant.now());
-    subscriptionMapper.upsert(subscription);
-
-    final String tenantKey = stripeSubscription.getMetadata() != null
-        ? stripeSubscription.getMetadata().get("tenantKey")
-        : null;
-
-    if (tenantKey == null || tenantKey.isBlank()) {
-      log.error("Cannot publish subscription.cancelled — tenantKey absent from Stripe metadata. "
-                + "externalSubscriptionId={}", subscription.getExternalSubscriptionId());
-      return;
-    }
-
-    messagingService.publishSubscriptionCancelled(tenantKey, subscription.getExternalSubscriptionId(),
-        subscription.getSubjectType() != null ? subscription.getSubjectType() : "TENANT",
-        subscription.getSubjectKey() != null ? subscription.getSubjectKey() : tenantKey);
-    log.info("Published subscription.cancelled for tenant {}, subscription {}",
-        tenantKey, subscription.getExternalSubscriptionId());
-
-    billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
-      final String email = resolveEmail(settings);
-      if (email != null) {
-        publishNotification(new NotificationEvent(
-            email,
-            notificationProps.defaultLocale(),
-            NotificationEventType.SUBSCRIPTION_CANCELLED,
-            Map.of(
-                "companyName", settings.getCompanyName() != null ? settings.getCompanyName() : "",
-                "externalSubscriptionId", subscription.getExternalSubscriptionId()
-            ),
-            Instant.now()));
-      }
-    });
-  }
-
-  private void handleInvoicePaid(final Event event) {
-    final var invoice = deserializeInvoice(event);
-    if (invoice == null) {
-      return;
-    }
-
-    // Resolve tenant and subject information from billing settings
-    final var billingSettingsOpt = billingSettingsMapper.findByExternalCustomerId(invoice.getCustomer());
-    if (billingSettingsOpt.isEmpty()) {
-      log.warn("Cannot publish invoice.paid — no billing settings found for customer {}",
-          invoice.getCustomer());
-      return;
-    }
-
-    final var billingSettings = billingSettingsOpt.get();
-    final String tenantKey = billingSettings.getTenantKey();
-
-    // Resolve subject information for the event
-    final String subjectType;
-    final String subjectKey;
-    // Access subscription field directly - it's an ExpandableField that returns ID when not expanded
-    final String subscriptionId = invoice.getLines() != null 
-        && !invoice.getLines().getData().isEmpty()
-        && invoice.getLines().getData().get(0).getSubscription() != null
-        ? invoice.getLines().getData().get(0).getSubscription()
-        : null;
-    if (subscriptionId != null) {
-      // Try to get subject info from the subscription
-      final var subscriptionOpt = subscriptionMapper.findByExternalSubscriptionId(subscriptionId);
-      if (subscriptionOpt.isPresent()) {
-        final var subscription = subscriptionOpt.get();
-        subjectType = subscription.getSubjectType() != null ? subscription.getSubjectType() : "TENANT";
-        subjectKey = subscription.getSubjectKey() != null ? subscription.getSubjectKey() : tenantKey;
-      } else {
-        // Fallback to tenant scope
-        subjectType = "TENANT";
-        subjectKey = tenantKey;
-      }
-    } else {
-      // No subscription context, use tenant scope
-      subjectType = "TENANT";
-      subjectKey = tenantKey;
-    }
-
-    // Publish invoice.paid lifecycle event
-    messagingService.publishInvoicePaid(
-        tenantKey,
-        invoice.getId(),
-        invoice.getCustomer(),
-        subscriptionId,
-        invoice.getAmountPaid(),
-        billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD",
-        subjectType,
-        subjectKey
-    );
-    log.info("Published invoice.paid for tenant {}, invoice {}", tenantKey, invoice.getId());
-
-    // Send notification email
-    final String email = resolveEmail(billingSettings);
-    if (email != null) {
-      publishNotification(new NotificationEvent(
-          email,
-          notificationProps.defaultLocale(),
-          NotificationEventType.INVOICE_PAID,
-          Map.of(
-              "companyName", billingSettings.getCompanyName() != null ? billingSettings.getCompanyName() : "",
-              "invoiceId", invoice.getId() != null ? invoice.getId() : "",
-              "amountPaid", invoice.getAmountPaid() != null ? invoice.getAmountPaid() / 100.0 : 0.0,
-              "currency", billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD"
-          ),
-          Instant.now()));
-    }
-  }
-
-  private void handleInvoicePaymentFailed(final Event event) {
-    final var invoice = deserializeInvoice(event);
-    if (invoice == null) {
-      return;
-    }
-
-    // Resolve tenant and subject information from billing settings
-    final var billingSettingsOpt = billingSettingsMapper.findByExternalCustomerId(invoice.getCustomer());
-    if (billingSettingsOpt.isEmpty()) {
-      log.warn("Cannot publish payment.failed — no billing settings found for customer {}",
-          invoice.getCustomer());
-      return;
-    }
-
-    final var billingSettings = billingSettingsOpt.get();
-    final String tenantKey = billingSettings.getTenantKey();
-
-    // Resolve subject information for the event
-    final String subjectType;
-    final String subjectKey;
-    // Access subscription field directly - it's an ExpandableField that returns ID when not expanded
-    final String subscriptionId = invoice.getLines() != null 
-        && !invoice.getLines().getData().isEmpty()
-        && invoice.getLines().getData().get(0).getSubscription() != null
-        ? invoice.getLines().getData().get(0).getSubscription()
-        : null;
-    if (subscriptionId != null) {
-      // Try to get subject info from the subscription
-      final var subscriptionOpt = subscriptionMapper.findByExternalSubscriptionId(subscriptionId);
-      if (subscriptionOpt.isPresent()) {
-        final var subscription = subscriptionOpt.get();
-        subjectType = subscription.getSubjectType() != null ? subscription.getSubjectType() : "TENANT";
-        subjectKey = subscription.getSubjectKey() != null ? subscription.getSubjectKey() : tenantKey;
-      } else {
-        // Fallback to tenant scope
-        subjectType = "TENANT";
-        subjectKey = tenantKey;
-      }
-    } else {
-      // No subscription context, use tenant scope
-      subjectType = "TENANT";
-      subjectKey = tenantKey;
-    }
-
-    // Extract failure reason from invoice (if available)
-    final String failureReason;
-    if (invoice.getLastFinalizationError() != null && invoice.getLastFinalizationError().getMessage() != null) {
-      failureReason = invoice.getLastFinalizationError().getMessage();
-    } else {
-      failureReason = "Payment failed";
-    }
-
-    // Publish payment.failed lifecycle event
-    messagingService.publishPaymentFailed(
-        tenantKey,
-        invoice.getId(),
-        invoice.getCustomer(),
-        subscriptionId,
-        invoice.getAmountDue(),
-        billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD",
-        failureReason,
-        subjectType,
-        subjectKey
-    );
-    log.info("Published payment.failed for tenant {}, invoice {}", tenantKey, invoice.getId());
-
-    // Send notification email
-    final String email = resolveEmail(billingSettings);
-    if (email != null) {
-      publishNotification(new NotificationEvent(
-          email,
-          notificationProps.defaultLocale(),
-          NotificationEventType.PAYMENT_FAILED,
-          Map.of(
-              "companyName", billingSettings.getCompanyName() != null ? billingSettings.getCompanyName() : "",
-              "invoiceId", invoice.getId() != null ? invoice.getId() : "",
-              "amountDue", invoice.getAmountDue() != null ? invoice.getAmountDue() / 100.0 : 0.0,
-              "currency", billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD"
-          ),
-          Instant.now()));
     }
   }
 
@@ -464,6 +397,58 @@ public class WebhookProcessingService {
     }
   }
 
+  // -------------------------------------------------------------------------
+  // Mapping helpers
+  // -------------------------------------------------------------------------
+
+  private Subscription toSubscription(final GatewaySubscriptionEvent event) {
+    final var sub = new Subscription();
+    sub.setId(UUID.randomUUID());
+    sub.setExternalSubscriptionId(event.externalSubscriptionId());
+    sub.setExternalCustomerId(event.externalCustomerId());
+    sub.setStatus(event.status());
+    sub.setPlanId(event.planId());
+    sub.setCurrentPeriodStart(event.currentPeriodStart());
+    sub.setCurrentPeriodEnd(event.currentPeriodEnd());
+    sub.setCancelAtPeriodEnd(event.cancelAtPeriodEnd());
+    sub.setCanceledAt(event.canceledAt());
+    sub.setTenantKey(event.metadata().get("tenantKey"));
+    return sub;
+  }
+
+  /**
+   * Resolves subject context from a cached subscription record.
+   * Falls back to {@code TENANT / tenantKey} when no subscription is found.
+   */
+  private SubscriptionSubject resolveSubjectFromSubscription(final String externalSubscriptionId,
+                                                             final String tenantKey) {
+    if (externalSubscriptionId != null) {
+      final var subscriptionOpt = subscriptionMapper.findByExternalSubscriptionId(externalSubscriptionId);
+      if (subscriptionOpt.isPresent()) {
+        final var subscription = subscriptionOpt.get();
+        final String type = subscription.getSubjectType() != null
+            ? subscription.getSubjectType() : SubjectType.TENANT.name();
+        final String key = subscription.getSubjectKey() != null
+            ? subscription.getSubjectKey() : tenantKey;
+        return new SubscriptionSubject(SubjectType.valueOf(type), key);
+      }
+    }
+    return new SubscriptionSubject(SubjectType.TENANT, tenantKey);
+  }
+
+  private UUID resolveUserId(final Map<String, String> metadata) {
+    final String userIdStr = metadata.get("userId");
+    if (userIdStr == null || userIdStr.isBlank()) {
+      return null;
+    }
+    try {
+      return UUID.fromString(userIdStr);
+    } catch (final IllegalArgumentException e) {
+      log.warn("Invalid userId in subscription metadata: {}", userIdStr);
+      return null;
+    }
+  }
+
   private String resolveEmail(final BillingSettings settings) {
     if (settings.getBillingEmail() != null && !settings.getBillingEmail().isBlank()) {
       return settings.getBillingEmail();
@@ -472,79 +457,7 @@ public class WebhookProcessingService {
     return null;
   }
 
-  private com.stripe.model.Subscription deserializeSubscription(final Event event) {
-    return event.getDataObjectDeserializer()
-        .getObject()
-        .filter(obj -> obj instanceof com.stripe.model.Subscription)
-        .map(obj -> (com.stripe.model.Subscription) obj)
-        .orElseThrow(() -> new WebhookProcessingException(
-            "Could not deserialize Stripe Subscription from event " + event.getId()));
-  }
-
-  private Invoice deserializeInvoice(final Event event) {
-    return event.getDataObjectDeserializer()
-        .getObject()
-        .filter(obj -> obj instanceof Invoice)
-        .map(obj -> (Invoice) obj)
-        .orElse(null);
-  }
-
-  private Subscription mapToSubscription(final com.stripe.model.Subscription stripe) {
-    final var sub = new Subscription();
-    sub.setId(UUID.randomUUID());
-    sub.setExternalSubscriptionId(stripe.getId());
-    sub.setExternalCustomerId(stripe.getCustomer());
-    sub.setStatus(stripe.getStatus());
-    sub.setCancelAtPeriodEnd(Boolean.TRUE.equals(stripe.getCancelAtPeriodEnd()));
-
-    if (stripe.getBillingCycleAnchor() != null) {
-      sub.setCurrentPeriodStart(Instant.ofEpochSecond(stripe.getBillingCycleAnchor()));
-    }
-    if (stripe.getCanceledAt() != null) {
-      sub.setCanceledAt(Instant.ofEpochSecond(stripe.getCanceledAt()));
-    }
-    if (stripe.getMetadata() != null) {
-      sub.setTenantKey(stripe.getMetadata().get("tenantKey"));
-    }
-    if (stripe.getItems() != null && stripe.getItems().getData() != null
-        && !stripe.getItems().getData().isEmpty()) {
-      final com.stripe.model.SubscriptionItem item = stripe.getItems().getData().get(0);
-      if (item.getPrice() != null) {
-        sub.setPlanId(item.getPrice().getId());
-      }
-    }
-
-    return sub;
-  }
-
-  /**
-   * Resolves the user ID from Stripe subscription metadata.
-   * Returns {@code null} if the metadata key is absent or unparseable.
-   */
-  private UUID resolveUserId(final com.stripe.model.Subscription stripe) {
-    if (stripe.getMetadata() == null) {
-      return null;
-    }
-    final String userIdStr = stripe.getMetadata().get("userId");
-    if (userIdStr == null || userIdStr.isBlank()) {
-      return null;
-    }
-    try {
-      return UUID.fromString(userIdStr);
-    } catch (final IllegalArgumentException e) {
-      log.warn("Invalid userId in Stripe subscription metadata: {}", userIdStr);
-      return null;
-    }
-  }
-
-  /**
-   * Resolves the plan code from Stripe subscription metadata.
-   * Returns {@code null} if the metadata key is absent.
-   */
-  private String resolvePlanCode(final com.stripe.model.Subscription stripe) {
-    if (stripe.getMetadata() == null) {
-      return null;
-    }
-    return stripe.getMetadata().get("planCode");
+  private String nullToEmpty(final String value) {
+    return value != null ? value : "";
   }
 }

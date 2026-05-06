@@ -17,3 +17,9 @@ iqkv:
   messaging:
     rabbitmq:
       enabled: false
+  payment:
+    gateway:
+      type: STRIPE
+  stripe:
+    secret-key: sk_test_placeholder
+    webhook-secret: whsec_placeholder

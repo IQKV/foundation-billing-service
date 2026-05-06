@@ -25,10 +25,20 @@
       "description": "Billing-specific configuration. Provides fallback values for single-tenant mode."
     },
     {
+      "name": "iqkv.payment",
+      "description": "Payment gateway configuration."
+    },
+    {
+      "name": "iqkv.payment.gateway",
+      "type": "com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayConfigurationProperties",
+      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayConfigurationProperties",
+      "description": "Active payment gateway selection. Determines which PaymentGatewayPort adapter is used at runtime."
+    },
+    {
       "name": "iqkv.stripe",
       "type": "com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties",
       "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties",
-      "description": "Stripe payment gateway configuration."
+      "description": "Stripe adapter configuration. Required when iqkv.payment.gateway.type=STRIPE."
     },
     {
       "name": "iqkv.auth",
@@ -176,18 +186,24 @@
     {
       "name": "iqkv.billing.default-contact-email",
       "type": "java.lang.String",
-      "description": "Fallback billing contact email for SINGLE_TENANT mode. Used when tenant.created event has no ownerEmail (bootstrap events have no owner). Fallback chain: (1) ownerEmail from event → (2) this value → (3) null (Stripe allows no email)."
+      "description": "Fallback billing contact email for SINGLE_TENANT mode. Used when tenant.created event has no ownerEmail. Fallback chain: (1) ownerEmail from event → (2) this value → (3) null (payment gateway customer created without email)."
+    },
+    {
+      "name": "iqkv.payment.gateway.type",
+      "type": "com.iqkv.foundation.billingservice.gateway.GatewayType",
+      "description": "Active payment gateway adapter. Determines which PaymentGatewayPort implementation is used. Currently only STRIPE is implemented.",
+      "defaultValue": "STRIPE"
     },
     {
       "name": "iqkv.stripe.secret-key",
       "type": "java.lang.String",
-      "description": "Stripe API secret key. Use test keys (sk_test_*) for development, live keys (sk_live_*) for production.",
+      "description": "Stripe API secret key. Required when iqkv.payment.gateway.type=STRIPE. Use test keys (sk_test_*) for development, live keys (sk_live_*) for production.",
       "defaultValue": "sk_test_placeholder"
     },
     {
       "name": "iqkv.stripe.webhook-secret",
       "type": "java.lang.String",
-      "description": "Stripe webhook signing secret. Used to verify webhook event signatures from Stripe.",
+      "description": "Stripe webhook signing secret. Required when iqkv.payment.gateway.type=STRIPE. Used to verify webhook event signatures at POST /api/v1/billing/webhooks/stripe.",
       "defaultValue": "whsec_placeholder"
     },
     {
@@ -199,7 +215,7 @@
     {
       "name": "iqkv.messaging.rabbitmq.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enables RabbitMQ messaging. When false, all AMQP beans are skipped.",
+      "description": "Enables RabbitMQ messaging. When false, all AMQP beans are skipped (used in test profile).",
       "defaultValue": true
     },
     {
@@ -220,13 +236,13 @@
     {
       "name": "iqkv.notification.default-locale",
       "type": "java.lang.String",
-      "description": "Default locale for notification templates.",
+      "description": "Default locale for notification templates. Must be a valid BCP 47 language tag (e.g. en, en-US).",
       "defaultValue": "en"
     },
     {
       "name": "iqkv.notification.base-url",
       "type": "java.lang.String",
-      "description": "Base URL of the frontend application, used in email links.",
+      "description": "Base URL of the frontend application, used to construct links in notification emails.",
       "defaultValue": "http://localhost:3000"
     },
     {
@@ -238,7 +254,7 @@
     {
       "name": "iqkv.liquibase.contexts",
       "type": "java.lang.String",
-      "description": "Active Liquibase contexts (e.g. demo to include seed data, or omit for clean schema only).",
+      "description": "Active Liquibase contexts. Use 'demo' to include seed data, omit or use '!demo' for clean schema only.",
       "defaultValue": "demo"
     }
   ],
@@ -248,6 +264,25 @@
       "values": [
         { "value": "MULTI_TENANT", "description": "Multi-tenant mode: subscriptions scoped per tenant." },
         { "value": "SINGLE_TENANT", "description": "Single-tenant mode: subscriptions scoped per user." }
+      ]
+    },
+    {
+      "name": "iqkv.payment.gateway.type",
+      "values": [
+        { "value": "STRIPE", "description": "Stripe payment gateway (implemented). Requires iqkv.stripe.* properties." }
+      ]
+    },
+    {
+      "name": "iqkv.stripe.secret-key",
+      "values": [
+        { "value": "sk_test_*", "description": "Test mode secret key for development and staging." },
+        { "value": "sk_live_*", "description": "Live mode secret key for production." }
+      ]
+    },
+    {
+      "name": "iqkv.stripe.webhook-secret",
+      "values": [
+        { "value": "whsec_*", "description": "Webhook signing secret from the Stripe dashboard." }
       ]
     },
     {
@@ -269,19 +304,6 @@
       "values": [
         { "value": true, "description": "Enable RabbitMQ — required for all non-test profiles." },
         { "value": false, "description": "Disable RabbitMQ — used in test profile." }
-      ]
-    },
-    {
-      "name": "iqkv.stripe.secret-key",
-      "values": [
-        { "value": "sk_test_*", "description": "Test mode secret key for development." },
-        { "value": "sk_live_*", "description": "Live mode secret key for production." }
-      ]
-    },
-    {
-      "name": "iqkv.stripe.webhook-secret",
-      "values": [
-        { "value": "whsec_*", "description": "Webhook signing secret from Stripe dashboard." }
       ]
     }
   ]

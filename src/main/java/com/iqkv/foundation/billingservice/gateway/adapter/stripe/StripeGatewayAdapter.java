@@ -1,0 +1,241 @@
+/*
+ * Copyright 2026 IQKV Foundation Team.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.iqkv.foundation.billingservice.gateway.adapter.stripe;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.Optional;
+
+import com.iqkv.foundation.billingservice.gateway.GatewayType;
+import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
+import com.iqkv.foundation.billingservice.gateway.event.GatewayInvoiceEvent;
+import com.iqkv.foundation.billingservice.gateway.event.GatewayPaymentFailureEvent;
+import com.iqkv.foundation.billingservice.gateway.event.GatewaySubscriptionEvent;
+import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
+import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
+import com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties;
+import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException;
+import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
+import com.stripe.Stripe;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.exception.StripeException;
+import com.stripe.model.Customer;
+import com.stripe.model.Event;
+import com.stripe.model.Invoice;
+import com.stripe.model.SubscriptionItem;
+import com.stripe.net.Webhook;
+import com.stripe.param.CustomerCreateParams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+/**
+ * Stripe implementation of {@link PaymentGatewayPort}.
+ *
+ * <p>Adapts Stripe SDK types to gateway-agnostic domain events and commands.
+ * Handles customer creation, webhook signature verification, and event parsing.
+ *
+ * <p>Stripe-specific event types handled:
+ * <ul>
+ *   <li>{@code customer.subscription.created}</li>
+ *   <li>{@code customer.subscription.updated}</li>
+ *   <li>{@code customer.subscription.deleted}</li>
+ *   <li>{@code invoice.payment_succeeded}</li>
+ *   <li>{@code invoice.payment_failed}</li>
+ * </ul>
+ */
+@Component
+public class StripeGatewayAdapter implements PaymentGatewayPort {
+
+  private static final Logger log = LoggerFactory.getLogger(StripeGatewayAdapter.class);
+
+  private static final String EVENT_SUBSCRIPTION_CREATED      = "customer.subscription.created";
+  private static final String EVENT_SUBSCRIPTION_UPDATED      = "customer.subscription.updated";
+  private static final String EVENT_SUBSCRIPTION_DELETED      = "customer.subscription.deleted";
+  private static final String EVENT_INVOICE_PAYMENT_SUCCEEDED = "invoice.payment_succeeded";
+  private static final String EVENT_INVOICE_PAYMENT_FAILED    = "invoice.payment_failed";
+
+  private final StripeConfigurationProperties config;
+
+  public StripeGatewayAdapter(final StripeConfigurationProperties config) {
+    this.config = config;
+    Stripe.apiKey = config.secretKey();
+  }
+
+  @Override
+  public GatewayType getGatewayType() {
+    return GatewayType.STRIPE;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Creates a Stripe {@code Customer} object. The {@code managed_by} metadata key
+   * is always set to {@code "foundation-billing-service"} for traceability.
+   */
+  @Override
+  public String createCustomer(final CreateCustomerCommand command) {
+    final CustomerCreateParams.Builder builder = CustomerCreateParams.builder()
+        .setName(command.name())
+        .putMetadata("managed_by", "foundation-billing-service");
+
+    command.metadata().forEach(builder::putMetadata);
+
+    if (command.email() != null && !command.email().isBlank()) {
+      builder.setEmail(command.email());
+    }
+
+    try {
+      final Customer customer = Customer.create(builder.build());
+      log.debug("Created Stripe customer {} for name={}", customer.getId(), command.name());
+      return customer.getId();
+    } catch (final StripeException e) {
+      throw new PaymentGatewayException("Failed to create Stripe customer for: " + command.name(), e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>Verifies the {@code Stripe-Signature} header using the configured webhook secret,
+   * then parses the verified event into a normalized domain event.
+   *
+   * @throws WebhookProcessingException if the signature is invalid
+   */
+  @Override
+  public Optional<GatewayWebhookEvent> verifyAndParseWebhookEvent(final String payload,
+                                                                   final String signature) {
+    final Event event;
+    try {
+      event = Webhook.constructEvent(payload, signature, config.webhookSecret());
+    } catch (final SignatureVerificationException e) {
+      throw new WebhookProcessingException("Invalid Stripe webhook signature", e);
+    }
+
+    return switch (event.getType()) {
+      case EVENT_SUBSCRIPTION_CREATED,
+           EVENT_SUBSCRIPTION_UPDATED,
+           EVENT_SUBSCRIPTION_DELETED -> Optional.of(toSubscriptionEvent(event));
+      case EVENT_INVOICE_PAYMENT_SUCCEEDED -> Optional.of(toInvoiceEvent(event));
+      case EVENT_INVOICE_PAYMENT_FAILED    -> Optional.of(toPaymentFailureEvent(event));
+      default -> {
+        log.debug("Unhandled Stripe event type: {}", event.getType());
+        yield Optional.empty();
+      }
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // Private mapping methods
+  // -------------------------------------------------------------------------
+
+  private GatewaySubscriptionEvent toSubscriptionEvent(final Event event) {
+    final var stripe = deserializeSubscription(event);
+    final Instant occurredAt = Instant.ofEpochSecond(event.getCreated());
+
+    // Stripe 32.x: currentPeriodStart/End are not available on Subscription directly.
+    // Use billingCycleAnchor as period start and trialEnd/startDate as available context.
+    final Instant periodStart = stripe.getBillingCycleAnchor() != null
+        ? Instant.ofEpochSecond(stripe.getBillingCycleAnchor()) : null;
+    final Instant periodEnd = stripe.getTrialEnd() != null
+        ? Instant.ofEpochSecond(stripe.getTrialEnd()) : null;
+
+    return new GatewaySubscriptionEvent(
+        event.getId(),
+        event.getType(),
+        occurredAt,
+        stripe.getId(),
+        stripe.getCustomer(),
+        stripe.getStatus(),
+        extractPlanId(stripe),
+        periodStart,
+        periodEnd,
+        Boolean.TRUE.equals(stripe.getCancelAtPeriodEnd()),
+        stripe.getEndedAt() != null ? Instant.ofEpochSecond(stripe.getEndedAt()) : null,
+        stripe.getMetadata() != null ? Map.copyOf(stripe.getMetadata()) : Map.of()
+    );
+  }
+
+  private GatewayInvoiceEvent toInvoiceEvent(final Event event) {
+    final Invoice invoice = deserializeInvoice(event);
+    return new GatewayInvoiceEvent(
+        event.getId(),
+        event.getType(),
+        Instant.ofEpochSecond(event.getCreated()),
+        invoice.getId(),
+        invoice.getCustomer(),
+        extractSubscriptionId(invoice),
+        invoice.getAmountPaid(),
+        invoice.getCurrency()
+    );
+  }
+
+  private GatewayPaymentFailureEvent toPaymentFailureEvent(final Event event) {
+    final Invoice invoice = deserializeInvoice(event);
+    final String failureReason = invoice.getLastFinalizationError() != null
+        && invoice.getLastFinalizationError().getMessage() != null
+        ? invoice.getLastFinalizationError().getMessage()
+        : "Payment failed";
+
+    return new GatewayPaymentFailureEvent(
+        event.getId(),
+        event.getType(),
+        Instant.ofEpochSecond(event.getCreated()),
+        invoice.getId(),
+        invoice.getCustomer(),
+        extractSubscriptionId(invoice),
+        invoice.getAmountDue(),
+        invoice.getCurrency(),
+        failureReason
+    );
+  }
+
+  private com.stripe.model.Subscription deserializeSubscription(final Event event) {
+    return event.getDataObjectDeserializer()
+        .getObject()
+        .filter(obj -> obj instanceof com.stripe.model.Subscription)
+        .map(obj -> (com.stripe.model.Subscription) obj)
+        .orElseThrow(() -> new WebhookProcessingException(
+            "Could not deserialize Stripe Subscription from event " + event.getId()));
+  }
+
+  private Invoice deserializeInvoice(final Event event) {
+    return event.getDataObjectDeserializer()
+        .getObject()
+        .filter(obj -> obj instanceof Invoice)
+        .map(obj -> (Invoice) obj)
+        .orElseThrow(() -> new WebhookProcessingException(
+            "Could not deserialize Stripe Invoice from event " + event.getId()));
+  }
+
+  private String extractPlanId(final com.stripe.model.Subscription stripe) {
+    if (stripe.getItems() == null || stripe.getItems().getData() == null
+        || stripe.getItems().getData().isEmpty()) {
+      return null;
+    }
+    final SubscriptionItem item = stripe.getItems().getData().get(0);
+    return item.getPrice() != null ? item.getPrice().getId() : null;
+  }
+
+  private String extractSubscriptionId(final Invoice invoice) {
+    if (invoice.getLines() == null || invoice.getLines().getData() == null
+        || invoice.getLines().getData().isEmpty()) {
+      return null;
+    }
+    return invoice.getLines().getData().get(0).getSubscription();
+  }
+}

@@ -31,6 +31,9 @@ iqkv:
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
     from: ${MAIL_FROM}
+  payment:
+    gateway:
+      type: ${PAYMENT_GATEWAY_TYPE:STRIPE}
   stripe:
     secret-key: ${STRIPE_SECRET_KEY}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET}

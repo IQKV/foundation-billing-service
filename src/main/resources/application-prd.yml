@@ -35,3 +35,9 @@ iqkv:
     port: ${RABBITMQ_PORT}
     username: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}
+  payment:
+    gateway:
+      type: ${PAYMENT_GATEWAY_TYPE:STRIPE}
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET}

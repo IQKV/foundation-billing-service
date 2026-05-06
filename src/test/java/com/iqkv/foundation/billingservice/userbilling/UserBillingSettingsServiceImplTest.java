@@ -18,6 +18,7 @@ package com.iqkv.foundation.billingservice.userbilling;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -27,10 +28,10 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayClient;
+import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
+import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper;
 import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException;
-import com.stripe.exception.StripeException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,14 +47,14 @@ class UserBillingSettingsServiceImplTest {
   private UserBillingSettingsMapper userBillingSettingsMapper;
 
   @Mock
-  private PaymentGatewayClient paymentGatewayClient;
+  private PaymentGatewayPort paymentGatewayPort;
 
   @InjectMocks
   private UserBillingSettingsServiceImpl userBillingSettingsService;
 
   @Test
   @DisplayName("Should return existing user billing settings when they exist")
-  void shouldReturnExistingUserBillingSettings() throws StripeException {
+  void shouldReturnExistingUserBillingSettings() {
     // Arrange
     final UUID userId = UUID.randomUUID();
     final UserBillingSettings existingSettings = createUserBillingSettings(userId);
@@ -67,18 +68,18 @@ class UserBillingSettingsServiceImplTest {
     assertThat(result.getUserId()).isEqualTo(userId);
     assertThat(result.getExternalCustomerId()).isEqualTo("cus_existing123");
     verify(userBillingSettingsMapper).findByUserId(userId);
-    verifyNoInteractions(paymentGatewayClient);
+    verifyNoInteractions(paymentGatewayPort);
   }
 
   @Test
   @DisplayName("Should create new user billing settings when they do not exist")
-  void shouldCreateNewUserBillingSettings() throws StripeException {
+  void shouldCreateNewUserBillingSettings() {
     // Arrange
     final UUID userId = UUID.randomUUID();
     final String externalCustomerId = "cus_new123";
 
     when(userBillingSettingsMapper.findByUserId(userId)).thenReturn(Optional.empty());
-    when(paymentGatewayClient.createCustomer("user:" + userId, null)).thenReturn(externalCustomerId);
+    when(paymentGatewayPort.createCustomer(any(CreateCustomerCommand.class))).thenReturn(externalCustomerId);
 
     // Act
     final UserBillingSettings result = userBillingSettingsService.getOrCreateUserBillingSettings(userId);
@@ -90,7 +91,11 @@ class UserBillingSettingsServiceImplTest {
     assertThat(result.getCurrency()).isEqualTo("USD");
     assertThat(result.getBillingEmail()).isNull();
     verify(userBillingSettingsMapper).findByUserId(userId);
-    verify(paymentGatewayClient).createCustomer("user:" + userId, null);
+    verify(paymentGatewayPort).createCustomer(argThat(cmd ->
+        cmd.name().equals("user:" + userId)
+            && cmd.email() == null
+            && cmd.metadata().get("userId").equals(userId.toString())
+    ));
     verify(userBillingSettingsMapper).insert(argThat(settings ->
         settings.getUserId().equals(userId)
             && settings.getExternalCustomerId().equals(externalCustomerId)
@@ -99,31 +104,31 @@ class UserBillingSettingsServiceImplTest {
   }
 
   @Test
-  @DisplayName("Should throw PaymentGatewayException when Stripe customer creation fails")
-  void shouldThrowExceptionWhenStripeCustomerCreationFails() throws StripeException {
+  @DisplayName("Should throw PaymentGatewayException when gateway customer creation fails")
+  void shouldThrowExceptionWhenGatewayCustomerCreationFails() {
     // Arrange
     final UUID userId = UUID.randomUUID();
-    final StripeException stripeException = new StripeException("Stripe API error", "req_123", "code", 500) {};
+    final PaymentGatewayException gatewayException =
+        new PaymentGatewayException("Gateway API error");
 
     when(userBillingSettingsMapper.findByUserId(userId)).thenReturn(Optional.empty());
-    when(paymentGatewayClient.createCustomer("user:" + userId, null)).thenThrow(stripeException);
+    when(paymentGatewayPort.createCustomer(any(CreateCustomerCommand.class))).thenThrow(gatewayException);
 
     // Act & Assert
     assertThatThrownBy(() -> userBillingSettingsService.getOrCreateUserBillingSettings(userId))
         .isInstanceOf(PaymentGatewayException.class)
-        .hasMessageContaining("Failed to create Stripe customer for userId=" + userId)
-        .hasCause(stripeException);
+        .hasMessageContaining("Failed to create payment gateway customer for userId=" + userId);
   }
 
   @Test
   @DisplayName("Should create user billing settings with correct metadata")
-  void shouldCreateUserBillingSettingsWithCorrectMetadata() throws StripeException {
+  void shouldCreateUserBillingSettingsWithCorrectMetadata() {
     // Arrange
     final UUID userId = UUID.randomUUID();
     final String externalCustomerId = "cus_metadata123";
 
     when(userBillingSettingsMapper.findByUserId(userId)).thenReturn(Optional.empty());
-    when(paymentGatewayClient.createCustomer("user:" + userId, null)).thenReturn(externalCustomerId);
+    when(paymentGatewayPort.createCustomer(any(CreateCustomerCommand.class))).thenReturn(externalCustomerId);
 
     // Act
     final UserBillingSettings result = userBillingSettingsService.getOrCreateUserBillingSettings(userId);
@@ -136,7 +141,9 @@ class UserBillingSettingsServiceImplTest {
     assertThat(result.getBillingAddress()).isNull();
     assertThat(result.getTaxId()).isNull();
     assertThat(result.getTaxIdType()).isNull();
-    verify(paymentGatewayClient).createCustomer("user:" + userId, null);
+    verify(paymentGatewayPort).createCustomer(argThat(cmd ->
+        cmd.name().equals("user:" + userId) && cmd.email() == null
+    ));
   }
 
   private UserBillingSettings createUserBillingSettings(final UUID userId) {

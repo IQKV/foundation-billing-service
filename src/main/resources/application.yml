@@ -77,6 +77,10 @@ iqkv:
   messaging:
     rabbitmq:
       enabled: ${MESSAGING_ENABLED:true}
+  payment:
+    gateway:
+      # Active payment gateway: STRIPE (default). Reserved: PAYPAL
+      type: ${PAYMENT_GATEWAY_TYPE:STRIPE}
   stripe:
     secret-key: ${STRIPE_SECRET_KEY:sk_test_placeholder}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_placeholder}

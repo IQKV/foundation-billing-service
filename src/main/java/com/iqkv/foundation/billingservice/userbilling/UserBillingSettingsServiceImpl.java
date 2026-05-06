@@ -17,12 +17,13 @@
 package com.iqkv.foundation.billingservice.userbilling;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
-import com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayClient;
+import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
+import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper;
 import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException;
-import com.stripe.exception.StripeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -34,8 +35,8 @@ import org.springframework.stereotype.Service;
  * <p>On the first subscription action for a user, this service:
  * <ol>
  *   <li>Checks whether a {@code user_billing_settings} row already exists for the user.</li>
- *   <li>If not, creates a Stripe customer (with no email — the user can update it later).</li>
- *   <li>Persists the new {@code user_billing_settings} row with the Stripe customer ID.</li>
+ *   <li>If not, creates a payment gateway customer (with no email — the user can update it later).</li>
+ *   <li>Persists the new {@code user_billing_settings} row with the external customer ID.</li>
  * </ol>
  *
  * <p>The bean is only registered when {@code iqkv.platform.rollout-mode=SINGLE_TENANT},
@@ -48,20 +49,20 @@ public class UserBillingSettingsServiceImpl implements UserBillingSettingsServic
   private static final Logger log = LoggerFactory.getLogger(UserBillingSettingsServiceImpl.class);
 
   private final UserBillingSettingsMapper userBillingSettingsMapper;
-  private final PaymentGatewayClient paymentGatewayClient;
+  private final PaymentGatewayPort paymentGatewayPort;
 
   public UserBillingSettingsServiceImpl(final UserBillingSettingsMapper userBillingSettingsMapper,
-                                        final PaymentGatewayClient paymentGatewayClient) {
+                                        final PaymentGatewayPort paymentGatewayPort) {
     this.userBillingSettingsMapper = userBillingSettingsMapper;
-    this.paymentGatewayClient = paymentGatewayClient;
+    this.paymentGatewayPort = paymentGatewayPort;
   }
 
   /**
    * {@inheritDoc}
    *
    * <p>If settings already exist for the user, they are returned immediately without
-   * contacting Stripe. Otherwise a new Stripe customer is created and the settings row
-   * is inserted.
+   * contacting the payment gateway. Otherwise a new gateway customer is created and
+   * the settings row is inserted.
    */
   @Override
   public UserBillingSettings getOrCreateUserBillingSettings(final UUID userId) {
@@ -76,13 +77,14 @@ public class UserBillingSettingsServiceImpl implements UserBillingSettingsServic
   private UserBillingSettings createUserBillingSettings(final UUID userId) {
     log.debug("Creating user billing settings for userId={}", userId);
 
+    // Create gateway customer with no email; the user can update billing details later.
     final String externalCustomerId;
     try {
-      // Create Stripe customer with no email; the user can update billing details later.
-      externalCustomerId = paymentGatewayClient.createCustomer("user:" + userId, null);
-    } catch (final StripeException e) {
+      externalCustomerId = paymentGatewayPort.createCustomer(
+          new CreateCustomerCommand("user:" + userId, null, Map.of("userId", userId.toString())));
+    } catch (final PaymentGatewayException e) {
       throw new PaymentGatewayException(
-          "Failed to create Stripe customer for userId=" + userId, e);
+          "Failed to create payment gateway customer for userId=" + userId, e);
     }
 
     final LocalDateTime now = LocalDateTime.now();

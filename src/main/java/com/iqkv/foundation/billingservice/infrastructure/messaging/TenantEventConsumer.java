@@ -21,13 +21,13 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
+import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
-import com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayClient;
 import com.iqkv.foundation.billingservice.infrastructure.config.RabbitMQConfig;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
 import com.iqkv.foundation.billingservice.settings.BillingSettings;
 import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException;
-import com.stripe.exception.StripeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>Billing needs full visibility into the tenant provisioning lifecycle because:
  * <ul>
- *   <li>{@code TENANT_CREATED} — bootstraps the Stripe customer and billing settings</li>
+ *   <li>{@code TENANT_CREATED} — bootstraps the payment gateway customer and billing settings</li>
  *   <li>{@code TENANT_PROVISIONED} — tenant is now ACTIVE; billing can activate services</li>
  *   <li>{@code TENANT_PROVISIONING_FAILED} — provisioning failed; billing should not charge</li>
  *   <li>{@code TENANT_SUSPENDED} — tenant suspended; billing may pause invoicing</li>
@@ -53,18 +53,18 @@ public class TenantEventConsumer {
   private static final Logger log = LoggerFactory.getLogger(TenantEventConsumer.class);
 
   private final BillingSettingsMapper billingSettingsMapper;
-  private final PaymentGatewayClient paymentGatewayClient;
+  private final PaymentGatewayPort paymentGatewayPort;
   private final MessagingService messagingService;
   private final NotificationConfigurationProperties notificationProps;
   private final BillingContactResolver billingContactResolver;
 
   public TenantEventConsumer(final BillingSettingsMapper billingSettingsMapper,
-                              final PaymentGatewayClient paymentGatewayClient,
+                              final PaymentGatewayPort paymentGatewayPort,
                               final MessagingService messagingService,
                               final NotificationConfigurationProperties notificationProps,
                               final BillingContactResolver billingContactResolver) {
     this.billingSettingsMapper = billingSettingsMapper;
-    this.paymentGatewayClient = paymentGatewayClient;
+    this.paymentGatewayPort = paymentGatewayPort;
     this.messagingService = messagingService;
     this.notificationProps = notificationProps;
     this.billingContactResolver = billingContactResolver;
@@ -77,11 +77,11 @@ public class TenantEventConsumer {
       return;
     }
     switch (event.getEventType()) {
-      case TENANT_CREATED            -> handleTenantCreated(event);
-      case TENANT_PROVISIONED        -> handleTenantProvisioned(event);
+      case TENANT_CREATED             -> handleTenantCreated(event);
+      case TENANT_PROVISIONED         -> handleTenantProvisioned(event);
       case TENANT_PROVISIONING_FAILED -> handleTenantProvisioningFailed(event);
-      case TENANT_SUSPENDED          -> handleTenantSuspended(event);
-      case TENANT_DELETED            -> handleTenantDeleted(event);
+      case TENANT_SUSPENDED           -> handleTenantSuspended(event);
+      case TENANT_DELETED             -> handleTenantDeleted(event);
       default -> log.debug("Unhandled tenant event type: {}", event.getEventType());
     }
   }
@@ -104,8 +104,9 @@ public class TenantEventConsumer {
 
     final String externalCustomerId;
     try {
-      externalCustomerId = paymentGatewayClient.createCustomer(tenantName, resolvedEmail);
-    } catch (final StripeException e) {
+      externalCustomerId = paymentGatewayPort.createCustomer(
+          new CreateCustomerCommand(tenantName, resolvedEmail, Map.of("tenantKey", tenantKey)));
+    } catch (final PaymentGatewayException e) {
       throw new PaymentGatewayException(
           "Failed to create payment gateway customer for tenantKey=" + tenantKey, e);
     }
@@ -121,7 +122,6 @@ public class TenantEventConsumer {
     final String tenantKey = event.getTenantKey();
     log.info("Tenant provisioning succeeded: tenantKey={}", tenantKey);
 
-    // Notify billing contact that their account is ready
     billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
       final String email = settings.getBillingEmail();
       if (email != null && !email.isBlank()) {
@@ -141,15 +141,14 @@ public class TenantEventConsumer {
   private void handleTenantProvisioningFailed(final TenantEvent event) {
     final String tenantKey = event.getTenantKey();
     log.warn("Tenant provisioning failed: tenantKey={} — billing will not activate", tenantKey);
-    // No billing action needed; Stripe customer already created but no subscription activated.
+    // No billing action needed; gateway customer already created but no subscription activated.
     // Billing settings remain so retry-provisioning can succeed later.
   }
 
   private void handleTenantSuspended(final TenantEvent event) {
     final String tenantKey = event.getTenantKey();
     log.info("Tenant suspended: tenantKey={}", tenantKey);
-    
-    // Send account suspension notification
+
     billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
       final String email = settings.getBillingEmail();
       if (email != null && !email.isBlank()) {
@@ -165,14 +164,14 @@ public class TenantEventConsumer {
             Instant.now()));
       }
     });
-    
+
     // Future: pause invoicing, flag billing settings, etc.
   }
 
   private void handleTenantDeleted(final TenantEvent event) {
     final String tenantKey = event.getTenantKey();
     log.info("Tenant deleted: tenantKey={}", tenantKey);
-    // Future: cancel Stripe customer, archive billing settings, etc.
+    // Future: cancel gateway customer, archive billing settings, etc.
   }
 
   // ---------------------------------------------------------------------------

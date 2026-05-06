@@ -16,10 +16,8 @@
 
 package com.iqkv.foundation.billingservice.webhook;
 
-import com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties;
-import com.stripe.exception.SignatureVerificationException;
-import com.stripe.model.Event;
-import com.stripe.net.Webhook;
+import com.iqkv.foundation.billingservice.gateway.adapter.stripe.StripeGatewayAdapter;
+import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -38,32 +36,35 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST endpoint for inbound Stripe webhook events.
  *
- * <p>Verifies the Stripe signature, then delegates to {@link WebhookProcessingService}
- * for idempotent processing. Always returns HTTP 200 after the idempotency check to
- * prevent Stripe from retrying on business logic failures.
+ * <p>Delegates signature verification and event parsing to {@link StripeGatewayAdapter},
+ * then hands the normalized event to {@link WebhookProcessingService} for idempotent
+ * gateway-agnostic processing.
+ *
+ * <p>Always returns HTTP 200 after the idempotency check to prevent Stripe from
+ * retrying on business logic failures.
  */
 @RestController
 @RequestMapping("/api/v1/billing/webhooks")
-@Tag(name = "Webhooks", description = "Inbound Stripe webhook event receiver")
+@Tag(name = "Webhooks", description = "Inbound payment gateway webhook event receivers")
 public class StripeWebhookRestResource {
 
   private static final Logger log = LoggerFactory.getLogger(StripeWebhookRestResource.class);
 
+  private final StripeGatewayAdapter stripeGatewayAdapter;
   private final WebhookProcessingService webhookProcessingService;
-  private final StripeConfigurationProperties stripeProps;
 
-  public StripeWebhookRestResource(final WebhookProcessingService webhookProcessingService,
-                                   final StripeConfigurationProperties stripeProps) {
+  public StripeWebhookRestResource(final StripeGatewayAdapter stripeGatewayAdapter,
+                                   final WebhookProcessingService webhookProcessingService) {
+    this.stripeGatewayAdapter = stripeGatewayAdapter;
     this.webhookProcessingService = webhookProcessingService;
-    this.stripeProps = stripeProps;
   }
 
   @PostMapping("/stripe")
   @Operation(
       summary = "Receive Stripe webhook",
-      description = "Verifies the Stripe-Signature header, then processes the event idempotently. "
-          + "Always returns 200 after the idempotency check to prevent Stripe retries on business logic failures. "
-          + "No authentication required — secured by Stripe signature verification.")
+      description = "Verifies the Stripe-Signature header, normalizes the event, then processes it "
+          + "idempotently. Always returns 200 after the idempotency check to prevent Stripe retries "
+          + "on business logic failures. No authentication required — secured by Stripe signature verification.")
   @Parameter(name = "Stripe-Signature", in = ParameterIn.HEADER, required = true,
       description = "Stripe webhook signature (t=timestamp,v1=hash)")
   @ApiResponses({
@@ -74,15 +75,14 @@ public class StripeWebhookRestResource {
       @RequestBody final String payload,
       @RequestHeader("Stripe-Signature") final String sigHeader) {
 
-    final Event event;
     try {
-      event = Webhook.constructEvent(payload, sigHeader, stripeProps.webhookSecret());
-    } catch (final SignatureVerificationException e) {
-      log.warn("Invalid Stripe webhook signature: {}", e.getMessage());
+      stripeGatewayAdapter.verifyAndParseWebhookEvent(payload, sigHeader)
+          .ifPresent(webhookProcessingService::process);
+    } catch (final WebhookProcessingException e) {
+      log.warn("Rejected Stripe webhook — {}", e.getMessage());
       return ResponseEntity.badRequest().build();
     }
 
-    webhookProcessingService.process(event);
     return ResponseEntity.ok().build();
   }
 }
