@@ -82,7 +82,7 @@ Base path: `/api/v1/billing`
 
 - JDK 25 (Eclipse Temurin)
 - Maven 3.9+
-- Node.js >= 22.15.0 & pnpm >= 10.33.2 (git hooks)
+- Node.js >= 22.15.0 & pnpm >= 11.0.8 (git hooks)
 - Docker & Docker Compose
 
 ## Quick Start
