@@ -58,9 +58,9 @@ Base path: `/api/v1/billing`
 | -------- | ------------------- | ----------------------- | ------------------------------- |
 | `GET`    | `/plans`            | JWT (any authenticated) | List all active plans           |
 | `GET`    | `/plans/{planCode}` | JWT (any authenticated) | Get plan by planCode            |
-| `POST`   | `/plans`            | JWT `PLATFORM_OPERATOR` | Create a new plan               |
-| `PUT`    | `/plans/{planCode}` | JWT `PLATFORM_OPERATOR` | Replace a plan                  |
-| `DELETE` | `/plans/{planCode}` | JWT `PLATFORM_OPERATOR` | Deactivate a plan (soft-delete) |
+| `POST`   | `/plans`            | JWT `PLATFORM_ADMIN`    | Create a new plan               |
+| `PUT`    | `/plans/{planCode}` | JWT `PLATFORM_ADMIN`    | Replace a plan                  |
+| `DELETE` | `/plans/{planCode}` | JWT `PLATFORM_ADMIN`    | Deactivate a plan (soft-delete) |
 
 ### Webhooks
 

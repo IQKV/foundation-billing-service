@@ -38,9 +38,9 @@ Subscription data is a local cache of Stripe state — no payment gateway round-
 | -------- | ------------------- | ----------------------- | ------------------------------- |
 | `GET`    | `/plans`            | JWT (any authenticated) | List all active plans           |
 | `GET`    | `/plans/{planCode}` | JWT (any authenticated) | Get plan by planCode            |
-| `POST`   | `/plans`            | JWT `PLATFORM_OPERATOR` | Create a new plan               |
-| `PUT`    | `/plans/{planCode}` | JWT `PLATFORM_OPERATOR` | Replace a plan (full update)    |
-| `DELETE` | `/plans/{planCode}` | JWT `PLATFORM_OPERATOR` | Deactivate a plan (soft-delete) |
+| `POST`   | `/plans`            | JWT `PLATFORM_ADMIN`    | Create a new plan               |
+| `PUT`    | `/plans/{planCode}` | JWT `PLATFORM_ADMIN`    | Replace a plan (full update)    |
+| `DELETE` | `/plans/{planCode}` | JWT `PLATFORM_ADMIN`    | Deactivate a plan (soft-delete) |
 
 `DELETE` performs a soft-delete by setting `active = false`. The row is retained for historical reference.
 

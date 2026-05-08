@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST resource for plan catalog management.
  *
  * <p>Read endpoints are accessible to any authenticated user.
- * Mutation endpoints (create, update, delete) require the {@code PLATFORM_OPERATOR} authority.
+ * Mutation endpoints (create, update, delete) require the {@code PLATFORM_ADMIN} authority.
  *
  * <p>DELETE performs a soft-delete by setting {@code active = false} rather than removing the row.
  */
@@ -92,15 +92,15 @@ public class PlanCatalogRestResource {
   }
 
   @PostMapping
-  @PreAuthorize("hasAuthority('PLATFORM_OPERATOR')")
+  @PreAuthorize("hasAuthority('PLATFORM_ADMIN')")
   @Operation(
       summary = "Create a new plan",
-      description = "Creates a new plan in the catalog. Requires PLATFORM_OPERATOR authority.")
+      description = "Creates a new plan in the catalog. Requires PLATFORM_ADMIN authority.")
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Plan created"),
       @ApiResponse(responseCode = "400", description = "Validation error"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
-      @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_OPERATOR required")
+      @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_ADMIN required")
   })
   public ResponseEntity<Plan> createPlan(@Valid @RequestBody final PlanRequest request) {
     final Plan plan = toPlan(request);
@@ -111,18 +111,18 @@ public class PlanCatalogRestResource {
   }
 
   @PutMapping("/{planCode}")
-  @PreAuthorize("hasAuthority('PLATFORM_OPERATOR')")
+  @PreAuthorize("hasAuthority('PLATFORM_ADMIN')")
   @Operation(
       summary = "Update a plan",
       description = "Replaces mutable fields of the plan identified by planCode. "
-          + "Requires PLATFORM_OPERATOR authority.")
+          + "Requires PLATFORM_ADMIN authority.")
   @Parameter(name = "planCode", in = ParameterIn.PATH, required = true,
       description = "Unique plan identifier (e.g. pro-monthly)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Plan updated"),
       @ApiResponse(responseCode = "400", description = "Validation error"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
-      @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_OPERATOR required"),
+      @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_ADMIN required"),
       @ApiResponse(responseCode = "404", description = "Plan not found")
   })
   public ResponseEntity<Plan> updatePlan(
@@ -141,18 +141,18 @@ public class PlanCatalogRestResource {
   }
 
   @DeleteMapping("/{planCode}")
-  @PreAuthorize("hasAuthority('PLATFORM_OPERATOR')")
+  @PreAuthorize("hasAuthority('PLATFORM_ADMIN')")
   @Operation(
       summary = "Deactivate a plan",
       description = "Soft-deletes the plan by setting active = false. "
           + "The row is retained for historical reference. "
-          + "Requires PLATFORM_OPERATOR authority.")
+          + "Requires PLATFORM_ADMIN authority.")
   @Parameter(name = "planCode", in = ParameterIn.PATH, required = true,
       description = "Unique plan identifier (e.g. pro-monthly)")
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Plan deactivated"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
-      @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_OPERATOR required"),
+      @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_ADMIN required"),
       @ApiResponse(responseCode = "404", description = "Plan not found")
   })
   public ResponseEntity<Void> deactivatePlan(@PathVariable final String planCode) {
