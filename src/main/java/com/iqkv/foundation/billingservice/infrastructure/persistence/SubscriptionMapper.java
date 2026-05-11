@@ -75,4 +75,39 @@ public interface SubscriptionMapper {
    * Used for finding past_due subscriptions for overdue notifications.
    */
   List<Subscription> findByStatus(String status);
+
+  // ─── Admin queries ─────────────────────────────────────────────────────────
+
+  /**
+   * Returns subscription by ID.
+   */
+  Optional<Subscription> findById(@Param("id") java.util.UUID id);
+
+  /**
+   * Updates mutable fields of a subscription.
+   */
+  void update(Subscription subscription);
+
+  /**
+   * Permanently deletes a subscription by ID.
+   */
+  void deleteById(@Param("id") java.util.UUID id);
+
+  /**
+   * Returns a paginated, sorted, and optionally filtered list of subscriptions.
+   */
+  List<Subscription> findAll(@Param("limit") int limit,
+                             @Param("offset") int offset,
+                             @Param("sortBy") String sortBy,
+                             @Param("sortDir") String sortDir,
+                             @Param("search") String search,
+                             @Param("status") String status,
+                             @Param("tenantKey") String tenantKey);
+
+  /**
+   * Returns the total count of subscriptions matching the given filters.
+   */
+  long countAll(@Param("search") String search,
+                @Param("status") String status,
+                @Param("tenantKey") String tenantKey);
 }
