@@ -36,7 +36,7 @@
                               columnName="subject_key" columnDataType="VARCHAR(255)"/>
     </changeSet>
 
-    <changeSet id="20260425120000-add-subscription-subject-scope-5" author="iqkv">
+    <changeSet id="20260425120000-add-subscription-subject-scope-5" author="iqkv" dbms="postgresql">
         <!-- Step 5: Add check constraint for subject_type values -->
         <sql>
             ALTER TABLE subscriptions
@@ -45,7 +45,7 @@
         </sql>
     </changeSet>
 
-    <changeSet id="20260425120000-add-subscription-subject-scope-6" author="iqkv">
+    <changeSet id="20260425120000-add-subscription-subject-scope-6" author="iqkv" dbms="postgresql">
         <!-- Step 6: Create unique partial index for one active subscription per subject -->
         <sql>
             CREATE UNIQUE INDEX idx_subscriptions_subject_active_unique
