@@ -8,8 +8,8 @@
     <include file="db/changelog/changes/20260422120000-create-billing-settings.xml"/>
     <include file="db/changelog/changes/20260422120100-create-subscriptions.xml"/>
     <include file="db/changelog/changes/20260422120300-create-webhook-log.xml"/>
-    <include file="db/changelog/changes/20250425120000-add-subscription-subject-scope.xml"/>
-    <include file="db/changelog/changes/20250425120001-create-plan-catalog.xml"/>
-    <include file="db/changelog/changes/20250425120002-create-user-billing-settings.xml"/>
+    <include file="db/changelog/changes/20260425120000-add-subscription-subject-scope.xml"/>
+    <include file="db/changelog/changes/20260425120001-create-plan-catalog.xml"/>
+    <include file="db/changelog/changes/20260425120002-create-user-billing-settings.xml"/>
 
 </databaseChangeLog>
