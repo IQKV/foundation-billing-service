@@ -77,6 +77,9 @@ public final class SubscriptionDtos {
       Boolean cancelAtPeriodEnd
   ) {}
 
+  /** Total subscription count returned by the admin count endpoint. */
+  public record SubscriptionCountResponse(long total) {}
+
   /** Paginated list of subscriptions returned by the admin list endpoint. */
   public record PagedSubscriptionResponse(
       java.util.List<AdminSubscriptionResponse> content,

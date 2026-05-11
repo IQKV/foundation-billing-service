@@ -93,6 +93,16 @@ public class SubscriptionService {
   // ─── Platform admin ────────────────────────────────────────────────────────
 
   /**
+   * Returns the total number of subscription records across all tenants.
+   *
+   * @return total subscription count
+   */
+  @org.springframework.transaction.annotation.Transactional(readOnly = true)
+  public SubscriptionDtos.SubscriptionCountResponse countSubscriptions() {
+    return new SubscriptionDtos.SubscriptionCountResponse(subscriptionMapper.countAll(null, null, null));
+  }
+
+  /**
    * Returns a paginated, sorted, and optionally filtered list of subscriptions.
    *
    * @param query encapsulates pagination, sort, and optional filters

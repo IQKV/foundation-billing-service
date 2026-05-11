@@ -65,6 +65,19 @@ public class SubscriptionAdminRestResource {
     return ResponseEntity.ok(subscriptionService.listSubscriptions(query));
   }
 
+  @GetMapping("/count")
+  @Operation(summary = "Count subscriptions", description = "Returns the total number of subscription records across all tenants.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Total subscription count returned",
+                   content = @Content(schema = @io.swagger.v3.oas.annotations.media.Schema(
+                       implementation = SubscriptionDtos.SubscriptionCountResponse.class))),
+      @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+      @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_ADMIN required", content = @Content)
+  })
+  public ResponseEntity<SubscriptionDtos.SubscriptionCountResponse> countSubscriptions() {
+    return ResponseEntity.ok(subscriptionService.countSubscriptions());
+  }
+
   @GetMapping("/{id}")
   @Operation(summary = "Get subscription by ID")
   @ApiResponses({
