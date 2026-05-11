@@ -6,13 +6,15 @@
 spring:
   liquibase:
     enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
     contexts: demo
 
 logging:
   level:
     com.iqkv: DEBUG
     org.mybatis: INFO
-    liquibase: INFO
+    liquibase: DEBUG
+    liquibase.changelog: DEBUG
 
 iqkv:
   db:
