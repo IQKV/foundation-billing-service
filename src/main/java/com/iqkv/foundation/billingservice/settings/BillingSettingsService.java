@@ -19,11 +19,13 @@ package com.iqkv.foundation.billingservice.settings;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEvent;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEventType;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
+import com.iqkv.foundation.billingservice.shared.exception.DuplicateResourceException;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
 import org.slf4j.Logger;
@@ -101,7 +103,111 @@ public class BillingSettingsService {
     settings.setUpdatedAt(LocalDateTime.now());
     billingSettingsMapper.update(settings);
 
-    // Send billing settings updated notification
+    maybePublishBillingUpdated(tenantKey, settings);
+
+    return settings;
+  }
+
+  /**
+   * Creates billing settings for a tenant (platform operator). One row per tenant.
+   *
+   * @throws DuplicateResourceException if settings already exist for {@code tenantKey}
+   */
+  public BillingSettings createForPlatformAdmin(final String tenantKey,
+                                                final BillingSettingsDtos.AdminCreateBillingSettingsRequest request) {
+    if (billingSettingsMapper.existsByTenantKey(tenantKey)) {
+      throw new DuplicateResourceException("Billing settings already exist for tenantKey=" + tenantKey);
+    }
+    final var now = LocalDateTime.now();
+    final var settings = new BillingSettings();
+    settings.setId(UUID.randomUUID());
+    settings.setTenantKey(tenantKey);
+    settings.setExternalCustomerId(request.externalCustomerId());
+    settings.setBillingEmail(request.billingEmail());
+    settings.setCompanyName(request.companyName());
+    settings.setBillingAddress(request.billingAddress());
+    settings.setTaxId(request.taxId());
+    settings.setTaxIdType(request.taxIdType());
+    settings.setCurrency(request.currency());
+    settings.setProfileOwnerId(request.profileOwnerId());
+    settings.setCreatedAt(now);
+    settings.setUpdatedAt(now);
+    billingSettingsMapper.insert(settings);
+    maybePublishBillingUpdated(tenantKey, settings);
+    return settings;
+  }
+
+  /**
+   * Replaces all mutable billing fields for a tenant (platform operator).
+   *
+   * @throws ResourceNotFoundException if no settings exist
+   */
+  public BillingSettings replaceForPlatformAdmin(final String tenantKey,
+                                                 final BillingSettingsDtos.AdminReplaceBillingSettingsRequest request) {
+    final BillingSettings settings = getByTenantKey(tenantKey);
+    settings.setExternalCustomerId(request.externalCustomerId());
+    settings.setBillingEmail(request.billingEmail());
+    settings.setCompanyName(request.companyName());
+    settings.setBillingAddress(request.billingAddress());
+    settings.setTaxId(request.taxId());
+    settings.setTaxIdType(request.taxIdType());
+    settings.setCurrency(request.currency());
+    settings.setProfileOwnerId(request.profileOwnerId());
+    settings.setUpdatedAt(LocalDateTime.now());
+    billingSettingsMapper.update(settings);
+    maybePublishBillingUpdated(tenantKey, settings);
+    return settings;
+  }
+
+  /**
+   * Partially updates billing settings (platform operator).
+   *
+   * @throws ResourceNotFoundException if no settings exist
+   */
+  public BillingSettings patchForPlatformAdmin(final String tenantKey,
+                                               final BillingSettingsDtos.AdminPatchBillingSettingsRequest request) {
+    final BillingSettings settings = getByTenantKey(tenantKey);
+    if (request.externalCustomerId() != null) {
+      settings.setExternalCustomerId(request.externalCustomerId());
+    }
+    if (request.billingEmail() != null) {
+      settings.setBillingEmail(request.billingEmail());
+    }
+    if (request.companyName() != null) {
+      settings.setCompanyName(request.companyName());
+    }
+    if (request.billingAddress() != null) {
+      settings.setBillingAddress(request.billingAddress());
+    }
+    if (request.taxId() != null) {
+      settings.setTaxId(request.taxId());
+    }
+    if (request.taxIdType() != null) {
+      settings.setTaxIdType(request.taxIdType());
+    }
+    if (request.currency() != null) {
+      settings.setCurrency(request.currency());
+    }
+    if (request.profileOwnerId() != null) {
+      settings.setProfileOwnerId(request.profileOwnerId());
+    }
+    settings.setUpdatedAt(LocalDateTime.now());
+    billingSettingsMapper.update(settings);
+    maybePublishBillingUpdated(tenantKey, settings);
+    return settings;
+  }
+
+  /**
+   * Deletes billing settings for a tenant (platform operator).
+   *
+   * @throws ResourceNotFoundException if no settings exist
+   */
+  public void deleteForPlatformAdmin(final String tenantKey) {
+    getByTenantKey(tenantKey);
+    billingSettingsMapper.deleteByTenantKey(tenantKey);
+  }
+
+  private void maybePublishBillingUpdated(final String tenantKey, final BillingSettings settings) {
     final String email = resolveEmail(settings);
     if (email != null) {
       try {
@@ -119,8 +225,6 @@ public class BillingSettingsService {
         log.warn("Failed to send billing updated notification for tenant {}: {}", tenantKey, e.getMessage());
       }
     }
-
-    return settings;
   }
 
   /**

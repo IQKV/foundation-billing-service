@@ -37,4 +37,21 @@ public final class BillingSettingsDtoMapper {
         settings.getUpdatedAt() != null ? settings.getUpdatedAt().toInstant(java.time.ZoneOffset.UTC) : null
     );
   }
+
+  public static BillingSettingsDtos.AdminBillingSettingsResponse toAdminResponse(final BillingSettings settings) {
+    return new BillingSettingsDtos.AdminBillingSettingsResponse(
+        settings.getId(),
+        settings.getTenantKey(),
+        settings.getExternalCustomerId(),
+        settings.getBillingEmail(),
+        settings.getCompanyName(),
+        settings.getBillingAddress(),
+        settings.getTaxId(),
+        settings.getTaxIdType(),
+        settings.getCurrency(),
+        settings.getProfileOwnerId(),
+        settings.getCreatedAt() != null ? settings.getCreatedAt().toInstant(java.time.ZoneOffset.UTC) : null,
+        settings.getUpdatedAt() != null ? settings.getUpdatedAt().toInstant(java.time.ZoneOffset.UTC) : null
+    );
+  }
 }

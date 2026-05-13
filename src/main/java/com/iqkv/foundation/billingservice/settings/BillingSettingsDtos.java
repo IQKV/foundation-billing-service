@@ -25,7 +25,8 @@ import java.util.UUID;
 
 /**
  * DTOs for the billing settings API surface.
- * All types are immutable records; internal fields (e.g. {@code externalCustomerId}) are excluded.
+ * All types are immutable records. Tenant self-service responses omit internal gateway identifiers;
+ * admin responses expose them for platform operations.
  */
 public final class BillingSettingsDtos {
 
@@ -68,5 +69,106 @@ public final class BillingSettingsDtos {
       String currency,
       Instant createdAt,
       Instant updatedAt
+  ) {}
+
+  // ─── Admin DTOs (PLATFORM_ADMIN) ───────────────────────────────────────────
+
+  /**
+   * Full billing settings view for platform operators (includes gateway customer id and profile owner).
+   */
+  public record AdminBillingSettingsResponse(
+      UUID id,
+      String tenantKey,
+      String externalCustomerId,
+      String billingEmail,
+      String companyName,
+      String billingAddress,
+      String taxId,
+      String taxIdType,
+      String currency,
+      UUID profileOwnerId,
+      Instant createdAt,
+      Instant updatedAt
+  ) {}
+
+  /**
+   * Request body for {@code POST /admin/tenants/{tenantKey}/billing-settings}.
+   */
+  public record AdminCreateBillingSettingsRequest(
+      @NotBlank @Size(max = 255)
+      String externalCustomerId,
+
+      @NotBlank @Email
+      String billingEmail,
+
+      @Size(max = 255)
+      String companyName,
+
+      String billingAddress,
+
+      @Size(max = 100)
+      String taxId,
+
+      @Size(max = 50)
+      String taxIdType,
+
+      @NotBlank @Pattern(regexp = "[A-Z]{3}", message = "must be a 3-letter ISO 4217 currency code")
+      String currency,
+
+      UUID profileOwnerId
+  ) {}
+
+  /**
+   * Request body for {@code PUT} — replaces mutable fields; use {@code null} on optional fields to clear them.
+   */
+  public record AdminReplaceBillingSettingsRequest(
+      @NotBlank @Size(max = 255)
+      String externalCustomerId,
+
+      @NotBlank @Email
+      String billingEmail,
+
+      @Size(max = 255)
+      String companyName,
+
+      String billingAddress,
+
+      @Size(max = 100)
+      String taxId,
+
+      @Size(max = 50)
+      String taxIdType,
+
+      @NotBlank @Pattern(regexp = "[A-Z]{3}", message = "must be a 3-letter ISO 4217 currency code")
+      String currency,
+
+      UUID profileOwnerId
+  ) {}
+
+  /**
+   * Request body for {@code PATCH} — only non-null fields are applied.
+   */
+  public record AdminPatchBillingSettingsRequest(
+      @Size(max = 255)
+      String externalCustomerId,
+
+      @Email
+      String billingEmail,
+
+      @Size(max = 255)
+      String companyName,
+
+      String billingAddress,
+
+      @Size(max = 100)
+      String taxId,
+
+      @Size(max = 50)
+      String taxIdType,
+
+      @Pattern(regexp = "[A-Z]{3}", message = "must be a 3-letter ISO 4217 currency code")
+      String currency,
+
+      UUID profileOwnerId
   ) {}
 }

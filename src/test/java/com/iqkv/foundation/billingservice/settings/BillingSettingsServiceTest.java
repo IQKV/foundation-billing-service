@@ -30,6 +30,7 @@ import java.util.UUID;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEvent;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
+import com.iqkv.foundation.billingservice.shared.exception.DuplicateResourceException;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
 import org.junit.jupiter.api.DisplayName;
@@ -175,6 +176,81 @@ class BillingSettingsServiceTest {
     verify(messagingService).publishNotification(argThat(event ->
         event.getRecipientEmail().equals("billing@example.com")
     ));
+  }
+
+  @Test
+  @DisplayName("Should create billing settings for platform admin")
+  void shouldCreateForPlatformAdmin() {
+    when(billingSettingsMapper.existsByTenantKey("abcd1234")).thenReturn(false);
+
+    final var request = new BillingSettingsDtos.AdminCreateBillingSettingsRequest(
+        "cus_new", "ops@example.com", "Co", null, null, null, "USD", null);
+
+    final BillingSettings result = billingSettingsService.createForPlatformAdmin("abcd1234", request);
+
+    assertThat(result.getTenantKey()).isEqualTo("abcd1234");
+    assertThat(result.getExternalCustomerId()).isEqualTo("cus_new");
+    assertThat(result.getBillingEmail()).isEqualTo("ops@example.com");
+    verify(billingSettingsMapper).insert(any(BillingSettings.class));
+    verify(messagingService).publishNotification(any(NotificationEvent.class));
+  }
+
+  @Test
+  @DisplayName("Should throw DuplicateResourceException when creating existing billing settings")
+  void shouldThrowWhenCreateDuplicate() {
+    when(billingSettingsMapper.existsByTenantKey("abcd1234")).thenReturn(true);
+    final var request = new BillingSettingsDtos.AdminCreateBillingSettingsRequest(
+        "cus_new", "ops@example.com", null, null, null, null, "USD", null);
+
+    assertThatThrownBy(() -> billingSettingsService.createForPlatformAdmin("abcd1234", request))
+        .isInstanceOf(DuplicateResourceException.class);
+  }
+
+  @Test
+  @DisplayName("Should replace billing settings for platform admin")
+  void shouldReplaceForPlatformAdmin() {
+    final String tenantKey = "tenant-123";
+    final BillingSettings settings = createBillingSettings(tenantKey);
+    when(billingSettingsMapper.findByTenantKey(tenantKey)).thenReturn(Optional.of(settings));
+
+    final var request = new BillingSettingsDtos.AdminReplaceBillingSettingsRequest(
+        "cus_replaced", "new@example.com", null, null, null, null, "GBP", null);
+
+    final BillingSettings result = billingSettingsService.replaceForPlatformAdmin(tenantKey, request);
+
+    assertThat(result.getExternalCustomerId()).isEqualTo("cus_replaced");
+    assertThat(result.getBillingEmail()).isEqualTo("new@example.com");
+    assertThat(result.getCurrency()).isEqualTo("GBP");
+    verify(billingSettingsMapper).update(settings);
+  }
+
+  @Test
+  @DisplayName("Should patch billing settings for platform admin")
+  void shouldPatchForPlatformAdmin() {
+    final String tenantKey = "tenant-123";
+    final BillingSettings settings = createBillingSettings(tenantKey);
+    when(billingSettingsMapper.findByTenantKey(tenantKey)).thenReturn(Optional.of(settings));
+
+    final var request = new BillingSettingsDtos.AdminPatchBillingSettingsRequest(
+        "cus_patched", null, null, null, null, null, null, null);
+
+    final BillingSettings result = billingSettingsService.patchForPlatformAdmin(tenantKey, request);
+
+    assertThat(result.getExternalCustomerId()).isEqualTo("cus_patched");
+    assertThat(result.getBillingEmail()).isEqualTo("billing@example.com");
+    verify(billingSettingsMapper).update(settings);
+  }
+
+  @Test
+  @DisplayName("Should delete billing settings for platform admin")
+  void shouldDeleteForPlatformAdmin() {
+    final String tenantKey = "tenant-123";
+    final BillingSettings settings = createBillingSettings(tenantKey);
+    when(billingSettingsMapper.findByTenantKey(tenantKey)).thenReturn(Optional.of(settings));
+
+    billingSettingsService.deleteForPlatformAdmin(tenantKey);
+
+    verify(billingSettingsMapper).deleteByTenantKey(tenantKey);
   }
 
   private BillingSettings createBillingSettings(final String tenantKey) {

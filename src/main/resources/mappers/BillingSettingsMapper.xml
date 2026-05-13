@@ -63,16 +63,21 @@
 
     <update id="update" parameterType="com.iqkv.foundation.billingservice.settings.BillingSettings">
         UPDATE billing_settings
-        SET billing_email       = #{billingEmail},
-            company_name        = #{companyName},
-            billing_address     = #{billingAddress}::jsonb,
-            tax_id              = #{taxId},
-            tax_id_type         = #{taxIdType},
-            currency            = #{currency},
-            profile_owner_id    = #{profileOwnerId},
-            updated_at          = now()
+        SET external_customer_id = #{externalCustomerId},
+            billing_email        = #{billingEmail},
+            company_name         = #{companyName},
+            billing_address      = #{billingAddress}::jsonb,
+            tax_id               = #{taxId},
+            tax_id_type          = #{taxIdType},
+            currency             = #{currency},
+            profile_owner_id     = #{profileOwnerId},
+            updated_at           = now()
         WHERE tenant_key = #{tenantKey}
     </update>
+
+    <delete id="deleteByTenantKey">
+        DELETE FROM billing_settings WHERE tenant_key = #{tenantKey}
+    </delete>
 
     <update id="clearProfileOwnerById">
         UPDATE billing_settings

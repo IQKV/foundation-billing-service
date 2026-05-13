@@ -38,5 +38,7 @@ public interface BillingSettingsMapper {
 
   void update(BillingSettings settings);
 
+  int deleteByTenantKey(String tenantKey);
+
   int clearProfileOwnerById(@Param("profileOwnerId") java.util.UUID profileOwnerId);
 }
