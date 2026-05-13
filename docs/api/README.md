@@ -34,23 +34,23 @@ Subscription data is a local cache of Stripe state — no payment gateway round-
 
 ### Plan Catalog
 
-| Method   | Path                | Auth                    | Description           |
-| -------- | ------------------- | ----------------------- | --------------------- |
-| `GET`    | `/plans`            | JWT (any authenticated) | List all active plans |
-| `GET`    | `/plans/{planCode}` | JWT (any authenticated) | Get plan by planCode  |
+| Method | Path                | Auth                    | Description           |
+| ------ | ------------------- | ----------------------- | --------------------- |
+| `GET`  | `/plans`            | JWT (any authenticated) | List all active plans |
+| `GET`  | `/plans/{planCode}` | JWT (any authenticated) | Get plan by planCode  |
 
 ---
 
 ### Plan Catalog (platform admin)
 
-| Method   | Path                      | Auth                 | Description                                      |
-| -------- | ------------------------- | -------------------- | ------------------------------------------------ |
-| `GET`    | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive)              |
-| `GET`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                             |
-| `POST`   | `/admin/plans`            | JWT `PLATFORM_ADMIN` | Create a new plan                                |
-| `PUT`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan (full update)                   |
-| `PATCH`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Partially update a plan                          |
-| `DELETE` | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Deactivate a plan (soft-delete)                  |
+| Method   | Path                      | Auth                 | Description                         |
+| -------- | ------------------------- | -------------------- | ----------------------------------- |
+| `GET`    | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive) |
+| `GET`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                |
+| `POST`   | `/admin/plans`            | JWT `PLATFORM_ADMIN` | Create a new plan                   |
+| `PUT`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan (full update)        |
+| `PATCH`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Partially update a plan             |
+| `DELETE` | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Deactivate a plan (soft-delete)     |
 
 `DELETE` performs a soft-delete by setting `active = false`. The row is retained for historical reference.
 
