@@ -12,4 +12,7 @@
     <include file="db/changelog/changes/20260425120001-create-plan-catalog.xml"/>
     <include file="db/changelog/changes/20260425120002-create-user-billing-settings.xml"/>
 
+    <!-- Demo data (Liquibase context: demo); enable with iqkv.liquibase.contexts=demo -->
+    <include file="db/changelog/demo/master.xml"/>
+
 </databaseChangeLog>

@@ -32,5 +32,7 @@ logging:
     org.springframework.security: INFO
 
 iqkv:
+  liquibase:
+    contexts: demo
   mail:
     port: ${MAIL_PORT:1025}

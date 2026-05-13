@@ -78,7 +78,9 @@
     },
     {
       "name": "iqkv.liquibase",
-      "description": "Liquibase database migration configuration."
+      "type": "com.iqkv.foundation.billingservice.infrastructure.config.LiquibaseConfigurationProperties",
+      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.LiquibaseConfigurationProperties",
+      "description": "Liquibase database migration configuration for the custom LiquibaseRunner."
     }
   ],
   "properties": [
@@ -254,8 +256,7 @@
     {
       "name": "iqkv.liquibase.contexts",
       "type": "java.lang.String",
-      "description": "Active Liquibase contexts. Use 'demo' to include seed data, omit or use '!demo' for clean schema only.",
-      "defaultValue": "demo"
+      "description": "Active Liquibase contexts. Set to 'demo' on non-production profiles to apply demo seed changelogs; omit for schema-only."
     }
   ],
   "hints": [

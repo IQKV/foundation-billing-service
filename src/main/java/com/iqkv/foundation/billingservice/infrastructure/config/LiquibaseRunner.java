@@ -32,6 +32,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * Runs Liquibase migrations on application startup using the Liquibase Java API directly.
@@ -42,6 +43,9 @@ import org.springframework.stereotype.Component;
  * used by {@code TenantLiquibaseRunner} in the IAM service.
  *
  * <p>Enabled by default; disable with {@code spring.liquibase.enabled=false}.
+ *
+ * <p>Non-production seed data is gated with Liquibase {@code context="demo"}; activate via
+ * {@code iqkv.liquibase.contexts=demo} (see profile {@code application-local.yml}).
  */
 @Component
 @ConditionalOnProperty(name = "spring.liquibase.enabled", havingValue = "true", matchIfMissing = false)
@@ -49,26 +53,39 @@ public class LiquibaseRunner implements ApplicationRunner {
 
   private static final Logger log = LoggerFactory.getLogger(LiquibaseRunner.class);
 
-  private static final String CHANGELOG = "db/changelog/db.changelog-master.xml";
+  private static final String DEFAULT_CHANGELOG = "db/changelog/db.changelog-master.xml";
 
   private final DataSource dataSource;
+  private final LiquibaseConfigurationProperties liquibaseProps;
 
-  public LiquibaseRunner(final DataSource dataSource) {
+  public LiquibaseRunner(final DataSource dataSource,
+                         final LiquibaseConfigurationProperties liquibaseProps) {
     this.dataSource = dataSource;
+    this.liquibaseProps = liquibaseProps;
   }
 
   @Override
   public void run(final ApplicationArguments args) throws Exception {
-    log.info("Running Liquibase migrations from {}", CHANGELOG);
+    final String changelog = StringUtils.hasText(liquibaseProps.changeLog())
+        ? liquibaseProps.changeLog()
+        : DEFAULT_CHANGELOG;
+    final Contexts contexts = StringUtils.hasText(liquibaseProps.contexts())
+        ? new Contexts(liquibaseProps.contexts())
+        : new Contexts();
+
+    log.info("Running Liquibase migrations from {} (contexts: {})",
+        changelog,
+        StringUtils.hasText(liquibaseProps.contexts()) ? liquibaseProps.contexts() : "(none)");
+
     try (final Connection connection = dataSource.getConnection()) {
       final Database database = DatabaseFactory.getInstance()
           .findCorrectDatabaseImplementation(new JdbcConnection(connection));
 
       try (final Liquibase liquibase = new Liquibase(
-          CHANGELOG,
+          changelog,
           new ClassLoaderResourceAccessor(),
           database)) {
-        liquibase.update(new Contexts(), new LabelExpression());
+        liquibase.update(contexts, new LabelExpression());
       }
     }
     log.info("Liquibase migrations completed successfully");

@@ -16,6 +16,8 @@ logging:
     liquibase.changelog: DEBUG
 
 iqkv:
+  liquibase:
+    contexts: demo
   db:
     host: ${DB_HOST:postgres-billing}
   rabbitmq:

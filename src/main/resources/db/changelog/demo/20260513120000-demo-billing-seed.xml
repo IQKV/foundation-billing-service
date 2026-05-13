@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        Demo billing seed — context: demo.
+
+        Matches foundation-iam-service demo tenant and user UUIDs:
+          tenant_key demo0001
+          TENANT_OWNER 00000000-0000-0000-0101-000000000032  tenant.owner@demo.iqkv.com
+          MEMBER       00000000-0000-0000-0101-000000000002  alice.johnson@demo.iqkv.com
+
+        Stripe-style IDs are synthetic placeholders for the local subscription cache (no real Stripe objects).
+    -->
+
+    <changeSet id="20260513120000-demo-plan-catalog" author="iqkv" context="demo">
+        <insert tableName="plan_catalog" schemaName="public">
+            <column name="id"             value="00000000-0000-0000-0b01-000000000001"/>
+            <column name="plan_code"      value="DEMO_PRO_TENANT"/>
+            <column name="display_name"   value="Demo Pro (Tenant)"/>
+            <column name="billing_period" value="MONTHLY"/>
+            <column name="price_minor"    valueNumeric="2900"/>
+            <column name="currency"       value="USD"/>
+            <column name="feature_set"    value="[&quot;api&quot;,&quot;sso&quot;]"/>
+            <column name="scope"          value="TENANT"/>
+            <column name="active"         valueBoolean="true"/>
+            <column name="created_at"     valueDate="2026-05-13T12:00:00"/>
+            <column name="updated_at"     valueDate="2026-05-13T12:00:00"/>
+        </insert>
+        <insert tableName="plan_catalog" schemaName="public">
+            <column name="id"             value="00000000-0000-0000-0b01-000000000002"/>
+            <column name="plan_code"      value="DEMO_TEAM_TENANT"/>
+            <column name="display_name"   value="Demo Team (Tenant)"/>
+            <column name="billing_period" value="MONTHLY"/>
+            <column name="price_minor"    valueNumeric="9900"/>
+            <column name="currency"       value="USD"/>
+            <column name="feature_set"    value="[&quot;api&quot;,&quot;sso&quot;,&quot;audit&quot;]"/>
+            <column name="scope"          value="TENANT"/>
+            <column name="active"         valueBoolean="true"/>
+            <column name="created_at"     valueDate="2026-05-13T12:00:00"/>
+            <column name="updated_at"     valueDate="2026-05-13T12:00:00"/>
+        </insert>
+        <rollback>
+            <delete tableName="plan_catalog" schemaName="public">
+                <where>id IN (
+                    '00000000-0000-0000-0b01-000000000001',
+                    '00000000-0000-0000-0b01-000000000002'
+                )</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20260513120000-demo-billing-settings" author="iqkv" context="demo">
+        <insert tableName="billing_settings" schemaName="public">
+            <column name="id"                     value="00000000-0000-0000-0b10-000000000001"/>
+            <column name="tenant_key"             value="demo0001"/>
+            <column name="external_customer_id"   value="cus_iqkvDemo0001"/>
+            <column name="billing_email"          value="tenant.owner@demo.iqkv.com"/>
+            <column name="company_name"           value="Demo Tenant"/>
+            <column name="currency"               value="USD"/>
+            <column name="profile_owner_id"       value="00000000-0000-0000-0101-000000000032"/>
+            <column name="created_at"             valueDate="2026-05-13T12:00:00"/>
+            <column name="updated_at"             valueDate="2026-05-13T12:00:00"/>
+        </insert>
+        <rollback>
+            <delete tableName="billing_settings" schemaName="public">
+                <where>tenant_key = 'demo0001'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20260513120000-demo-user-billing-settings" author="iqkv" context="demo">
+        <insert tableName="user_billing_settings" schemaName="public">
+            <column name="id"                   value="00000000-0000-0000-0b11-000000000001"/>
+            <column name="user_id"              value="00000000-0000-0000-0101-000000000032"/>
+            <column name="external_customer_id" value="cus_iqkvDemoUserOwner"/>
+            <column name="billing_email"        value="tenant.owner@demo.iqkv.com"/>
+            <column name="company_name"         value="Demo Tenant"/>
+            <column name="currency"             value="USD"/>
+            <column name="created_at"           valueDate="2026-05-13T12:00:00"/>
+            <column name="updated_at"           valueDate="2026-05-13T12:00:00"/>
+        </insert>
+        <insert tableName="user_billing_settings" schemaName="public">
+            <column name="id"                   value="00000000-0000-0000-0b11-000000000002"/>
+            <column name="user_id"              value="00000000-0000-0000-0101-000000000002"/>
+            <column name="external_customer_id" value="cus_iqkvDemoUserAlice"/>
+            <column name="billing_email"        value="alice.johnson@demo.iqkv.com"/>
+            <column name="currency"             value="USD"/>
+            <column name="created_at"           valueDate="2026-05-13T12:00:00"/>
+            <column name="updated_at"           valueDate="2026-05-13T12:00:00"/>
+        </insert>
+        <rollback>
+            <delete tableName="user_billing_settings" schemaName="public">
+                <where>id IN (
+                    '00000000-0000-0000-0b11-000000000001',
+                    '00000000-0000-0000-0b11-000000000002'
+                )</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20260513120000-demo-subscription" author="iqkv" context="demo">
+        <insert tableName="subscriptions" schemaName="public">
+            <column name="id"                         value="00000000-0000-0000-0b12-000000000001"/>
+            <column name="tenant_key"                 value="demo0001"/>
+            <column name="external_subscription_id"   value="sub_iqkvDemo0001Active"/>
+            <column name="external_customer_id"       value="cus_iqkvDemo0001"/>
+            <column name="status"                     value="active"/>
+            <column name="plan_id"                    value="price_1IQKVDemoProMonthly"/>
+            <column name="current_period_start"       valueDate="2026-05-01T00:00:00"/>
+            <column name="current_period_end"         valueDate="2026-06-01T00:00:00"/>
+            <column name="cancel_at_period_end"       valueBoolean="false"/>
+            <column name="subject_type"               value="TENANT"/>
+            <column name="subject_key"                value="demo0001"/>
+            <column name="created_at"                 valueDate="2026-05-13T12:00:00"/>
+            <column name="updated_at"                 valueDate="2026-05-13T12:00:00"/>
+        </insert>
+        <rollback>
+            <delete tableName="subscriptions" schemaName="public">
+                <where>id = '00000000-0000-0000-0b12-000000000001'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
