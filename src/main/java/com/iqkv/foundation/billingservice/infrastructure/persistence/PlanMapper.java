@@ -42,6 +42,11 @@ public interface PlanMapper {
   List<Plan> findAllActive();
 
   /**
+   * Returns all plans in the catalog (including inactive), ordered by {@code plan_code ASC}.
+   */
+  List<Plan> findAll();
+
+  /**
    * Inserts a new plan into the catalog.
    */
   void insert(Plan plan);

@@ -40,6 +40,13 @@
         ORDER BY plan_code ASC
     </select>
 
+    <select id="findAll" resultMap="planResultMap">
+        SELECT id, plan_code, display_name, billing_period, price_minor, currency,
+               feature_set, scope, active, created_at, updated_at
+        FROM plan_catalog
+        ORDER BY plan_code ASC
+    </select>
+
     <insert id="insert" parameterType="com.iqkv.foundation.billingservice.plan.Plan">
         INSERT INTO plan_catalog
             (id, plan_code, display_name, billing_period, price_minor, currency,
