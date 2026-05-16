@@ -29,15 +29,22 @@ The Billing service owns the payment gateway integration layer for the platform:
 
 Base path: `/api/v1/billing`
 
-### Plan Catalog — `/api/v1/billing/plans`
+### Billing Settings — `/api/v1/billing/settings`
 
-| Method   | Path                | Auth                 | Description                     |
-| -------- | ------------------- | -------------------- | ------------------------------- |
-| `GET`    | `/plans`            | JWT                  | List all active plans           |
-| `GET`    | `/plans/{planCode}` | JWT                  | Get plan by code                |
-| `POST`   | `/plans`            | JWT `PLATFORM_ADMIN` | Create a plan                   |
-| `PUT`    | `/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan                  |
-| `DELETE` | `/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Deactivate a plan (soft-delete) |
+| Method  | Path                    | Auth                               | Description                                        |
+| ------- | ----------------------- | ---------------------------------- | -------------------------------------------------- |
+| `GET`   | `/settings/{tenantKey}` | JWT `TENANT_OWNER` + `X-Tenant-ID` | Get billing settings (contact email, tax ID, etc.) |
+| `PATCH` | `/settings/{tenantKey}` | JWT `TENANT_OWNER` + `X-Tenant-ID` | Update billing settings (syncs to payment gateway) |
+
+### Billing Settings (platform admin) — `/api/v1/billing/admin/tenants/{tenantKey}/billing-settings`
+
+| Method   | Path                                          | Auth                 | Description                          |
+| -------- | --------------------------------------------- | -------------------- | ------------------------------------ |
+| `GET`    | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Get billing settings for a tenant    |
+| `POST`   | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Create billing settings for a tenant |
+| `PUT`    | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Replace billing settings             |
+| `PATCH`  | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Partially update billing settings    |
+| `DELETE` | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Delete billing settings              |
 
 ### Subscriptions — `/api/v1/billing/subscriptions`
 
@@ -50,12 +57,33 @@ Base path: `/api/v1/billing`
 
 > Subscription data is a local cache — no gateway round-trips on read. Subject resolves to tenant (multi-tenant) or user (single-tenant) based on `ROLLOUT_MODE`.
 
-### Billing Settings — `/api/v1/billing/settings`
+### Subscriptions (platform admin) — `/api/v1/billing/admin/subscriptions`
 
-| Method  | Path                    | Auth                               | Description                                        |
-| ------- | ----------------------- | ---------------------------------- | -------------------------------------------------- |
-| `GET`   | `/settings/{tenantKey}` | JWT `TENANT_OWNER` + `X-Tenant-ID` | Get billing settings (contact email, tax ID, etc.) |
-| `PATCH` | `/settings/{tenantKey}` | JWT `TENANT_OWNER` + `X-Tenant-ID` | Update billing settings                            |
+| Method   | Path                         | Auth                 | Description                                |
+| -------- | ---------------------------- | -------------------- | ------------------------------------------ |
+| `GET`    | `/admin/subscriptions`       | JWT `PLATFORM_ADMIN` | List subscriptions (paginated, filterable) |
+| `GET`    | `/admin/subscriptions/count` | JWT `PLATFORM_ADMIN` | Count all subscriptions                    |
+| `GET`    | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Get subscription by ID                     |
+| `PATCH`  | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Partially update subscription              |
+| `DELETE` | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Delete subscription                        |
+
+### Plan Catalog — `/api/v1/billing/plans`
+
+| Method | Path                | Auth                    | Description           |
+| ------ | ------------------- | ----------------------- | --------------------- |
+| `GET`  | `/plans`            | JWT (any authenticated) | List all active plans |
+| `GET`  | `/plans/{planCode}` | JWT (any authenticated) | Get plan by planCode  |
+
+### Plan Catalog (platform admin) — `/api/v1/billing/admin/plans`
+
+| Method   | Path                      | Auth                 | Description                                     |
+| -------- | ------------------------- | -------------------- | ----------------------------------------------- |
+| `GET`    | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive)             |
+| `GET`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                            |
+| `POST`   | `/admin/plans`            | JWT `PLATFORM_ADMIN` | Create a plan                                   |
+| `PUT`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan                                  |
+| `PATCH`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Partially update a plan                         |
+| `DELETE` | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Deactivate a plan (soft-delete, `active=false`) |
 
 ### Webhooks — `/api/v1/billing/webhooks`
 

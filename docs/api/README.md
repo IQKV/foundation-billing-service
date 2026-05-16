@@ -19,6 +19,21 @@ Cross-tenant access returns `403 Forbidden`.
 
 ---
 
+### Billing Settings (platform admin)
+
+| Method   | Path                                          | Auth                 | Description                          |
+| -------- | --------------------------------------------- | -------------------- | ------------------------------------ |
+| `GET`    | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Get billing settings for a tenant    |
+| `POST`   | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Create billing settings for a tenant |
+| `PUT`    | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Replace billing settings             |
+| `PATCH`  | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Partially update billing settings    |
+| `DELETE` | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Delete billing settings              |
+
+`POST` returns `409 Conflict` if billing settings already exist for the tenant.
+`DELETE` permanently removes the row (not a soft-delete).
+
+---
+
 ### Subscriptions
 
 | Method | Path                                | Auth                           | Description                                 |
@@ -29,6 +44,21 @@ Cross-tenant access returns `403 Forbidden`.
 | `GET`  | `/subscriptions/me`                 | JWT `TENANT_OWNER` or `MEMBER` | Get all subscriptions for current subject   |
 
 Subscription data is a local cache of Stripe state — no payment gateway round-trips are made.
+The `/{tenantKey}` paths validate `tenantKey` against the JWT `tenant_id` claim; cross-tenant access returns `403 Forbidden`.
+
+---
+
+### Subscriptions (platform admin)
+
+| Method   | Path                         | Auth                 | Description                                |
+| -------- | ---------------------------- | -------------------- | ------------------------------------------ |
+| `GET`    | `/admin/subscriptions`       | JWT `PLATFORM_ADMIN` | List subscriptions (paginated, filterable) |
+| `GET`    | `/admin/subscriptions/count` | JWT `PLATFORM_ADMIN` | Count all subscriptions                    |
+| `GET`    | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Get subscription by ID                     |
+| `PATCH`  | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Partially update subscription              |
+| `DELETE` | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Delete subscription                        |
+
+`DELETE` permanently removes the subscription record.
 
 ---
 

@@ -43,6 +43,16 @@ Base path: `/api/v1/billing`
 | `GET`   | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Get billing settings for a tenant                  |
 | `PATCH` | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Update billing settings (syncs to payment gateway) |
 
+### Billing Settings (platform admin)
+
+| Method   | Path                                          | Auth                 | Description                          |
+| -------- | --------------------------------------------- | -------------------- | ------------------------------------ |
+| `GET`    | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Get billing settings for a tenant    |
+| `POST`   | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Create billing settings for a tenant |
+| `PUT`    | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Replace billing settings             |
+| `PATCH`  | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Partially update billing settings    |
+| `DELETE` | `/admin/tenants/{tenantKey}/billing-settings` | JWT `PLATFORM_ADMIN` | Delete billing settings              |
+
 ### Subscriptions
 
 | Method | Path                                | Auth                           | Description                                 |
@@ -51,6 +61,16 @@ Base path: `/api/v1/billing`
 | `GET`  | `/subscriptions/{tenantKey}`        | JWT `TENANT_OWNER`             | Get all subscriptions for a tenant          |
 | `GET`  | `/subscriptions/me/active`          | JWT `TENANT_OWNER` or `MEMBER` | Get active subscription for current subject |
 | `GET`  | `/subscriptions/me`                 | JWT `TENANT_OWNER` or `MEMBER` | Get all subscriptions for current subject   |
+
+### Subscriptions (platform admin)
+
+| Method   | Path                         | Auth                 | Description                                |
+| -------- | ---------------------------- | -------------------- | ------------------------------------------ |
+| `GET`    | `/admin/subscriptions`       | JWT `PLATFORM_ADMIN` | List subscriptions (paginated, filterable) |
+| `GET`    | `/admin/subscriptions/count` | JWT `PLATFORM_ADMIN` | Count all subscriptions                    |
+| `GET`    | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Get subscription by ID                     |
+| `PATCH`  | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Partially update subscription              |
+| `DELETE` | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Delete subscription                        |
 
 ### Plan Catalog
 
