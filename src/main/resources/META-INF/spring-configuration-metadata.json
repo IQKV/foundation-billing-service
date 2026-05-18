@@ -124,7 +124,7 @@
       "name": "iqkv.rabbitmq.port",
       "type": "java.lang.Integer",
       "description": "RabbitMQ broker AMQP port.",
-      "defaultValue": 5673
+      "defaultValue": 5672
     },
     {
       "name": "iqkv.rabbitmq.username",

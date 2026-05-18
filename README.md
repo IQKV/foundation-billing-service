@@ -128,7 +128,7 @@ pnpm install
 cp .env.example .env.local
 # Edit .env.local — defaults work for local Docker setup
 
-# Start dependencies (PostgreSQL on :5432, RabbitMQ on :5673)
+# Start dependencies (PostgreSQL on :5432, RabbitMQ on :5672)
 docker compose up -d
 
 # Run the service
@@ -149,7 +149,7 @@ docker compose up -d
 | `DB_USERNAME`              | `billing`                       | Database user                                    |
 | `DB_PASSWORD`              | `billing`                       | Database password                                |
 | `RABBITMQ_HOST`            | `localhost`                     | RabbitMQ host                                    |
-| `RABBITMQ_PORT`            | `5673`                          | RabbitMQ AMQP port                               |
+| `RABBITMQ_PORT`            | `5672`                          | RabbitMQ AMQP port                               |
 | `RABBITMQ_USERNAME`        | `billing`                       | RabbitMQ user                                    |
 | `RABBITMQ_PASSWORD`        | `billing`                       | RabbitMQ password                                |
 | `STRIPE_SECRET_KEY`        | `sk_test_placeholder`           | Stripe secret key (required when gateway=STRIPE) |
