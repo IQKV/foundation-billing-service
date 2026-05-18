@@ -60,7 +60,7 @@ The service uses Drone CI/CD pipeline with 10 stages:
 | `SMTP_USERNAME`                   | Email service username            | Email notifications                        |
 | `SMTP_PASSWORD`                   | Email service password            | Email notifications                        |
 
-> **Stripe keys** (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) are not injected by the pipeline. SIT uses hardcoded dummy test values from `values-sit.yaml`. For UAT/PRD, override via `--set config.stripe.secretKey` and `--set config.stripe.webhookSecret` manually or extend the pipeline.
+> **Stripe keys** (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PORTAL_RETURN_URL`) are not injected by the pipeline. SIT uses hardcoded dummy test values from `values-sit.yaml`. For UAT/PRD, override via `--set config.stripe.secretKey`, `--set config.stripe.webhookSecret`, and `--set config.stripe.portalReturnUrl` manually or extend the pipeline.
 
 </details>
 

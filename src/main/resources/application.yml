@@ -89,6 +89,7 @@ iqkv:
   stripe:
     secret-key: ${STRIPE_SECRET_KEY:sk_test_placeholder}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_placeholder}
+    portal-return-url: ${STRIPE_PORTAL_RETURN_URL:http://localhost:3000/billing}
   notification:
     default-locale: en
     base-url: ${APP_BASE_URL:http://localhost:3000}

@@ -1,0 +1,69 @@
+/*
+ * Copyright 2026 IQKV Foundation Team.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.iqkv.foundation.billingservice.userbilling;
+
+import java.util.UUID;
+
+import com.iqkv.foundation.billingservice.settings.BillingSettingsDtos;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * REST resource for individual user billing settings (single-tenant mode).
+ *
+ * <p>Only active when {@code iqkv.platform.rollout-mode=SINGLE_TENANT}.
+ */
+@RestController
+@RequestMapping("/api/v1/billing/user-settings")
+@Tag(name = "User Billing Settings", description = "Individual user billing configuration management")
+@SecurityRequirement(name = "bearerAuth")
+@ConditionalOnProperty(name = "iqkv.platform.rollout-mode", havingValue = "SINGLE_TENANT")
+public class UserBillingSettingsRestResource {
+
+  private final UserBillingSettingsService userBillingSettingsService;
+
+  public UserBillingSettingsRestResource(final UserBillingSettingsService userBillingSettingsService) {
+    this.userBillingSettingsService = userBillingSettingsService;
+  }
+
+  @PostMapping("/portal")
+  @Operation(
+      summary = "Create customer portal session",
+      description = "Creates a Stripe Customer Portal session for the authenticated user and returns the URL for redirection. "
+          + "Only active in SINGLE_TENANT mode.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Portal session created"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "404", description = "User billing settings or customer ID not found")
+  })
+  public ResponseEntity<BillingSettingsDtos.PortalSessionResponse> createPortalSession(
+      @AuthenticationPrincipal final Jwt jwt) {
+    final UUID userId = UUID.fromString(jwt.getSubject());
+    final String url = userBillingSettingsService.createPortalSession(userId);
+    return ResponseEntity.ok(new BillingSettingsDtos.PortalSessionResponse(url));
+  }
+}

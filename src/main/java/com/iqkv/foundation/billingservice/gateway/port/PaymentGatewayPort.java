@@ -63,4 +63,14 @@ public interface PaymentGatewayPort {
    *         if the signature is invalid or the payload cannot be deserialized
    */
   Optional<GatewayWebhookEvent> verifyAndParseWebhookEvent(String payload, String signature);
+
+  /**
+   * Creates a customer portal session for the given customer.
+   *
+   * @param customerId the external customer ID
+   * @param returnUrl  the URL to redirect to after the user leaves the portal
+   * @return the URL of the portal session
+   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if session creation fails
+   */
+  String createPortalSession(String customerId, String returnUrl);
 }

@@ -38,10 +38,11 @@ Base path: `/api/v1/billing`
 
 ### Billing Settings
 
-| Method  | Path                    | Auth               | Description                                        |
-| ------- | ----------------------- | ------------------ | -------------------------------------------------- |
-| `GET`   | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Get billing settings for a tenant                  |
-| `PATCH` | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Update billing settings (syncs to payment gateway) |
+| Method  | Path                           | Auth               | Description                                        |
+| ------- | ------------------------------ | ------------------ | -------------------------------------------------- |
+| `GET`   | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` | Get billing settings for a tenant                  |
+| `PATCH` | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` | Update billing settings (syncs to payment gateway) |
+| `POST`  | `/settings/{tenantKey}/portal` | JWT `TENANT_OWNER` | Create a Stripe Customer Portal session            |
 
 ### Billing Settings (platform admin)
 
@@ -139,20 +140,21 @@ docker compose up -d
 
 ## Environment Variables
 
-| Variable                | Default               | Description                                      |
-| ----------------------- | --------------------- | ------------------------------------------------ |
-| `PAYMENT_GATEWAY_TYPE`  | `STRIPE`              | Active payment gateway (`STRIPE`)                |
-| `DB_HOST`               | `localhost`           | PostgreSQL host                                  |
-| `DB_PORT`               | `5432`                | PostgreSQL port                                  |
-| `DB_NAME`               | `billing`             | Database name                                    |
-| `DB_USERNAME`           | `billing`             | Database user                                    |
-| `DB_PASSWORD`           | `billing`             | Database password                                |
-| `RABBITMQ_HOST`         | `localhost`           | RabbitMQ host                                    |
-| `RABBITMQ_PORT`         | `5673`                | RabbitMQ AMQP port                               |
-| `RABBITMQ_USERNAME`     | `billing`             | RabbitMQ user                                    |
-| `RABBITMQ_PASSWORD`     | `billing`             | RabbitMQ password                                |
-| `STRIPE_SECRET_KEY`     | `sk_test_placeholder` | Stripe secret key (required when gateway=STRIPE) |
-| `STRIPE_WEBHOOK_SECRET` | `whsec_placeholder`   | Stripe webhook signing secret                    |
+| Variable                   | Default                         | Description                                      |
+| -------------------------- | ------------------------------- | ------------------------------------------------ |
+| `PAYMENT_GATEWAY_TYPE`     | `STRIPE`                        | Active payment gateway (`STRIPE`)                |
+| `DB_HOST`                  | `localhost`                     | PostgreSQL host                                  |
+| `DB_PORT`                  | `5432`                          | PostgreSQL port                                  |
+| `DB_NAME`                  | `billing`                       | Database name                                    |
+| `DB_USERNAME`              | `billing`                       | Database user                                    |
+| `DB_PASSWORD`              | `billing`                       | Database password                                |
+| `RABBITMQ_HOST`            | `localhost`                     | RabbitMQ host                                    |
+| `RABBITMQ_PORT`            | `5673`                          | RabbitMQ AMQP port                               |
+| `RABBITMQ_USERNAME`        | `billing`                       | RabbitMQ user                                    |
+| `RABBITMQ_PASSWORD`        | `billing`                       | RabbitMQ password                                |
+| `STRIPE_SECRET_KEY`        | `sk_test_placeholder`           | Stripe secret key (required when gateway=STRIPE) |
+| `STRIPE_WEBHOOK_SECRET`    | `whsec_placeholder`             | Stripe webhook signing secret                    |
+| `STRIPE_PORTAL_RETURN_URL` | `http://localhost:3000/billing` | Stripe portal return URL                         |
 
 Copy `.env.example` to `.env.local` (or `.env.uat` / `.env.prd`) and fill in production values.
 

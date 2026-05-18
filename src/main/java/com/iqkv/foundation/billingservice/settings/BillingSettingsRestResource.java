@@ -35,6 +35,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -111,7 +112,36 @@ public class BillingSettingsRestResource {
       @Valid @RequestBody final BillingSettingsDtos.UpdateBillingSettingsRequest request,
       @AuthenticationPrincipal final Jwt jwt) {
     final String authenticatedTenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
-    final var updated = billingSettingsService.update(tenantKey, authenticatedTenantKey, request);
-    return ResponseEntity.ok(BillingSettingsDtoMapper.toResponse(updated));
+    final var settings = billingSettingsService.update(tenantKey, authenticatedTenantKey, request);
+    return ResponseEntity.ok(BillingSettingsDtoMapper.toResponse(settings));
+  }
+
+  @PostMapping("/{tenantKey}/portal")
+  @PreAuthorize("hasAuthority('TENANT_OWNER')")
+  @Operation(
+      summary = "Create customer portal session",
+      description = "Creates a Stripe Customer Portal session and returns the URL for redirection. "
+          + "Requires TENANT_OWNER authority. The authenticated tenant must match the tenantKey path variable.")
+  @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
+      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+  @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
+      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Portal session created"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER or tenant mismatch"),
+      @ApiResponse(responseCode = "404", description = "Tenant billing settings or customer ID not found")
+  })
+  public ResponseEntity<BillingSettingsDtos.PortalSessionResponse> createPortalSession(
+      @Parameter(description = "8-char alphanumeric tenantKey")
+      @PathVariable @Pattern(regexp = "[a-z0-9]{8}", message = "tenantKey must be 8 lowercase alphanumeric characters") final String tenantKey,
+      @AuthenticationPrincipal final Jwt jwt) {
+    final String authenticatedTenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
+    if (!tenantKey.equals(authenticatedTenantKey)) {
+      throw new com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException(
+          "Authenticated tenant '" + authenticatedTenantKey + "' does not match requested tenant '" + tenantKey + "'");
+    }
+    final String url = billingSettingsService.createPortalSession(tenantKey);
+    return ResponseEntity.ok(new BillingSettingsDtos.PortalSessionResponse(url));
   }
 }

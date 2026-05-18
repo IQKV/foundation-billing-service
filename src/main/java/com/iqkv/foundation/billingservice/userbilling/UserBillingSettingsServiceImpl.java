@@ -22,8 +22,10 @@ import java.util.UUID;
 
 import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
+import com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper;
 import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException;
+import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -50,11 +52,14 @@ public class UserBillingSettingsServiceImpl implements UserBillingSettingsServic
 
   private final UserBillingSettingsMapper userBillingSettingsMapper;
   private final PaymentGatewayPort paymentGatewayPort;
+  private final StripeConfigurationProperties stripeConfig;
 
   public UserBillingSettingsServiceImpl(final UserBillingSettingsMapper userBillingSettingsMapper,
-                                        final PaymentGatewayPort paymentGatewayPort) {
+                                        final PaymentGatewayPort paymentGatewayPort,
+                                        final StripeConfigurationProperties stripeConfig) {
     this.userBillingSettingsMapper = userBillingSettingsMapper;
     this.paymentGatewayPort = paymentGatewayPort;
+    this.stripeConfig = stripeConfig;
   }
 
   /**
@@ -68,6 +73,21 @@ public class UserBillingSettingsServiceImpl implements UserBillingSettingsServic
   public UserBillingSettings getOrCreateUserBillingSettings(final UUID userId) {
     return userBillingSettingsMapper.findByUserId(userId)
         .orElseGet(() -> createUserBillingSettings(userId));
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String createPortalSession(final UUID userId) {
+    final UserBillingSettings settings = userBillingSettingsMapper.findByUserId(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("UserBillingSettings not found for userId=" + userId));
+
+    if (settings.getExternalCustomerId() == null || settings.getExternalCustomerId().isBlank()) {
+      throw new ResourceNotFoundException("No external customer ID found for userId=" + userId);
+    }
+
+    return paymentGatewayPort.createPortalSession(settings.getExternalCustomerId(), stripeConfig.portalReturnUrl());
   }
 
   // ---------------------------------------------------------------------------

@@ -71,6 +71,13 @@ public final class BillingSettingsDtos {
       Instant updatedAt
   ) {}
 
+  /**
+   * Response body for the customer portal session request.
+   *
+   * @param url the URL of the portal session
+   */
+  public record PortalSessionResponse(String url) {}
+
   // ─── Admin DTOs (PLATFORM_ADMIN) ───────────────────────────────────────────
 
   /**

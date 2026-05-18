@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
+import com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEvent;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEventType;
@@ -45,11 +47,17 @@ public class BillingSettingsService {
 
   private final BillingSettingsMapper billingSettingsMapper;
   private final MessagingService messagingService;
+  private final PaymentGatewayPort paymentGatewayPort;
+  private final StripeConfigurationProperties stripeConfig;
 
   public BillingSettingsService(final BillingSettingsMapper billingSettingsMapper,
-                                final MessagingService messagingService) {
+                                final MessagingService messagingService,
+                                final PaymentGatewayPort paymentGatewayPort,
+                                final StripeConfigurationProperties stripeConfig) {
     this.billingSettingsMapper = billingSettingsMapper;
     this.messagingService = messagingService;
+    this.paymentGatewayPort = paymentGatewayPort;
+    this.stripeConfig = stripeConfig;
   }
 
   /**
@@ -61,6 +69,21 @@ public class BillingSettingsService {
     return billingSettingsMapper.findByTenantKey(tenantKey)
         .orElseThrow(() -> new ResourceNotFoundException(
             "BillingSettings not found for tenantKey=" + tenantKey));
+  }
+
+  /**
+   * Creates a customer portal session for the given tenant.
+   *
+   * @param tenantKey the tenant key
+   * @return the URL of the portal session
+   * @throws ResourceNotFoundException if no settings or external customer ID exist
+   */
+  public String createPortalSession(final String tenantKey) {
+    final BillingSettings settings = getByTenantKey(tenantKey);
+    if (settings.getExternalCustomerId() == null || settings.getExternalCustomerId().isBlank()) {
+      throw new ResourceNotFoundException("No external customer ID found for tenantKey=" + tenantKey);
+    }
+    return paymentGatewayPort.createPortalSession(settings.getExternalCustomerId(), stripeConfig.portalReturnUrl());
   }
 
   /**

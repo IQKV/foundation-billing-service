@@ -9,10 +9,11 @@ The JWT must be passed as a `Bearer` token in the `Authorization` header.
 
 ### Billing Settings
 
-| Method  | Path                    | Auth               | Description                               |
-| ------- | ----------------------- | ------------------ | ----------------------------------------- |
-| `GET`   | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Get billing settings for a tenant         |
-| `PATCH` | `/settings/{tenantKey}` | JWT `TENANT_OWNER` | Update billing settings (syncs to Stripe) |
+| Method  | Path                           | Auth               | Description                               |
+| ------- | ------------------------------ | ------------------ | ----------------------------------------- |
+| `GET`   | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` | Get billing settings for a tenant         |
+| `PATCH` | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` | Update billing settings (syncs to Stripe) |
+| `POST`  | `/settings/{tenantKey}/portal` | JWT `TENANT_OWNER` | Create a Stripe Customer Portal session   |
 
 The `tenantKey` path variable is validated against the authenticated tenant's JWT `tenant_id` claim.
 Cross-tenant access returns `403 Forbidden`.
@@ -31,6 +32,16 @@ Cross-tenant access returns `403 Forbidden`.
 
 `POST` returns `409 Conflict` if billing settings already exist for the tenant.
 `DELETE` permanently removes the row (not a soft-delete).
+
+---
+
+### User Billing Settings (single-tenant mode)
+
+| Method | Path                    | Auth | Description                             |
+| ------ | ----------------------- | ---- | --------------------------------------- |
+| `POST` | `/user-settings/portal` | JWT  | Create a Stripe Customer Portal session |
+
+Only active in `SINGLE_TENANT` rollout mode. Returns the portal session URL for the authenticated user.
 
 ---
 

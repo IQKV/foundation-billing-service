@@ -31,10 +31,11 @@ Base path: `/api/v1/billing`
 
 ### Billing Settings — `/api/v1/billing/settings`
 
-| Method  | Path                    | Auth                               | Description                                        |
-| ------- | ----------------------- | ---------------------------------- | -------------------------------------------------- |
-| `GET`   | `/settings/{tenantKey}` | JWT `TENANT_OWNER` + `X-Tenant-ID` | Get billing settings (contact email, tax ID, etc.) |
-| `PATCH` | `/settings/{tenantKey}` | JWT `TENANT_OWNER` + `X-Tenant-ID` | Update billing settings (syncs to payment gateway) |
+| Method  | Path                           | Auth                               | Description                                        |
+| ------- | ------------------------------ | ---------------------------------- | -------------------------------------------------- |
+| `GET`   | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` + `X-Tenant-ID` | Get billing settings (contact email, tax ID, etc.) |
+| `PATCH` | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` + `X-Tenant-ID` | Update billing settings (syncs to payment gateway) |
+| `POST`  | `/settings/{tenantKey}/portal` | JWT `TENANT_OWNER` + `X-Tenant-ID` | Create a Stripe Customer Portal session            |
 
 ### Billing Settings (platform admin) — `/api/v1/billing/admin/tenants/{tenantKey}/billing-settings`
 
@@ -172,28 +173,29 @@ docker compose up -d
 
 ## Environment Variables
 
-| Variable                | Default                     | Description                                                     |
-| ----------------------- | --------------------------- | --------------------------------------------------------------- |
-| `PAYMENT_GATEWAY_TYPE`  | `STRIPE`                    | Active payment gateway adapter (`STRIPE`)                       |
-| `ROLLOUT_MODE`          | `MULTI_TENANT`              | Platform mode: `MULTI_TENANT` or `SINGLE_TENANT`                |
-| `DB_HOST`               | `localhost`                 | PostgreSQL host                                                 |
-| `DB_PORT`               | `5432`                      | PostgreSQL port                                                 |
-| `DB_NAME`               | `billing`                   | Database name                                                   |
-| `DB_USERNAME`           | `billing`                   | Database user                                                   |
-| `DB_PASSWORD`           | `billing`                   | Database password                                               |
-| `RABBITMQ_HOST`         | `localhost`                 | RabbitMQ host                                                   |
-| `RABBITMQ_PORT`         | `5673`                      | RabbitMQ AMQP port                                              |
-| `RABBITMQ_USERNAME`     | `billing`                   | RabbitMQ user                                                   |
-| `RABBITMQ_PASSWORD`     | `billing`                   | RabbitMQ password                                               |
-| `STRIPE_SECRET_KEY`     | `sk_test_placeholder`       | Stripe secret key (required when `PAYMENT_GATEWAY_TYPE=STRIPE`) |
-| `STRIPE_WEBHOOK_SECRET` | `whsec_placeholder`         | Stripe webhook signing secret                                   |
-| `JWT_PUBLIC_KEY_PATH`   | `classpath:keys/public.pem` | RS256 public key (from IAM)                                     |
-| `MAIL_HOST`             | `localhost`                 | SMTP host                                                       |
-| `MAIL_PORT`             | `587`                       | SMTP port                                                       |
-| `MAIL_FROM`             | `noreply@iqkv.com`          | Sender address                                                  |
-| `APP_BASE_URL`          | `http://localhost:3000`     | Frontend base URL (used in email links)                         |
-| `DEFAULT_BILLING_EMAIL` | _(empty)_                   | Fallback billing contact for single-tenant mode                 |
-| `MESSAGING_ENABLED`     | `true`                      | Toggle RabbitMQ publishing (set `false` for local dev)          |
+| Variable                   | Default                         | Description                                                     |
+| -------------------------- | ------------------------------- | --------------------------------------------------------------- |
+| `PAYMENT_GATEWAY_TYPE`     | `STRIPE`                        | Active payment gateway adapter (`STRIPE`)                       |
+| `ROLLOUT_MODE`             | `MULTI_TENANT`                  | Platform mode: `MULTI_TENANT` or `SINGLE_TENANT`                |
+| `DB_HOST`                  | `localhost`                     | PostgreSQL host                                                 |
+| `DB_PORT`                  | `5432`                          | PostgreSQL port                                                 |
+| `DB_NAME`                  | `billing`                       | Database name                                                   |
+| `DB_USERNAME`              | `billing`                       | Database user                                                   |
+| `DB_PASSWORD`              | `billing`                       | Database password                                               |
+| `RABBITMQ_HOST`            | `localhost`                     | RabbitMQ host                                                   |
+| `RABBITMQ_PORT`            | `5673`                          | RabbitMQ AMQP port                                              |
+| `RABBITMQ_USERNAME`        | `billing`                       | RabbitMQ user                                                   |
+| `RABBITMQ_PASSWORD`        | `billing`                       | RabbitMQ password                                               |
+| `STRIPE_SECRET_KEY`        | `sk_test_placeholder`           | Stripe secret key (required when `PAYMENT_GATEWAY_TYPE=STRIPE`) |
+| `STRIPE_WEBHOOK_SECRET`    | `whsec_placeholder`             | Stripe webhook signing secret                                   |
+| `STRIPE_PORTAL_RETURN_URL` | `http://localhost:3000/billing` | Stripe portal return URL                                        |
+| `JWT_PUBLIC_KEY_PATH`      | `classpath:keys/public.pem`     | RS256 public key (from IAM)                                     |
+| `MAIL_HOST`                | `localhost`                     | SMTP host                                                       |
+| `MAIL_PORT`                | `587`                           | SMTP port                                                       |
+| `MAIL_FROM`                | `noreply@iqkv.com`              | Sender address                                                  |
+| `APP_BASE_URL`             | `http://localhost:3000`         | Frontend base URL (used in email links)                         |
+| `DEFAULT_BILLING_EMAIL`    | _(empty)_                       | Fallback billing contact for single-tenant mode                 |
+| `MESSAGING_ENABLED`        | `true`                          | Toggle RabbitMQ publishing (set `false` for local dev)          |
 
 > Copy `.env.example` to `.env.local` / `.env.uat` / `.env.prd` and fill in values per environment.
 

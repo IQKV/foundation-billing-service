@@ -37,8 +37,10 @@ import com.stripe.model.Customer;
 import com.stripe.model.Event;
 import com.stripe.model.Invoice;
 import com.stripe.model.SubscriptionItem;
+import com.stripe.model.billingportal.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.CustomerCreateParams;
+import com.stripe.param.billingportal.SessionCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -137,6 +139,25 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
         yield Optional.empty();
       }
     };
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String createPortalSession(final String customerId, final String returnUrl) {
+    final SessionCreateParams params = SessionCreateParams.builder()
+        .setCustomer(customerId)
+        .setReturnUrl(returnUrl)
+        .build();
+
+    try {
+      final Session session = Session.create(params);
+      log.debug("Created Stripe portal session for customer {}: {}", customerId, session.getUrl());
+      return session.getUrl();
+    } catch (final StripeException e) {
+      throw new PaymentGatewayException("Failed to create Stripe portal session for customer: " + customerId, e);
+    }
   }
 
   // -------------------------------------------------------------------------

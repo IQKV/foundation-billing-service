@@ -28,6 +28,8 @@ public record StripeConfigurationProperties(
     // Stripe live/test secret key — must start with sk_live_ or sk_test_
     @NotBlank @Pattern(regexp = "^sk_(live|test)_.+", message = "Stripe secretKey must start with sk_live_ or sk_test_") String secretKey,
     // Stripe webhook signing secret — must start with whsec_
-    @NotBlank @Pattern(regexp = "^whsec_.+", message = "Stripe webhookSecret must start with whsec_") String webhookSecret
+    @NotBlank @Pattern(regexp = "^whsec_.+", message = "Stripe webhookSecret must start with whsec_") String webhookSecret,
+    // URL to redirect users back to after they leave the Stripe Customer Portal
+    @NotBlank String portalReturnUrl
 ) {
 }

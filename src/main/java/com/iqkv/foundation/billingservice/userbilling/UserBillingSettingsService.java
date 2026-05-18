@@ -37,4 +37,14 @@ public interface UserBillingSettingsService {
    *         if Stripe customer creation fails
    */
   UserBillingSettings getOrCreateUserBillingSettings(UUID userId);
+
+  /**
+   * Creates a customer portal session for the given user.
+   *
+   * @param userId the user ID
+   * @return the URL of the portal session
+   * @throws com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException
+   *         if no settings or external customer ID exist for the user
+   */
+  String createPortalSession(UUID userId);
 }
