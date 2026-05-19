@@ -66,11 +66,14 @@ The `/{tenantKey}` paths validate `tenantKey` against the JWT `tenant_id` claim;
 
 ### Payments
 
-| Method | Path               | Auth               | Description     |
-| ------ | ------------------ | ------------------ | --------------- |
-| `POST` | `/payments/refund` | JWT `TENANT_OWNER` | Create a refund |
+| Method | Path                            | Auth               | Description                  |
+| ------ | ------------------------------- | ------------------ | ---------------------------- |
+| `POST` | `/payments/{tenantKey}/refund`  | JWT `TENANT_OWNER` | Create a refund for a tenant |
+| `GET`  | `/payments/{tenantKey}/refunds` | JWT `TENANT_OWNER` | List refunds for a tenant    |
 
-`POST /refund` creates a full or partial refund for a given payment (PaymentIntent or Charge ID).
+`POST /{tenantKey}/refund` creates a full or partial refund for a given payment (PaymentIntent or Charge ID).
+`GET /{tenantKey}/refunds` returns all refunds for the tenant ordered by occurrence date.
+The `{tenantKey}` is validated against the authenticated tenant's JWT `tenant_id` claim.
 
 ---
 
@@ -85,6 +88,17 @@ The `/{tenantKey}` paths validate `tenantKey` against the JWT `tenant_id` claim;
 | `DELETE` | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Delete subscription                        |
 
 `DELETE` permanently removes the subscription record.
+
+---
+
+### Refunds (platform admin)
+
+| Method | Path                  | Auth                 | Description                            |
+| ------ | --------------------- | -------------------- | -------------------------------------- |
+| `GET`  | `/admin/refunds`      | JWT `PLATFORM_ADMIN` | List all refunds (paginated, filtered) |
+| `GET`  | `/admin/refunds/{id}` | JWT `PLATFORM_ADMIN` | Get refund by ID                       |
+
+`GET /admin/refunds` supports pagination and filtering by `tenantKey`.
 
 ---
 

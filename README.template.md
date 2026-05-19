@@ -60,9 +60,10 @@ Base path: `/api/v1/billing`
 
 ### Payments — `/api/v1/billing/payments`
 
-| Method | Path               | Auth                               | Description     |
-| ------ | ------------------ | ---------------------------------- | --------------- |
-| `POST` | `/payments/refund` | JWT `TENANT_OWNER` + `X-Tenant-ID` | Create a refund |
+| Method | Path                            | Auth                               | Description                  |
+| ------ | ------------------------------- | ---------------------------------- | ---------------------------- |
+| `POST` | `/payments/{tenantKey}/refund`  | JWT `TENANT_OWNER` + `X-Tenant-ID` | Create a refund for a tenant |
+| `GET`  | `/payments/{tenantKey}/refunds` | JWT `TENANT_OWNER` + `X-Tenant-ID` | List refunds for a tenant    |
 
 > Subscription data is a local cache — no gateway round-trips on read. Subject resolves to tenant (multi-tenant) or user (single-tenant) based on `ROLLOUT_MODE`.
 
@@ -75,6 +76,13 @@ Base path: `/api/v1/billing`
 | `GET`    | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Get subscription by ID                     |
 | `PATCH`  | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Partially update subscription              |
 | `DELETE` | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Delete subscription                        |
+
+### Refunds (platform admin) — `/api/v1/billing/admin/refunds`
+
+| Method | Path                  | Auth                 | Description                            |
+| ------ | --------------------- | -------------------- | -------------------------------------- |
+| `GET`  | `/admin/refunds`      | JWT `PLATFORM_ADMIN` | List all refunds (paginated, filtered) |
+| `GET`  | `/admin/refunds/{id}` | JWT `PLATFORM_ADMIN` | Get refund by ID                       |
 
 ### Plan Catalog — `/api/v1/billing/plans`
 

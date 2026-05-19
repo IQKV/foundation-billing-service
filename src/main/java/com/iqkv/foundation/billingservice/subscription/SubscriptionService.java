@@ -318,4 +318,12 @@ public class SubscriptionService {
         .map(RefundDtoMapper::toAdminResponse)
         .orElseThrow(() -> new ResourceNotFoundException("Refund not found: " + id));
   }
+
+  /**
+   * Returns all refunds for the given tenant.
+   */
+  @org.springframework.transaction.annotation.Transactional(readOnly = true)
+  public List<Refund> getAllRefundsByTenantKey(final String tenantKey) {
+    return refundMapper.findAllByTenantKey(tenantKey);
+  }
 }
