@@ -45,6 +45,46 @@ public final class SubscriptionDtos {
       Instant canceledAt
   ) {}
 
+  /**
+   * Request body for creating a checkout session.
+   */
+  public record CreateCheckoutSessionRequest(
+      String priceId,
+      String successUrl,
+      String cancelUrl,
+      Integer trialPeriodDays,
+      Long quantity,
+      Boolean allowPromotionCodes
+  ) {}
+
+  /**
+   * Response containing the checkout session URL.
+   */
+  public record CheckoutSessionResponse(String checkoutUrl) {}
+
+  /**
+   * Request body for updating a subscription.
+   */
+  public record UpdateSubscriptionRequest(
+      String priceId,
+      Long quantity,
+      String prorationBehavior
+  ) {}
+
+  /**
+   * Request body for creating a refund.
+   */
+  public record CreateRefundRequest(
+      String paymentId,
+      Long amount,
+      String reason
+  ) {}
+
+  /**
+   * Response containing the refund ID.
+   */
+  public record RefundResponse(String refundId) {}
+
   // ─── Admin DTOs (used by SubscriptionAdminRestResource) ──────────────────
 
   /**

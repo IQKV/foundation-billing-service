@@ -21,9 +21,13 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.iqkv.foundation.billingservice.gateway.GatewayType;
+import com.iqkv.foundation.billingservice.gateway.command.CreateCheckoutSessionCommand;
 import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
+import com.iqkv.foundation.billingservice.gateway.command.CreateRefundCommand;
+import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayInvoiceEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayPaymentFailureEvent;
+import com.iqkv.foundation.billingservice.gateway.event.GatewayRefundEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewaySubscriptionEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
@@ -33,14 +37,19 @@ import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingExce
 import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
+import com.stripe.model.Charge;
 import com.stripe.model.Customer;
 import com.stripe.model.Event;
 import com.stripe.model.Invoice;
+import com.stripe.model.Refund;
 import com.stripe.model.SubscriptionItem;
 import com.stripe.model.billingportal.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.CustomerCreateParams;
+import com.stripe.param.RefundCreateParams;
+import com.stripe.param.SubscriptionUpdateParams;
 import com.stripe.param.billingportal.SessionCreateParams;
+import com.stripe.param.checkout.SessionCreateParams.LineItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -56,8 +65,12 @@ import org.springframework.stereotype.Component;
  *   <li>{@code customer.subscription.created}</li>
  *   <li>{@code customer.subscription.updated}</li>
  *   <li>{@code customer.subscription.deleted}</li>
+ *   <li>{@code invoice.created}</li>
+ *   <li>{@code invoice.finalized}</li>
+ *   <li>{@code invoice.updated}</li>
  *   <li>{@code invoice.payment_succeeded}</li>
  *   <li>{@code invoice.payment_failed}</li>
+ *   <li>{@code charge.refunded}</li>
  * </ul>
  */
 @Component
@@ -68,8 +81,12 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
   private static final String EVENT_SUBSCRIPTION_CREATED      = "customer.subscription.created";
   private static final String EVENT_SUBSCRIPTION_UPDATED      = "customer.subscription.updated";
   private static final String EVENT_SUBSCRIPTION_DELETED      = "customer.subscription.deleted";
+  private static final String EVENT_INVOICE_CREATED           = "invoice.created";
+  private static final String EVENT_INVOICE_FINALIZED         = "invoice.finalized";
+  private static final String EVENT_INVOICE_UPDATED           = "invoice.updated";
   private static final String EVENT_INVOICE_PAYMENT_SUCCEEDED = "invoice.payment_succeeded";
   private static final String EVENT_INVOICE_PAYMENT_FAILED    = "invoice.payment_failed";
+  private static final String EVENT_CHARGE_REFUNDED           = "charge.refunded";
 
   private final StripeConfigurationProperties config;
 
@@ -112,6 +129,112 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
 
   /**
    * {@inheritDoc}
+   */
+  @Override
+  public String createCheckoutSession(final CreateCheckoutSessionCommand command) {
+    final com.stripe.param.checkout.SessionCreateParams.Builder builder =
+        com.stripe.param.checkout.SessionCreateParams.builder()
+            .setCustomer(command.customerId())
+            .setMode(com.stripe.param.checkout.SessionCreateParams.Mode.SUBSCRIPTION)
+            .setSuccessUrl(command.successUrl())
+            .setCancelUrl(command.cancelUrl())
+            .addLineItem(LineItem.builder()
+                .setPrice(command.priceId())
+                .setQuantity(command.quantity() != null ? command.quantity() : 1L)
+                .build());
+
+    if (command.trialPeriodDays() != null && command.trialPeriodDays() > 0) {
+      builder.setSubscriptionData(
+          com.stripe.param.checkout.SessionCreateParams.SubscriptionData.builder()
+              .setTrialPeriodDays(Long.valueOf(command.trialPeriodDays()))
+              .build());
+    }
+
+    if (Boolean.TRUE.equals(command.allowPromotionCodes())) {
+      builder.setAllowPromotionCodes(true);
+    }
+
+    command.metadata().forEach(builder::putMetadata);
+
+    try {
+      final com.stripe.model.checkout.Session session =
+          com.stripe.model.checkout.Session.create(builder.build());
+      log.debug("Created Stripe checkout session for customer {}: {}", command.customerId(), session.getUrl());
+      return session.getUrl();
+    } catch (final StripeException e) {
+      throw new PaymentGatewayException("Failed to create Stripe checkout session for customer: " + command.customerId(), e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void updateSubscription(final UpdateSubscriptionCommand command) {
+    try {
+      final com.stripe.model.Subscription subscription =
+          com.stripe.model.Subscription.retrieve(command.subscriptionId());
+
+      final SubscriptionUpdateParams.Builder builder = SubscriptionUpdateParams.builder();
+
+      if (command.priceId() != null) {
+        final String subscriptionItemId = subscription.getItems().getData().get(0).getId();
+        builder.addItem(SubscriptionUpdateParams.Item.builder()
+            .setId(subscriptionItemId)
+            .setPrice(command.priceId())
+            .setQuantity(command.quantity() != null ? command.quantity() : 1L)
+            .build());
+      } else if (command.quantity() != null) {
+        final String subscriptionItemId = subscription.getItems().getData().get(0).getId();
+        builder.addItem(SubscriptionUpdateParams.Item.builder()
+            .setId(subscriptionItemId)
+            .setQuantity(command.quantity())
+            .build());
+      }
+
+      if (command.prorationBehavior() != null) {
+        builder.setProrationBehavior(SubscriptionUpdateParams.ProrationBehavior.valueOf(
+            command.prorationBehavior().toUpperCase()));
+      }
+
+      command.metadata().forEach(builder::putMetadata);
+
+      subscription.update(builder.build());
+      log.debug("Updated Stripe subscription {}", command.subscriptionId());
+    } catch (final StripeException e) {
+      throw new PaymentGatewayException("Failed to update Stripe subscription: " + command.subscriptionId(), e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String createRefund(final CreateRefundCommand command) {
+    final RefundCreateParams.Builder builder = RefundCreateParams.builder()
+        .setCharge(command.paymentId());
+
+    if (command.amount() != null) {
+      builder.setAmount(command.amount());
+    }
+
+    if (command.reason() != null) {
+      builder.setReason(RefundCreateParams.Reason.valueOf(command.reason().toUpperCase()));
+    }
+
+    command.metadata().forEach(builder::putMetadata);
+
+    try {
+      final Refund refund = Refund.create(builder.build());
+      log.debug("Created Stripe refund {} for charge {}", refund.getId(), command.paymentId());
+      return refund.getId();
+    } catch (final StripeException e) {
+      throw new PaymentGatewayException("Failed to create Stripe refund for charge: " + command.paymentId(), e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
    *
    * <p>Verifies the {@code Stripe-Signature} header using the configured webhook secret,
    * then parses the verified event into a normalized domain event.
@@ -132,8 +255,12 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
       case EVENT_SUBSCRIPTION_CREATED,
            EVENT_SUBSCRIPTION_UPDATED,
            EVENT_SUBSCRIPTION_DELETED -> Optional.of(toSubscriptionEvent(event));
-      case EVENT_INVOICE_PAYMENT_SUCCEEDED -> Optional.of(toInvoiceEvent(event));
+      case EVENT_INVOICE_CREATED,
+           EVENT_INVOICE_FINALIZED,
+           EVENT_INVOICE_UPDATED,
+           EVENT_INVOICE_PAYMENT_SUCCEEDED -> Optional.of(toInvoiceEvent(event));
       case EVENT_INVOICE_PAYMENT_FAILED    -> Optional.of(toPaymentFailureEvent(event));
+      case EVENT_CHARGE_REFUNDED           -> Optional.of(toRefundEvent(event));
       default -> {
         log.debug("Unhandled Stripe event type: {}", event.getType());
         yield Optional.empty();
@@ -201,6 +328,7 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
         invoice.getCustomer(),
         extractSubscriptionId(invoice),
         invoice.getAmountPaid(),
+        invoice.getAmountDue(),
         invoice.getCurrency()
     );
   }
@@ -223,6 +351,40 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
         invoice.getCurrency(),
         failureReason
     );
+  }
+
+  private GatewayRefundEvent toRefundEvent(final Event event) {
+    final Object obj = event.getDataObjectDeserializer().getObject().orElseThrow();
+    if (obj instanceof Charge charge) {
+      final Refund refund = charge.getRefunds() != null && !charge.getRefunds().getData().isEmpty()
+          ? charge.getRefunds().getData().get(0)
+          : null;
+
+      return new GatewayRefundEvent(
+          event.getId(),
+          event.getType(),
+          Instant.ofEpochSecond(event.getCreated()),
+          refund != null ? refund.getId() : null,
+          charge.getId(),
+          charge.getCustomer(),
+          refund != null ? refund.getAmount() : charge.getAmountRefunded(),
+          charge.getCurrency(),
+          refund != null ? refund.getStatus() : "succeeded"
+      );
+    } else if (obj instanceof Refund refund) {
+      return new GatewayRefundEvent(
+          event.getId(),
+          event.getType(),
+          Instant.ofEpochSecond(event.getCreated()),
+          refund.getId(),
+          refund.getCharge(),
+          null, // Refund object might not have customer ID directly in some versions
+          refund.getAmount(),
+          refund.getCurrency(),
+          refund.getStatus()
+      );
+    }
+    throw new WebhookProcessingException("Unknown object type for refund event: " + obj.getClass().getName());
   }
 
   private com.stripe.model.Subscription deserializeSubscription(final Event event) {

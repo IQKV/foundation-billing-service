@@ -19,19 +19,19 @@ package com.iqkv.foundation.billingservice.gateway.event;
 import java.time.Instant;
 
 /**
- * Gateway-agnostic invoice payment success event.
+ * Gateway-agnostic refund event.
  *
- * <p>Represents successful invoice payments from any payment gateway.
+ * <p>Represents refund events from any payment gateway.
  */
-public record GatewayInvoiceEvent(
+public record GatewayRefundEvent(
     String eventId,
     String eventType,
     Instant occurredAt,
-    String externalInvoiceId,
+    String externalRefundId,
+    String externalPaymentId,
     String externalCustomerId,
-    String externalSubscriptionId,
-    Long amountPaid,
-    Long amountDue,
-    String currency
+    Long amountRefunded,
+    String currency,
+    String status
 ) implements GatewayWebhookEvent {
 }

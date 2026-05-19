@@ -32,7 +32,7 @@ import java.time.Instant;
  * </ul>
  */
 public sealed interface GatewayWebhookEvent
-    permits GatewaySubscriptionEvent, GatewayInvoiceEvent, GatewayPaymentFailureEvent {
+    permits GatewaySubscriptionEvent, GatewayInvoiceEvent, GatewayPaymentFailureEvent, GatewayRefundEvent {
 
   /**
    * Unique event identifier from the payment gateway.

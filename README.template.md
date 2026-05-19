@@ -13,7 +13,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 - **Billing email** — a separate `billing_email` field allows finance teams to receive invoices without a system account
 - **Tax ID / VAT/GST** — stored in `billing_settings` for compliant B2B invoices
 - **Webhook processing** — payment gateway webhooks are ingested and processed idempotently via a gateway-agnostic orchestrator; duplicate delivery is safe
-- **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, and `payment.failed` to the platform event bus
+- **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, `invoice.created`, `invoice.finalized`, `invoice.updated`, `payment.failed`, and `refund.created` to the platform event bus
 - **Email notifications** — publishes `notification.billing.email` events for async delivery by the notification service
 - **Subject-aware subscriptions** — `subjectType` (`TENANT` | `USER`) and `subjectKey` support both multi-tenant and single-tenant entitlement evaluation
 
@@ -49,12 +49,20 @@ Base path: `/api/v1/billing`
 
 ### Subscriptions — `/api/v1/billing/subscriptions`
 
-| Method | Path                                | Auth                                        | Description                                 |
-| ------ | ----------------------------------- | ------------------------------------------- | ------------------------------------------- |
-| `GET`  | `/subscriptions/{tenantKey}/active` | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get active subscription for tenant          |
-| `GET`  | `/subscriptions/{tenantKey}`        | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get all subscriptions for tenant            |
-| `GET`  | `/subscriptions/me/active`          | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get active subscription for current subject |
-| `GET`  | `/subscriptions/me`                 | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get all subscriptions for current subject   |
+| Method | Path                                          | Auth                                        | Description                                 |
+| ------ | --------------------------------------------- | ------------------------------------------- | ------------------------------------------- |
+| `GET`  | `/subscriptions/{tenantKey}/active`           | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get active subscription for tenant          |
+| `GET`  | `/subscriptions/{tenantKey}`                  | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get all subscriptions for tenant            |
+| `POST` | `/subscriptions/{tenantKey}/checkout`         | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Create a Checkout Session for subscription  |
+| `POST` | `/subscriptions/{tenantKey}/{subscriptionId}` | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Update an existing subscription             |
+| `GET`  | `/subscriptions/me/active`                    | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get active subscription for current subject |
+| `GET`  | `/subscriptions/me`                           | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get all subscriptions for current subject   |
+
+### Payments — `/api/v1/billing/payments`
+
+| Method | Path               | Auth                               | Description     |
+| ------ | ------------------ | ---------------------------------- | --------------- |
+| `POST` | `/payments/refund` | JWT `TENANT_OWNER` + `X-Tenant-ID` | Create a refund |
 
 > Subscription data is a local cache — no gateway round-trips on read. Subject resolves to tenant (multi-tenant) or user (single-tenant) based on `ROLLOUT_MODE`.
 
@@ -112,7 +120,11 @@ Base path: `/api/v1/billing`
 | `subscription.created`       | Gateway subscription created                 |
 | `subscription.cancelled`     | Gateway subscription cancelled               |
 | `invoice.paid`               | Gateway invoice payment succeeded            |
+| `invoice.created`            | Gateway invoice created                      |
+| `invoice.finalized`          | Gateway invoice finalized                    |
+| `invoice.updated`            | Gateway invoice updated                      |
 | `payment.failed`             | Gateway invoice payment failed               |
+| `refund.created`             | Gateway refund created                       |
 | `notification.billing.email` | Any billing lifecycle change requiring email |
 
 ### Email Notifications (async, via notification service)

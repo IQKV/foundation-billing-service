@@ -57,7 +57,11 @@ public class RabbitMQConfig {
   public static final String ROUTING_SUBSCRIPTION_CREATED      = "subscription.created";
   public static final String ROUTING_SUBSCRIPTION_CANCELLED     = "subscription.cancelled";
   public static final String ROUTING_INVOICE_PAID               = "invoice.paid";
+  public static final String ROUTING_INVOICE_CREATED            = "invoice.created";
+  public static final String ROUTING_INVOICE_FINALIZED         = "invoice.finalized";
+  public static final String ROUTING_INVOICE_UPDATED           = "invoice.updated";
   public static final String ROUTING_PAYMENT_FAILED             = "payment.failed";
+  public static final String ROUTING_REFUND_CREATED            = "refund.created";
 
   // -------------------------------------------------------------------------
   // Routing keys — billing notification emails (scoped to avoid conflicts)

@@ -184,7 +184,7 @@ class WebhookProcessingServiceTest {
     final String invoiceId = "inv_abc";
     final GatewayInvoiceEvent event = new GatewayInvoiceEvent(
         "evt_inv_paid", "invoice.payment_succeeded", Instant.now(),
-        invoiceId, customerId, "sub_inv123", 9900L, "USD"
+        invoiceId, customerId, "sub_inv123", 9900L, 9900L, "USD"
     );
     final BillingSettings settings = createBillingSettings(tenantKey, customerId);
 
@@ -269,7 +269,7 @@ class WebhookProcessingServiceTest {
     // Arrange
     final GatewayInvoiceEvent event = new GatewayInvoiceEvent(
         "evt_no_settings", "invoice.payment_succeeded", Instant.now(),
-        "inv_x", "cus_unknown", null, 1000L, "USD"
+        "inv_x", "cus_unknown", null, 1000L, 1000L, "USD"
     );
 
     when(webhookLogMapper.existsByExternalEventId("evt_no_settings")).thenReturn(false);

@@ -36,6 +36,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -106,11 +108,38 @@ public class SubscriptionRestResource {
       @PathVariable @Pattern(regexp = "[a-z0-9]{8}", message = "tenantKey must be 8 lowercase alphanumeric characters") final String tenantKey,
       @AuthenticationPrincipal final Jwt jwt) {
     enforceOwnership(tenantKey, jwt);
-    final var subscriptions = subscriptionService.getAllByTenantKey(tenantKey)
-        .stream()
-        .map(SubscriptionDtoMapper::toResponse)
-        .toList();
-    return ResponseEntity.ok(subscriptions);
+    final var subscriptions = subscriptionService.getAllByTenantKey(tenantKey);
+    return ResponseEntity.ok(subscriptions.stream().map(SubscriptionDtoMapper::toResponse).toList());
+  }
+
+  @PostMapping("/{tenantKey}/checkout")
+  @PreAuthorize("hasAuthority('TENANT_OWNER')")
+  @Operation(
+      summary = "Create checkout session",
+      description = "Creates a Stripe Checkout Session for subscription creation. "
+          + "Requires TENANT_OWNER authority.")
+  public ResponseEntity<SubscriptionDtos.CheckoutSessionResponse> createCheckout(
+      @PathVariable @Pattern(regexp = "[a-z0-9]{8}") final String tenantKey,
+      @RequestBody final SubscriptionDtos.CreateCheckoutSessionRequest request,
+      @AuthenticationPrincipal final Jwt jwt) {
+    enforceOwnership(tenantKey, jwt);
+    return ResponseEntity.ok(subscriptionService.createCheckoutSession(tenantKey, request));
+  }
+
+  @PostMapping("/{tenantKey}/{externalSubscriptionId}")
+  @PreAuthorize("hasAuthority('TENANT_OWNER')")
+  @Operation(
+      summary = "Update subscription",
+      description = "Updates an existing subscription (upgrade/downgrade, quantity change). "
+          + "Requires TENANT_OWNER authority.")
+  public ResponseEntity<Void> updateSubscription(
+      @PathVariable @Pattern(regexp = "[a-z0-9]{8}") final String tenantKey,
+      @PathVariable final String externalSubscriptionId,
+      @RequestBody final SubscriptionDtos.UpdateSubscriptionRequest request,
+      @AuthenticationPrincipal final Jwt jwt) {
+    enforceOwnership(tenantKey, jwt);
+    subscriptionService.updateSubscription(externalSubscriptionId, request);
+    return ResponseEntity.noContent().build();
   }
 
   @GetMapping("/me/active")

@@ -19,7 +19,10 @@ package com.iqkv.foundation.billingservice.gateway.port;
 import java.util.Optional;
 
 import com.iqkv.foundation.billingservice.gateway.GatewayType;
+import com.iqkv.foundation.billingservice.gateway.command.CreateCheckoutSessionCommand;
 import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
+import com.iqkv.foundation.billingservice.gateway.command.CreateRefundCommand;
+import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
 
 /**
@@ -48,6 +51,32 @@ public interface PaymentGatewayPort {
    * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if creation fails
    */
   String createCustomer(CreateCustomerCommand command);
+
+  /**
+   * Creates a checkout session for subscription creation.
+   *
+   * @param command the checkout session creation command
+   * @return the URL of the checkout session
+   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if session creation fails
+   */
+  String createCheckoutSession(CreateCheckoutSessionCommand command);
+
+  /**
+   * Updates an existing subscription.
+   *
+   * @param command the subscription update command
+   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if update fails
+   */
+  void updateSubscription(UpdateSubscriptionCommand command);
+
+  /**
+   * Creates a refund for a payment.
+   *
+   * @param command the refund creation command
+   * @return the external refund ID
+   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if refund fails
+   */
+  String createRefund(CreateRefundCommand command);
 
   /**
    * Verifies the webhook signature and, if valid, parses the payload into a normalized domain event.

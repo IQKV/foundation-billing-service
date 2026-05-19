@@ -19,52 +19,42 @@ package com.iqkv.foundation.billingservice.infrastructure.messaging;
 import java.time.Instant;
 
 /**
- * Represents invoice lifecycle events published by the Billing service.
- *
- * <p>{@code subjectType} and {@code subjectKey} identify the invoice owner:
- * {@code TENANT}/{@code tenantKey} in multi-tenant mode, or {@code USER}/{@code userId}
- * in single-tenant mode.
+ * Represents refund events published by the Billing service.
  */
-public class InvoiceEvent {
+public class RefundEvent {
 
   public enum EventType {
-    INVOICE_PAID,
-    INVOICE_CREATED,
-    INVOICE_FINALIZED,
-    INVOICE_UPDATED
+    REFUND_CREATED
   }
 
   private String tenantKey;
-  private String externalInvoiceId;
+  private String externalRefundId;
+  private String externalPaymentId;
   private String externalCustomerId;
-  private String externalSubscriptionId;
   private EventType eventType;
-  private Long amountPaid;        // in minor currency units (cents)
+  private Long amountRefunded;
   private String currency;
+  private String status;
   private Instant occurredAt;
-  private String subjectType;     // TENANT | USER
-  private String subjectKey;      // tenantKey or userId depending on subjectType
+  private String subjectType;
+  private String subjectKey;
 
-  /**
-   * No-args constructor for deserialization.
-   */
-  public InvoiceEvent() {
+  public RefundEvent() {
   }
 
-  /**
-   * All-args constructor.
-   */
-  public InvoiceEvent(final String tenantKey, final String externalInvoiceId,
-                      final String externalCustomerId, final String externalSubscriptionId,
-                      final EventType eventType, final Long amountPaid, final String currency,
-                      final Instant occurredAt, final String subjectType, final String subjectKey) {
+  public RefundEvent(final String tenantKey, final String externalRefundId,
+                     final String externalPaymentId, final String externalCustomerId,
+                     final EventType eventType, final Long amountRefunded,
+                     final String currency, final String status, final Instant occurredAt,
+                     final String subjectType, final String subjectKey) {
     this.tenantKey = tenantKey;
-    this.externalInvoiceId = externalInvoiceId;
+    this.externalRefundId = externalRefundId;
+    this.externalPaymentId = externalPaymentId;
     this.externalCustomerId = externalCustomerId;
-    this.externalSubscriptionId = externalSubscriptionId;
     this.eventType = eventType;
-    this.amountPaid = amountPaid;
+    this.amountRefunded = amountRefunded;
     this.currency = currency;
+    this.status = status;
     this.occurredAt = occurredAt;
     this.subjectType = subjectType;
     this.subjectKey = subjectKey;
@@ -78,12 +68,20 @@ public class InvoiceEvent {
     this.tenantKey = tenantKey;
   }
 
-  public String getExternalInvoiceId() {
-    return externalInvoiceId;
+  public String getExternalRefundId() {
+    return externalRefundId;
   }
 
-  public void setExternalInvoiceId(final String externalInvoiceId) {
-    this.externalInvoiceId = externalInvoiceId;
+  public void setExternalRefundId(final String externalRefundId) {
+    this.externalRefundId = externalRefundId;
+  }
+
+  public String getExternalPaymentId() {
+    return externalPaymentId;
+  }
+
+  public void setExternalPaymentId(final String externalPaymentId) {
+    this.externalPaymentId = externalPaymentId;
   }
 
   public String getExternalCustomerId() {
@@ -94,14 +92,6 @@ public class InvoiceEvent {
     this.externalCustomerId = externalCustomerId;
   }
 
-  public String getExternalSubscriptionId() {
-    return externalSubscriptionId;
-  }
-
-  public void setExternalSubscriptionId(final String externalSubscriptionId) {
-    this.externalSubscriptionId = externalSubscriptionId;
-  }
-
   public EventType getEventType() {
     return eventType;
   }
@@ -110,12 +100,12 @@ public class InvoiceEvent {
     this.eventType = eventType;
   }
 
-  public Long getAmountPaid() {
-    return amountPaid;
+  public Long getAmountRefunded() {
+    return amountRefunded;
   }
 
-  public void setAmountPaid(final Long amountPaid) {
-    this.amountPaid = amountPaid;
+  public void setAmountRefunded(final Long amountRefunded) {
+    this.amountRefunded = amountRefunded;
   }
 
   public String getCurrency() {
@@ -124,6 +114,14 @@ public class InvoiceEvent {
 
   public void setCurrency(final String currency) {
     this.currency = currency;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(final String status) {
+    this.status = status;
   }
 
   public Instant getOccurredAt() {

@@ -47,15 +47,30 @@ Only active in `SINGLE_TENANT` rollout mode. Returns the portal session URL for 
 
 ### Subscriptions
 
-| Method | Path                                | Auth                           | Description                                 |
-| ------ | ----------------------------------- | ------------------------------ | ------------------------------------------- |
-| `GET`  | `/subscriptions/{tenantKey}/active` | JWT `TENANT_OWNER`             | Get active subscription for a tenant        |
-| `GET`  | `/subscriptions/{tenantKey}`        | JWT `TENANT_OWNER`             | Get all subscriptions for a tenant          |
-| `GET`  | `/subscriptions/me/active`          | JWT `TENANT_OWNER` or `MEMBER` | Get active subscription for current subject |
-| `GET`  | `/subscriptions/me`                 | JWT `TENANT_OWNER` or `MEMBER` | Get all subscriptions for current subject   |
+| Method | Path                                          | Auth                           | Description                                 |
+| ------ | --------------------------------------------- | ------------------------------ | ------------------------------------------- |
+| `GET`  | `/subscriptions/{tenantKey}/active`           | JWT `TENANT_OWNER`             | Get active subscription for a tenant        |
+| `GET`  | `/subscriptions/{tenantKey}`                  | JWT `TENANT_OWNER`             | Get all subscriptions for a tenant          |
+| `POST` | `/subscriptions/{tenantKey}/checkout`         | JWT `TENANT_OWNER`             | Create a Checkout Session for subscription  |
+| `POST` | `/subscriptions/{tenantKey}/{subscriptionId}` | JWT `TENANT_OWNER`             | Update an existing subscription             |
+| `GET`  | `/subscriptions/me/active`                    | JWT `TENANT_OWNER` or `MEMBER` | Get active subscription for current subject |
+| `GET`  | `/subscriptions/me`                           | JWT `TENANT_OWNER` or `MEMBER` | Get all subscriptions for current subject   |
 
 Subscription data is a local cache of Stripe state — no payment gateway round-trips are made.
 The `/{tenantKey}` paths validate `tenantKey` against the JWT `tenant_id` claim; cross-tenant access returns `403 Forbidden`.
+
+`POST /checkout` returns the Stripe Checkout Session URL for onboarding flow, supporting `trial_period_days`, `quantity`, `allow_promotion_codes`, etc.
+`POST /{subscriptionId}` supports upgrades/downgrades, quantity changes, and proration behavior control.
+
+---
+
+### Payments
+
+| Method | Path               | Auth               | Description     |
+| ------ | ------------------ | ------------------ | --------------- |
+| `POST` | `/payments/refund` | JWT `TENANT_OWNER` | Create a refund |
+
+`POST /refund` creates a full or partial refund for a given payment (PaymentIntent or Charge ID).
 
 ---
 

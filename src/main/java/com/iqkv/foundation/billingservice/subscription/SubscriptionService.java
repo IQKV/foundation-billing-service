@@ -19,6 +19,11 @@ package com.iqkv.foundation.billingservice.subscription;
 import java.util.List;
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.gateway.command.CreateCheckoutSessionCommand;
+import com.iqkv.foundation.billingservice.gateway.command.CreateRefundCommand;
+import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
+import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
@@ -37,11 +42,17 @@ public class SubscriptionService {
 
   private final SubscriptionMapper subscriptionMapper;
   private final SubscriptionSubjectResolver subjectResolver;
+  private final PaymentGatewayPort paymentGatewayPort;
+  private final BillingSettingsMapper billingSettingsMapper;
 
   public SubscriptionService(final SubscriptionMapper subscriptionMapper,
-                             final SubscriptionSubjectResolver subjectResolver) {
+                             final SubscriptionSubjectResolver subjectResolver,
+                             final PaymentGatewayPort paymentGatewayPort,
+                             final BillingSettingsMapper billingSettingsMapper) {
     this.subscriptionMapper = subscriptionMapper;
     this.subjectResolver = subjectResolver;
+    this.paymentGatewayPort = paymentGatewayPort;
+    this.billingSettingsMapper = billingSettingsMapper;
   }
 
   // ─── Self-service ──────────────────────────────────────────────────────────
@@ -88,6 +99,66 @@ public class SubscriptionService {
   public List<Subscription> getAllBySubject(final String tenantKey, final UUID userId) {
     final SubscriptionSubject subject = subjectResolver.resolveSubject(tenantKey, userId);
     return subscriptionMapper.findBySubject(subject.type().name(), subject.key());
+  }
+
+  /**
+   * Creates a checkout session for the given tenant.
+   */
+  public SubscriptionDtos.CheckoutSessionResponse createCheckoutSession(
+      final String tenantKey,
+      final SubscriptionDtos.CreateCheckoutSessionRequest request) {
+    final var settings = billingSettingsMapper.findByTenantKey(tenantKey)
+        .orElseThrow(() -> new ResourceNotFoundException("Billing settings not found for tenant: " + tenantKey));
+
+    if (settings.getExternalCustomerId() == null) {
+      throw new IllegalStateException("External customer ID not found for tenant: " + tenantKey);
+    }
+
+    final var command = new CreateCheckoutSessionCommand(
+        settings.getExternalCustomerId(),
+        request.priceId(),
+        request.successUrl(),
+        request.cancelUrl(),
+        request.trialPeriodDays(),
+        request.quantity(),
+        request.allowPromotionCodes(),
+        java.util.Map.of("tenantKey", tenantKey)
+    );
+
+    final String url = paymentGatewayPort.createCheckoutSession(command);
+    return new SubscriptionDtos.CheckoutSessionResponse(url);
+  }
+
+  /**
+   * Updates an existing subscription.
+   */
+  public void updateSubscription(
+      final String externalSubscriptionId,
+      final SubscriptionDtos.UpdateSubscriptionRequest request) {
+    final var command = new UpdateSubscriptionCommand(
+        externalSubscriptionId,
+        request.priceId(),
+        request.quantity(),
+        request.prorationBehavior(),
+        java.util.Map.of()
+    );
+
+    paymentGatewayPort.updateSubscription(command);
+  }
+
+  /**
+   * Creates a refund for a payment.
+   */
+  public SubscriptionDtos.RefundResponse createRefund(final SubscriptionDtos.CreateRefundRequest request) {
+    final var command = new CreateRefundCommand(
+        request.paymentId(),
+        request.amount(),
+        request.reason(),
+        java.util.Map.of()
+    );
+
+    final String refundId = paymentGatewayPort.createRefund(command);
+    return new SubscriptionDtos.RefundResponse(refundId);
   }
 
   // ─── Platform admin ────────────────────────────────────────────────────────

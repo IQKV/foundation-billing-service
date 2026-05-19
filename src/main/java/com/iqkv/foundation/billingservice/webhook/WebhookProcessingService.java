@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import com.iqkv.foundation.billingservice.gateway.event.GatewayInvoiceEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayPaymentFailureEvent;
+import com.iqkv.foundation.billingservice.gateway.event.GatewayRefundEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewaySubscriptionEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
@@ -145,8 +146,9 @@ public class WebhookProcessingService {
       case GatewaySubscriptionEvent sub when sub.isUpdated()  -> handleSubscriptionUpdated(sub);
       case GatewaySubscriptionEvent sub when sub.isDeleted()  -> handleSubscriptionDeleted(sub);
       case GatewaySubscriptionEvent sub                       -> log.debug("Unhandled subscription event type: {}", sub.eventType());
-      case GatewayInvoiceEvent inv                            -> handleInvoicePaid(inv);
+      case GatewayInvoiceEvent inv                            -> handleInvoiceEvent(inv);
       case GatewayPaymentFailureEvent pay                     -> handlePaymentFailed(pay);
+      case GatewayRefundEvent ref                             -> handleRefundEvent(ref);
     }
   }
 
@@ -259,44 +261,114 @@ public class WebhookProcessingService {
   // Invoice / payment handlers
   // -------------------------------------------------------------------------
 
-  private void handleInvoicePaid(final GatewayInvoiceEvent event) {
+  private void handleInvoiceEvent(final GatewayInvoiceEvent event) {
     final var billingSettingsOpt = billingSettingsMapper.findByExternalCustomerId(event.externalCustomerId());
     if (billingSettingsOpt.isEmpty()) {
-      log.warn("Cannot publish invoice.paid — no billing settings found for customer={}",
-          event.externalCustomerId());
+      log.warn("Cannot publish {} — no billing settings found for customer={}",
+          event.eventType(), event.externalCustomerId());
       return;
     }
 
     final var billingSettings = billingSettingsOpt.get();
     final String tenantKey = billingSettings.getTenantKey();
     final var subjectContext = resolveSubjectFromSubscription(event.externalSubscriptionId(), tenantKey);
+    final String currency = billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD";
 
-    messagingService.publishInvoicePaid(
-        tenantKey,
-        event.externalInvoiceId(),
-        event.externalCustomerId(),
-        event.externalSubscriptionId(),
-        event.amountPaid(),
-        billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD",
-        subjectContext.type().name(),
-        subjectContext.key()
-    );
-    log.info("Published invoice.paid for tenant={}, invoice={}", tenantKey, event.externalInvoiceId());
+    switch (event.eventType()) {
+      case "invoice.payment_succeeded" -> {
+        messagingService.publishInvoicePaid(
+            tenantKey,
+            event.externalInvoiceId(),
+            event.externalCustomerId(),
+            event.externalSubscriptionId(),
+            event.amountPaid(),
+            currency,
+            subjectContext.type().name(),
+            subjectContext.key()
+        );
+        log.info("Published invoice.paid for tenant={}, invoice={}", tenantKey, event.externalInvoiceId());
 
-    final String email = resolveEmail(billingSettings);
-    if (email != null) {
-      publishNotification(new NotificationEvent(
-          email,
-          notificationProps.defaultLocale(),
-          NotificationEventType.INVOICE_PAID,
-          Map.of(
-              "companyName", nullToEmpty(billingSettings.getCompanyName()),
-              "invoiceId", nullToEmpty(event.externalInvoiceId()),
-              "amountPaid", event.amountPaid() != null ? event.amountPaid() / 100.0 : 0.0,
-              "currency", billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD"
-          ),
-          Instant.now()));
+        final String email = resolveEmail(billingSettings);
+        if (email != null) {
+          publishNotification(new NotificationEvent(
+              email,
+              notificationProps.defaultLocale(),
+              NotificationEventType.INVOICE_PAID,
+              Map.of(
+                  "companyName", nullToEmpty(billingSettings.getCompanyName()),
+                  "invoiceId", nullToEmpty(event.externalInvoiceId()),
+                  "amountPaid", event.amountPaid() != null ? event.amountPaid() / 100.0 : 0.0,
+                  "currency", currency
+              ),
+              Instant.now()));
+        }
+      }
+      case "invoice.created" -> {
+        messagingService.publishInvoiceCreated(
+            tenantKey,
+            event.externalInvoiceId(),
+            event.externalCustomerId(),
+            event.externalSubscriptionId(),
+            event.amountDue(),
+            currency,
+            subjectContext.type().name(),
+            subjectContext.key()
+        );
+        log.info("Published invoice.created for tenant={}, invoice={}", tenantKey, event.externalInvoiceId());
+      }
+      case "invoice.finalized" -> {
+        messagingService.publishInvoiceFinalized(
+            tenantKey,
+            event.externalInvoiceId(),
+            event.externalCustomerId(),
+            event.externalSubscriptionId(),
+            event.amountDue(),
+            currency,
+            subjectContext.type().name(),
+            subjectContext.key()
+        );
+        log.info("Published invoice.finalized for tenant={}, invoice={}", tenantKey, event.externalInvoiceId());
+      }
+      case "invoice.updated" -> {
+        messagingService.publishInvoiceUpdated(
+            tenantKey,
+            event.externalInvoiceId(),
+            event.externalCustomerId(),
+            event.externalSubscriptionId(),
+            event.amountDue(),
+            currency,
+            subjectContext.type().name(),
+            subjectContext.key()
+        );
+        log.info("Published invoice.updated for tenant={}, invoice={}", tenantKey, event.externalInvoiceId());
+      }
+      default -> log.debug("Unhandled invoice event type: {}", event.eventType());
     }
+  }
+
+  private void handleRefundEvent(final GatewayRefundEvent event) {
+    final var billingSettingsOpt = billingSettingsMapper.findByExternalCustomerId(event.externalCustomerId());
+    if (billingSettingsOpt.isEmpty()) {
+      log.warn("Cannot publish refund.created — no billing settings found for customer={}",
+          event.externalCustomerId());
+      return;
+    }
+
+    final var billingSettings = billingSettingsOpt.get();
+    final String tenantKey = billingSettings.getTenantKey();
+
+    messagingService.publishRefundCreated(
+        tenantKey,
+        event.externalRefundId(),
+        event.externalPaymentId(),
+        event.externalCustomerId(),
+        event.amountRefunded(),
+        event.currency(),
+        event.status(),
+        SubjectType.TENANT.name(), // Default to TENANT for now as refund might not have subscription info easily available
+        tenantKey
+    );
+    log.info("Published refund.created for tenant={}, refund={}", tenantKey, event.externalRefundId());
   }
 
   private void handlePaymentFailed(final GatewayPaymentFailureEvent event) {

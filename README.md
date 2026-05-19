@@ -22,7 +22,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 - **Billing email** — a separate `billing_email` field allows finance teams to receive invoices without a system account
 - **Tax ID / VAT/GST** — stored in `billing_settings` for compliant B2B invoices
 - **Webhook processing** — payment gateway webhooks are ingested and processed idempotently; duplicate delivery is safe
-- **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, and `payment.failed` to the platform event bus
+- **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, `invoice.created`, `invoice.finalized`, `invoice.updated`, `payment.failed`, and `refund.created` to the platform event bus
 - **Multi-gateway strategy** — `PaymentGatewayPort` interface decouples business logic from gateway SDKs; Stripe is the active implementation
 
 ## Quick Links
@@ -56,12 +56,20 @@ Base path: `/api/v1/billing`
 
 ### Subscriptions
 
-| Method | Path                                | Auth                           | Description                                 |
-| ------ | ----------------------------------- | ------------------------------ | ------------------------------------------- |
-| `GET`  | `/subscriptions/{tenantKey}/active` | JWT `TENANT_OWNER`             | Get active subscription for a tenant        |
-| `GET`  | `/subscriptions/{tenantKey}`        | JWT `TENANT_OWNER`             | Get all subscriptions for a tenant          |
-| `GET`  | `/subscriptions/me/active`          | JWT `TENANT_OWNER` or `MEMBER` | Get active subscription for current subject |
-| `GET`  | `/subscriptions/me`                 | JWT `TENANT_OWNER` or `MEMBER` | Get all subscriptions for current subject   |
+| Method | Path                                          | Auth                           | Description                                 |
+| ------ | --------------------------------------------- | ------------------------------ | ------------------------------------------- |
+| `GET`  | `/subscriptions/{tenantKey}/active`           | JWT `TENANT_OWNER`             | Get active subscription for a tenant        |
+| `GET`  | `/subscriptions/{tenantKey}`                  | JWT `TENANT_OWNER`             | Get all subscriptions for a tenant          |
+| `POST` | `/subscriptions/{tenantKey}/checkout`         | JWT `TENANT_OWNER`             | Create a Checkout Session for subscription  |
+| `POST` | `/subscriptions/{tenantKey}/{subscriptionId}` | JWT `TENANT_OWNER`             | Update an existing subscription             |
+| `GET`  | `/subscriptions/me/active`                    | JWT `TENANT_OWNER` or `MEMBER` | Get active subscription for current subject |
+| `GET`  | `/subscriptions/me`                           | JWT `TENANT_OWNER` or `MEMBER` | Get all subscriptions for current subject   |
+
+### Payments
+
+| Method | Path               | Auth               | Description     |
+| ------ | ------------------ | ------------------ | --------------- |
+| `POST` | `/payments/refund` | JWT `TENANT_OWNER` | Create a refund |
 
 ### Subscriptions (platform admin)
 

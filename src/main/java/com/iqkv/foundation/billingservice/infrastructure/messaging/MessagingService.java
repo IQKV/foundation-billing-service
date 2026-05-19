@@ -135,6 +135,63 @@ public class MessagingService {
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_INVOICE_PAID, event);
   }
 
+  public void publishInvoiceCreated(final String tenantKey, final String externalInvoiceId,
+                                    final String externalCustomerId, final String externalSubscriptionId,
+                                    final Long amountDue, final String currency,
+                                    final String subjectType, final String subjectKey) {
+    final var event = new InvoiceEvent(
+        tenantKey,
+        externalInvoiceId,
+        externalCustomerId,
+        externalSubscriptionId,
+        InvoiceEvent.EventType.INVOICE_CREATED,
+        0L, // amountPaid is 0 for created invoices
+        currency,
+        Instant.now(),
+        subjectType,
+        subjectKey
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_INVOICE_CREATED, event);
+  }
+
+  public void publishInvoiceFinalized(final String tenantKey, final String externalInvoiceId,
+                                      final String externalCustomerId, final String externalSubscriptionId,
+                                      final Long amountDue, final String currency,
+                                      final String subjectType, final String subjectKey) {
+    final var event = new InvoiceEvent(
+        tenantKey,
+        externalInvoiceId,
+        externalCustomerId,
+        externalSubscriptionId,
+        InvoiceEvent.EventType.INVOICE_FINALIZED,
+        0L,
+        currency,
+        Instant.now(),
+        subjectType,
+        subjectKey
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_INVOICE_FINALIZED, event);
+  }
+
+  public void publishInvoiceUpdated(final String tenantKey, final String externalInvoiceId,
+                                    final String externalCustomerId, final String externalSubscriptionId,
+                                    final Long amountDue, final String currency,
+                                    final String subjectType, final String subjectKey) {
+    final var event = new InvoiceEvent(
+        tenantKey,
+        externalInvoiceId,
+        externalCustomerId,
+        externalSubscriptionId,
+        InvoiceEvent.EventType.INVOICE_UPDATED,
+        0L,
+        currency,
+        Instant.now(),
+        subjectType,
+        subjectKey
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_INVOICE_UPDATED, event);
+  }
+
   public void publishPaymentFailed(final String tenantKey, final String externalInvoiceId,
                                    final String externalCustomerId, final String externalSubscriptionId,
                                    final Long amountDue, final String currency, final String failureReason) {
@@ -175,6 +232,26 @@ public class MessagingService {
         subjectKey
     );
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_PAYMENT_FAILED, event);
+  }
+
+  public void publishRefundCreated(final String tenantKey, final String externalRefundId,
+                                   final String externalPaymentId, final String externalCustomerId,
+                                   final Long amountRefunded, final String currency,
+                                   final String status, final String subjectType, final String subjectKey) {
+    final var event = new RefundEvent(
+        tenantKey,
+        externalRefundId,
+        externalPaymentId,
+        externalCustomerId,
+        RefundEvent.EventType.REFUND_CREATED,
+        amountRefunded,
+        currency,
+        status,
+        Instant.now(),
+        subjectType,
+        subjectKey
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_REFUND_CREATED, event);
   }
 
   public void publishNotification(final NotificationEvent event) {
