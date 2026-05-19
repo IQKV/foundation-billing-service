@@ -135,6 +135,9 @@
     <update id="update" parameterType="com.iqkv.foundation.billingservice.subscription.Subscription">
         UPDATE subscriptions
         SET status                = #{status},
+            quantity              = #{quantity},
+            trial_start           = #{trialStart},
+            trial_end             = #{trialEnd},
             current_period_end    = #{currentPeriodEnd},
             cancel_at_period_end  = #{cancelAtPeriodEnd},
             canceled_at           = #{canceledAt},

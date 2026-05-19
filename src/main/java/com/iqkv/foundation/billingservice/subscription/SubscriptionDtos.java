@@ -39,6 +39,9 @@ public final class SubscriptionDtos {
       String externalSubscriptionId,
       String status,
       String planId,
+      Long quantity,
+      Instant trialStart,
+      Instant trialEnd,
       Instant currentPeriodStart,
       Instant currentPeriodEnd,
       boolean cancelAtPeriodEnd,
@@ -80,10 +83,49 @@ public final class SubscriptionDtos {
       String reason
   ) {}
 
-  /**
-   * Response containing the refund ID.
-   */
+  /** Response containing the refund ID. */
   public record RefundResponse(String refundId) {}
+
+  /**
+   * Rich refund response returned by admin endpoints.
+   */
+  public record AdminRefundResponse(
+      UUID id,
+      String tenantKey,
+      String externalRefundId,
+      String externalPaymentId,
+      String externalCustomerId,
+      Long amount,
+      String currency,
+      String status,
+      Instant occurredAt,
+      java.time.LocalDateTime createdAt,
+      java.time.LocalDateTime updatedAt
+  ) {}
+
+  /** Paginated list of refunds returned by the admin list endpoint. */
+  public record PagedRefundResponse(
+      java.util.List<AdminRefundResponse> content,
+      int page,
+      int size,
+      long totalElements,
+      int totalPages
+  ) {}
+
+  /**
+   * Query parameters for the admin refund list endpoint.
+   */
+  public record RefundListQuery(
+      @jakarta.validation.constraints.Min(0) int page,
+      @jakarta.validation.constraints.Min(1) @jakarta.validation.constraints.Max(100) int size,
+      String sortBy,
+      String sortDir,
+      String tenantKey
+  ) {
+    public RefundListQuery() {
+      this(0, 20, "occurredAt", "desc", null);
+    }
+  }
 
   // ─── Admin DTOs (used by SubscriptionAdminRestResource) ──────────────────
 
@@ -97,6 +139,9 @@ public final class SubscriptionDtos {
       String externalSubscriptionId,
       String status,
       String planId,
+      Long quantity,
+      Instant trialStart,
+      Instant trialEnd,
       Instant currentPeriodStart,
       Instant currentPeriodEnd,
       boolean cancelAtPeriodEnd,
@@ -113,6 +158,9 @@ public final class SubscriptionDtos {
    */
   public record AdminUpdateSubscriptionRequest(
       String status,
+      Long quantity,
+      Instant trialStart,
+      Instant trialEnd,
       Instant currentPeriodEnd,
       Boolean cancelAtPeriodEnd
   ) {}

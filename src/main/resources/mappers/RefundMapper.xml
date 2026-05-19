@@ -62,4 +62,38 @@
         LIMIT 1
     </select>
 
+    <select id="findAll" resultMap="refundResultMap">
+        SELECT id, tenant_key, external_refund_id, external_payment_id,
+               external_customer_id, amount, currency, status, occurred_at,
+               created_at, updated_at
+        FROM refunds
+        <where>
+            <if test="tenantKey != null and tenantKey != ''">
+                AND tenant_key = #{tenantKey}
+            </if>
+        </where>
+        ORDER BY
+            <choose>
+                <when test="sortBy == 'tenantKey'">tenant_key</when>
+                <when test="sortBy == 'status'">status</when>
+                <when test="sortBy == 'amount'">amount</when>
+                <otherwise>occurred_at</otherwise>
+            </choose>
+            <choose>
+                <when test="sortDir == 'asc'">ASC</when>
+                <otherwise>DESC</otherwise>
+            </choose>
+            , id ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM refunds
+        <where>
+            <if test="tenantKey != null and tenantKey != ''">
+                AND tenant_key = #{tenantKey}
+            </if>
+        </where>
+    </select>
+
 </mapper>

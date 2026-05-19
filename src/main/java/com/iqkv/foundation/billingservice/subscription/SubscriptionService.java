@@ -24,6 +24,7 @@ import com.iqkv.foundation.billingservice.gateway.command.CreateRefundCommand;
 import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
@@ -41,15 +42,18 @@ import org.springframework.stereotype.Service;
 public class SubscriptionService {
 
   private final SubscriptionMapper subscriptionMapper;
+  private final RefundMapper refundMapper;
   private final SubscriptionSubjectResolver subjectResolver;
   private final PaymentGatewayPort paymentGatewayPort;
   private final BillingSettingsMapper billingSettingsMapper;
 
   public SubscriptionService(final SubscriptionMapper subscriptionMapper,
+                             final RefundMapper refundMapper,
                              final SubscriptionSubjectResolver subjectResolver,
                              final PaymentGatewayPort paymentGatewayPort,
                              final BillingSettingsMapper billingSettingsMapper) {
     this.subscriptionMapper = subscriptionMapper;
+    this.refundMapper = refundMapper;
     this.subjectResolver = subjectResolver;
     this.paymentGatewayPort = paymentGatewayPort;
     this.billingSettingsMapper = billingSettingsMapper;
@@ -245,6 +249,18 @@ public class SubscriptionService {
       subscription.setCurrentPeriodEnd(request.currentPeriodEnd());
     }
 
+    if (request.quantity() != null) {
+      subscription.setQuantity(request.quantity());
+    }
+
+    if (request.trialStart() != null) {
+      subscription.setTrialStart(request.trialStart());
+    }
+
+    if (request.trialEnd() != null) {
+      subscription.setTrialEnd(request.trialEnd());
+    }
+
     if (request.cancelAtPeriodEnd() != null) {
       subscription.setCancelAtPeriodEnd(request.cancelAtPeriodEnd());
     }
@@ -266,5 +282,40 @@ public class SubscriptionService {
     subscriptionMapper.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException("Subscription not found: " + id));
     subscriptionMapper.deleteById(id);
+  }
+
+  /**
+   * Returns a paginated, sorted, and optionally filtered list of refunds.
+   */
+  @org.springframework.transaction.annotation.Transactional(readOnly = true)
+  public SubscriptionDtos.PagedRefundResponse listRefunds(final SubscriptionDtos.RefundListQuery query) {
+    final int limit = query.size();
+    final int offset = query.page() * limit;
+
+    final var refunds = refundMapper.findAll(
+        limit, offset, query.sortBy(), query.sortDir(), query.tenantKey());
+    final long total = refundMapper.countAll(query.tenantKey());
+
+    final var content = refunds.stream()
+        .map(RefundDtoMapper::toAdminResponse)
+        .toList();
+
+    return new SubscriptionDtos.PagedRefundResponse(
+        content,
+        query.page(),
+        query.size(),
+        total,
+        (int) Math.ceil((double) total / limit)
+    );
+  }
+
+  /**
+   * Returns a refund by ID.
+   */
+  @org.springframework.transaction.annotation.Transactional(readOnly = true)
+  public SubscriptionDtos.AdminRefundResponse getRefundById(final UUID id) {
+    return refundMapper.findById(id)
+        .map(RefundDtoMapper::toAdminResponse)
+        .orElseThrow(() -> new ResourceNotFoundException("Refund not found: " + id));
   }
 }

@@ -36,6 +36,9 @@ class SubscriptionDtosTest {
     final String externalSubscriptionId = "sub_abc123";
     final String status = "active";
     final String planId = "price_123";
+    final Long quantity = 5L;
+    final Instant trialStart = Instant.now();
+    final Instant trialEnd = Instant.now().plusSeconds(86400 * 7);
     final Instant periodStart = Instant.now();
     final Instant periodEnd = Instant.now().plusSeconds(2592000);
     final Instant canceledAt = Instant.now();
@@ -43,6 +46,7 @@ class SubscriptionDtosTest {
     // Act
     final var response = new SubscriptionDtos.SubscriptionResponse(
         id, tenantKey, externalSubscriptionId, status, planId,
+        quantity, trialStart, trialEnd,
         periodStart, periodEnd, true, canceledAt
     );
 
@@ -52,6 +56,9 @@ class SubscriptionDtosTest {
     assertThat(response.externalSubscriptionId()).isEqualTo(externalSubscriptionId);
     assertThat(response.status()).isEqualTo(status);
     assertThat(response.planId()).isEqualTo(planId);
+    assertThat(response.quantity()).isEqualTo(quantity);
+    assertThat(response.trialStart()).isEqualTo(trialStart);
+    assertThat(response.trialEnd()).isEqualTo(trialEnd);
     assertThat(response.currentPeriodStart()).isEqualTo(periodStart);
     assertThat(response.currentPeriodEnd()).isEqualTo(periodEnd);
     assertThat(response.cancelAtPeriodEnd()).isTrue();
@@ -59,15 +66,19 @@ class SubscriptionDtosTest {
   }
 
   @Test
-  @DisplayName("Should create SubscriptionResponse with null canceledAt")
-  void shouldCreateSubscriptionResponseWithNullCanceledAt() {
+  @DisplayName("Should create SubscriptionResponse with null optional fields")
+  void shouldCreateSubscriptionResponseWithNullOptionalFields() {
     // Arrange & Act
     final var response = new SubscriptionDtos.SubscriptionResponse(
         UUID.randomUUID(), "tenant-123", "sub_abc", "active", "price_123",
+        null, null, null,
         Instant.now(), Instant.now().plusSeconds(2592000), false, null
     );
 
     // Assert
+    assertThat(response.quantity()).isNull();
+    assertThat(response.trialStart()).isNull();
+    assertThat(response.trialEnd()).isNull();
     assertThat(response.cancelAtPeriodEnd()).isFalse();
     assertThat(response.canceledAt()).isNull();
   }
@@ -80,10 +91,12 @@ class SubscriptionDtosTest {
     final Instant now = Instant.now();
     final var response1 = new SubscriptionDtos.SubscriptionResponse(
         id, "tenant-123", "sub_abc", "active", "price_123",
+        5L, null, null,
         now, now.plusSeconds(2592000), false, null
     );
     final var response2 = new SubscriptionDtos.SubscriptionResponse(
         id, "tenant-123", "sub_abc", "active", "price_123",
+        5L, null, null,
         now, now.plusSeconds(2592000), false, null
     );
 
@@ -98,6 +111,7 @@ class SubscriptionDtosTest {
     // Arrange
     final var response = new SubscriptionDtos.SubscriptionResponse(
         UUID.randomUUID(), "tenant-123", "sub_abc", "active", "price_123",
+        1L, null, null,
         Instant.now(), Instant.now().plusSeconds(2592000), false, null
     );
 

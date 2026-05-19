@@ -46,4 +46,18 @@ public interface RefundMapper {
    * Returns refund by ID.
    */
   Optional<Refund> findById(@Param("id") java.util.UUID id);
+
+  /**
+   * Returns a paginated, sorted, and optionally filtered list of refunds.
+   */
+  List<Refund> findAll(@Param("limit") int limit,
+                       @Param("offset") int offset,
+                       @Param("sortBy") String sortBy,
+                       @Param("sortDir") String sortDir,
+                       @Param("tenantKey") String tenantKey);
+
+  /**
+   * Returns the total count of refunds matching the optional filters.
+   */
+  long countAll(@Param("tenantKey") String tenantKey);
 }
