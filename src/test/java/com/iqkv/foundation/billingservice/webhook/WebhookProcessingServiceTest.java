@@ -37,6 +37,7 @@ import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.WebhookLogMapper;
@@ -63,6 +64,9 @@ class WebhookProcessingServiceTest {
   private SubscriptionMapper subscriptionMapper;
 
   @Mock
+  private RefundMapper refundMapper;
+
+  @Mock
   private BillingSettingsMapper billingSettingsMapper;
 
   @Mock
@@ -87,6 +91,7 @@ class WebhookProcessingServiceTest {
     webhookProcessingService = new WebhookProcessingService(
         webhookLogMapper,
         subscriptionMapper,
+        refundMapper,
         billingSettingsMapper,
         userBillingSettingsMapper,
         messagingService,
@@ -302,6 +307,9 @@ class WebhookProcessingServiceTest {
         "cus_" + UUID.randomUUID(),
         "active",
         "price_basic",
+        1L,
+        null,
+        null,
         Instant.now(),
         Instant.now().plusSeconds(2592000),
         false,
