@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${#locale.language}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="#{email.account-suspended.page-title}">Account suspended</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    .email-container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 40px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2563eb;
+      margin-bottom: 10px;
+    }
+    .suspended-icon {
+      font-size: 48px;
+      color: #374151;
+      margin-bottom: 20px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 20px;
+    }
+    .content {
+      font-size: 16px;
+      color: #4b5563;
+      margin-bottom: 30px;
+    }
+    .details-box {
+      background-color: #f3f4f6;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .details-box h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 12px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .detail-label {
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .detail-value {
+      color: #1f2937;
+      font-weight: 600;
+    }
+    .action-box {
+      background-color: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .action-box h4 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #92400e;
+      margin: 0 0 10px 0;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: #6b7280;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="email-container">
+  <div class="header">
+    <div class="logo" th:text="#{email.common.logo}">IQ Key Value</div>
+    <div class="suspended-icon">&#128683;</div>
+    <h1 class="title" th:text="#{email.account-suspended.title}">Account Suspended</h1>
+  </div>
+
+  <div class="content">
+    <p th:text="#{email.common.greeting}">Hello,</p>
+    <p th:text="#{email.account-suspended.intro}">Your account has been suspended due to repeated payment failures or a manual suspension.</p>
+
+    <div class="details-box">
+      <h3 th:text="#{email.account-suspended.details-heading}">Account details</h3>
+      <div class="detail-row" th:if="${companyName != null and !companyName.isEmpty()}">
+        <span class="detail-label" th:text="#{email.account-suspended.label.company}">Company</span>
+        <span class="detail-value" th:text="${companyName}"></span>
+      </div>
+    </div>
+
+    <div class="action-box">
+      <h4 th:text="#{email.account-suspended.action-heading}">How to reactivate</h4>
+      <p th:text="#{email.account-suspended.action-text}">Please contact our support team or update your billing information in the dashboard to resolve this issue and reactivate your account.</p>
+    </div>
+
+    <p><span th:text="#{email.common.regards}">Best regards,</span><br>
+      <span th:text="#{email.common.team}">The IQ Key Value Team</span></p>
+  </div>
+
+  <div class="footer">
+    <p th:text="#{email.common.footer.copyright}">&copy; 2026 IQ Key Value. All rights reserved.</p>
+  </div>
+</div>
+</body>
+</html>

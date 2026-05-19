@@ -38,5 +38,7 @@ public enum NotificationEventType {
   /** Sent to the billing contact when billing settings are updated. */
   BILLING_UPDATED,
   /** Sent to the billing contact when account is suspended. */
-  ACCOUNT_SUSPENDED
+  ACCOUNT_SUSPENDED,
+  /** Sent to the billing contact when a refund is processed. */
+  REFUND_CREATED
 }

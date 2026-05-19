@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${#locale.language}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="#{email.payment-overdue.page-title}">Payment overdue</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    .email-container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 40px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2563eb;
+      margin-bottom: 10px;
+    }
+    .danger-icon {
+      font-size: 48px;
+      color: #ef4444;
+      margin-bottom: 20px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 20px;
+    }
+    .content {
+      font-size: 16px;
+      color: #4b5563;
+      margin-bottom: 30px;
+    }
+    .details-box {
+      background-color: #fef2f2;
+      border: 1px solid #ef4444;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .details-box h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #991b1b;
+      margin: 0 0 12px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #fee2e2;
+      font-size: 14px;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    .detail-label {
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .detail-value {
+      color: #1f2937;
+      font-weight: 600;
+    }
+    .action-box {
+      background-color: #f3f4f6;
+      border-radius: 6px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .action-box h4 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 10px 0;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: #6b7280;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="email-container">
+  <div class="header">
+    <div class="logo" th:text="#{email.common.logo}">IQ Key Value</div>
+    <div class="danger-icon">&#9888;</div>
+    <h1 class="title" th:text="#{email.payment-overdue.title}">Payment Overdue</h1>
+  </div>
+
+  <div class="content">
+    <p th:text="#{email.common.greeting}">Hello,</p>
+    <p th:text="#{email.payment-overdue.intro}">We noticed that your recent payment is overdue. Please update your payment information to keep your account active.</p>
+
+    <div class="details-box">
+      <h3 th:text="#{email.payment-overdue.details-heading}">Account details</h3>
+      <div class="detail-row" th:if="${companyName != null and !companyName.isEmpty()}">
+        <span class="detail-label" th:text="#{email.payment-overdue.label.company}">Company</span>
+        <span class="detail-value" th:text="${companyName}"></span>
+      </div>
+      <div class="detail-row" th:if="${planId != null and !planId.isEmpty()}">
+        <span class="detail-label" th:text="#{email.payment-overdue.label.plan}">Plan</span>
+        <span class="detail-value" th:text="${planId}"></span>
+      </div>
+      <div class="detail-row" th:if="${overdueDate != null and !overdueDate.isEmpty()}">
+        <span class="detail-label" th:text="#{email.payment-overdue.label.overdue-since}">Overdue Since</span>
+        <span class="detail-value" th:text="${overdueDate}"></span>
+      </div>
+    </div>
+
+    <div class="action-box">
+      <h4 th:text="#{email.payment-overdue.action-heading}">Action required</h4>
+      <p th:text="#{email.payment-overdue.action-text}">Please settle your outstanding balance in your account dashboard as soon as possible to avoid service interruption.</p>
+    </div>
+
+    <p><span th:text="#{email.common.regards}">Best regards,</span><br>
+      <span th:text="#{email.common.team}">The IQ Key Value Team</span></p>
+  </div>
+
+  <div class="footer">
+    <p th:text="#{email.common.footer.copyright}">&copy; 2026 IQ Key Value. All rights reserved.</p>
+  </div>
+</div>
+</body>
+</html>

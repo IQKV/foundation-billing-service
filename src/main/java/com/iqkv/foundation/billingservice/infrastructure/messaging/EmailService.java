@@ -104,6 +104,7 @@ public class EmailService {
       case INVOICE_PAID -> "email/billing/invoice-paid";
       case BILLING_UPDATED -> "email/billing/billing-updated";
       case ACCOUNT_SUSPENDED -> "email/billing/account-suspended";
+      case REFUND_CREATED -> "email/billing/refund-created";
     };
   }
 
@@ -118,6 +119,7 @@ public class EmailService {
       case INVOICE_PAID -> "email.invoice-paid.subject";
       case BILLING_UPDATED -> "email.billing-updated.subject";
       case ACCOUNT_SUSPENDED -> "email.account-suspended.subject";
+      case REFUND_CREATED -> "email.refund-created.subject";
     };
   }
 }

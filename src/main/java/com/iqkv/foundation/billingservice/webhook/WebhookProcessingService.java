@@ -369,6 +369,21 @@ public class WebhookProcessingService {
         tenantKey
     );
     log.info("Published refund.created for tenant={}, refund={}", tenantKey, event.externalRefundId());
+
+    final String email = resolveEmail(billingSettings);
+    if (email != null) {
+      publishNotification(new NotificationEvent(
+          email,
+          notificationProps.defaultLocale(),
+          NotificationEventType.REFUND_CREATED,
+          Map.of(
+              "companyName", nullToEmpty(billingSettings.getCompanyName()),
+              "externalRefundId", nullToEmpty(event.externalRefundId()),
+              "amountRefunded", event.amountRefunded() != null ? event.amountRefunded() : 0L,
+              "currency", event.currency() != null ? event.currency().toUpperCase() : "USD"
+          ),
+          Instant.now()));
+    }
   }
 
   private void handlePaymentFailed(final GatewayPaymentFailureEvent event) {
