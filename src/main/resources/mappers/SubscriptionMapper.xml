@@ -11,6 +11,9 @@
         <result property="externalCustomerId"       column="external_customer_id"/>
         <result property="status"                   column="status"/>
         <result property="planId"                   column="plan_id"/>
+        <result property="quantity"                 column="quantity"/>
+        <result property="trialStart"               column="trial_start"/>
+        <result property="trialEnd"                 column="trial_end"/>
         <result property="currentPeriodStart"       column="current_period_start"/>
         <result property="currentPeriodEnd"         column="current_period_end"/>
         <result property="cancelAtPeriodEnd"        column="cancel_at_period_end"/>
@@ -21,17 +24,27 @@
         <result property="updatedAt"                column="updated_at"/>
     </resultMap>
 
+    <sql id="subscriptionColumns">
+        id, tenant_key, external_subscription_id, external_customer_id,
+        status, plan_id, quantity, trial_start, trial_end,
+        current_period_start, current_period_end,
+        cancel_at_period_end, canceled_at,
+        subject_type, subject_key,
+        created_at, updated_at
+    </sql>
+
     <insert id="upsert" parameterType="com.iqkv.foundation.billingservice.subscription.Subscription">
         INSERT INTO subscriptions
             (id, tenant_key, external_subscription_id, external_customer_id,
-             status, plan_id, current_period_start, current_period_end,
+             status, plan_id, quantity, trial_start, trial_end,
+             current_period_start, current_period_end,
              cancel_at_period_end, canceled_at,
              subject_type, subject_key,
              created_at, updated_at)
         VALUES
             (COALESCE(#{id}::uuid, gen_random_uuid()),
              #{tenantKey}, #{externalSubscriptionId}, #{externalCustomerId},
-             #{status}, #{planId},
+             #{status}, #{planId}, #{quantity}, #{trialStart}, #{trialEnd},
              #{currentPeriodStart}, #{currentPeriodEnd},
              #{cancelAtPeriodEnd}, #{canceledAt},
              COALESCE(#{subjectType}, 'TENANT'),
@@ -40,6 +53,10 @@
              COALESCE(#{updatedAt}, now()))
         ON CONFLICT (external_subscription_id) DO UPDATE
             SET status                = EXCLUDED.status,
+                plan_id               = EXCLUDED.plan_id,
+                quantity              = EXCLUDED.quantity,
+                trial_start           = EXCLUDED.trial_start,
+                trial_end             = EXCLUDED.trial_end,
                 current_period_start  = EXCLUDED.current_period_start,
                 current_period_end    = EXCLUDED.current_period_end,
                 cancel_at_period_end  = EXCLUDED.cancel_at_period_end,
@@ -50,11 +67,7 @@
     </insert>
 
     <select id="findActiveByTenantKey" resultMap="subscriptionResultMap">
-        SELECT id, tenant_key, external_subscription_id, external_customer_id,
-               status, plan_id, current_period_start, current_period_end,
-               cancel_at_period_end, canceled_at,
-               subject_type, subject_key,
-               created_at, updated_at
+        SELECT <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE tenant_key = #{tenantKey}
           AND status NOT IN ('canceled', 'unpaid')
@@ -63,22 +76,14 @@
     </select>
 
     <select id="findAllByTenantKey" resultMap="subscriptionResultMap">
-        SELECT id, tenant_key, external_subscription_id, external_customer_id,
-               status, plan_id, current_period_start, current_period_end,
-               cancel_at_period_end, canceled_at,
-               subject_type, subject_key,
-               created_at, updated_at
+        SELECT <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE tenant_key = #{tenantKey}
         ORDER BY created_at DESC
     </select>
 
     <select id="findBySubject" resultMap="subscriptionResultMap">
-        SELECT id, tenant_key, external_subscription_id, external_customer_id,
-               status, plan_id, current_period_start, current_period_end,
-               cancel_at_period_end, canceled_at,
-               subject_type, subject_key,
-               created_at, updated_at
+        SELECT <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE subject_type = #{subjectType}
           AND subject_key  = #{subjectKey}
@@ -86,11 +91,7 @@
     </select>
 
     <select id="findActiveBySubject" resultMap="subscriptionResultMap">
-        SELECT id, tenant_key, external_subscription_id, external_customer_id,
-               status, plan_id, current_period_start, current_period_end,
-               cancel_at_period_end, canceled_at,
-               subject_type, subject_key,
-               created_at, updated_at
+        SELECT <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE subject_type = #{subjectType}
           AND subject_key  = #{subjectKey}
@@ -99,22 +100,14 @@
     </select>
 
     <select id="findByExternalSubscriptionId" resultMap="subscriptionResultMap">
-        SELECT id, tenant_key, external_subscription_id, external_customer_id,
-               status, plan_id, current_period_start, current_period_end,
-               cancel_at_period_end, canceled_at,
-               subject_type, subject_key,
-               created_at, updated_at
+        SELECT <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE external_subscription_id = #{externalSubscriptionId}
         LIMIT 1
     </select>
 
     <select id="findTrialsEndingBetween" resultMap="subscriptionResultMap">
-        SELECT id, tenant_key, external_subscription_id, external_customer_id,
-               status, plan_id, current_period_start, current_period_end,
-               cancel_at_period_end, canceled_at,
-               subject_type, subject_key,
-               created_at, updated_at
+        SELECT <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE status = 'trialing'
           AND current_period_end BETWEEN #{startDate} AND #{endDate}
@@ -122,11 +115,7 @@
     </select>
 
     <select id="findByStatus" resultMap="subscriptionResultMap">
-        SELECT id, tenant_key, external_subscription_id, external_customer_id,
-               status, plan_id, current_period_start, current_period_end,
-               cancel_at_period_end, canceled_at,
-               subject_type, subject_key,
-               created_at, updated_at
+        SELECT <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE status = #{status}
         ORDER BY created_at DESC
@@ -137,11 +126,7 @@
          ═══════════════════════════════════════════════════════════════════════ -->
 
     <select id="findById" resultMap="subscriptionResultMap">
-        SELECT id, tenant_key, external_subscription_id, external_customer_id,
-               status, plan_id, current_period_start, current_period_end,
-               cancel_at_period_end, canceled_at,
-               subject_type, subject_key,
-               created_at, updated_at
+        SELECT <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE id = #{id}
         LIMIT 1
@@ -162,11 +147,7 @@
     </delete>
 
     <select id="findAll" resultMap="subscriptionResultMap">
-        SELECT id, tenant_key, external_subscription_id, external_customer_id,
-               status, plan_id, current_period_start, current_period_end,
-               cancel_at_period_end, canceled_at,
-               subject_type, subject_key,
-               created_at, updated_at
+        SELECT <include refid="subscriptionColumns"/>
         FROM subscriptions
         <where>
             <if test="search != null and search != ''">

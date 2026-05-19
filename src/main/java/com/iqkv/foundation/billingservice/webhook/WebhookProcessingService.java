@@ -30,11 +30,13 @@ import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingServ
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEvent;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEventType;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.WebhookLogMapper;
 import com.iqkv.foundation.billingservice.plan.PlanEligibilityPolicy;
 import com.iqkv.foundation.billingservice.settings.BillingSettings;
+import com.iqkv.foundation.billingservice.subscription.Refund;
 import com.iqkv.foundation.billingservice.subscription.SubjectType;
 import com.iqkv.foundation.billingservice.subscription.Subscription;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubject;
@@ -67,6 +69,7 @@ public class WebhookProcessingService {
 
   private final WebhookLogMapper webhookLogMapper;
   private final SubscriptionMapper subscriptionMapper;
+  private final RefundMapper refundMapper;
   private final BillingSettingsMapper billingSettingsMapper;
   private final UserBillingSettingsMapper userBillingSettingsMapper;
   private final MessagingService messagingService;
@@ -84,6 +87,7 @@ public class WebhookProcessingService {
 
   public WebhookProcessingService(final WebhookLogMapper webhookLogMapper,
                                   final SubscriptionMapper subscriptionMapper,
+                                  final RefundMapper refundMapper,
                                   final BillingSettingsMapper billingSettingsMapper,
                                   final UserBillingSettingsMapper userBillingSettingsMapper,
                                   final MessagingService messagingService,
@@ -92,6 +96,7 @@ public class WebhookProcessingService {
                                   final PlanEligibilityPolicy planEligibilityPolicy) {
     this.webhookLogMapper = webhookLogMapper;
     this.subscriptionMapper = subscriptionMapper;
+    this.refundMapper = refundMapper;
     this.billingSettingsMapper = billingSettingsMapper;
     this.userBillingSettingsMapper = userBillingSettingsMapper;
     this.messagingService = messagingService;
@@ -357,6 +362,21 @@ public class WebhookProcessingService {
     final var billingSettings = billingSettingsOpt.get();
     final String tenantKey = billingSettings.getTenantKey();
 
+    final Refund refund = new Refund(
+        null,
+        tenantKey,
+        event.externalRefundId(),
+        event.externalPaymentId(),
+        event.externalCustomerId(),
+        event.amountRefunded(),
+        event.currency(),
+        event.status(),
+        event.occurredAt(),
+        null,
+        null
+    );
+    refundMapper.upsert(refund);
+
     messagingService.publishRefundCreated(
         tenantKey,
         event.externalRefundId(),
@@ -495,6 +515,9 @@ public class WebhookProcessingService {
     sub.setExternalCustomerId(event.externalCustomerId());
     sub.setStatus(event.status());
     sub.setPlanId(event.planId());
+    sub.setQuantity(event.quantity());
+    sub.setTrialStart(event.trialStart());
+    sub.setTrialEnd(event.trialEnd());
     sub.setCurrentPeriodStart(event.currentPeriodStart());
     sub.setCurrentPeriodEnd(event.currentPeriodEnd());
     sub.setCancelAtPeriodEnd(event.cancelAtPeriodEnd());

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper">
+
+    <resultMap id="refundResultMap"
+               type="com.iqkv.foundation.billingservice.subscription.Refund">
+        <id     property="id"                 column="id"/>
+        <result property="tenantKey"          column="tenant_key"/>
+        <result property="externalRefundId"   column="external_refund_id"/>
+        <result property="externalPaymentId"  column="external_payment_id"/>
+        <result property="externalCustomerId" column="external_customer_id"/>
+        <result property="amount"             column="amount"/>
+        <result property="currency"           column="currency"/>
+        <result property="status"             column="status"/>
+        <result property="occurredAt"         column="occurred_at"/>
+        <result property="createdAt"          column="created_at"/>
+        <result property="updatedAt"          column="updated_at"/>
+    </resultMap>
+
+    <insert id="upsert" parameterType="com.iqkv.foundation.billingservice.subscription.Refund">
+        INSERT INTO refunds
+            (id, tenant_key, external_refund_id, external_payment_id,
+             external_customer_id, amount, currency, status, occurred_at,
+             created_at, updated_at)
+        VALUES
+            (COALESCE(#{id}::uuid, gen_random_uuid()),
+             #{tenantKey}, #{externalRefundId}, #{externalPaymentId},
+             #{externalCustomerId}, #{amount}, #{currency}, #{status}, #{occurredAt},
+             COALESCE(#{createdAt}, now()),
+             COALESCE(#{updatedAt}, now()))
+        ON CONFLICT (external_refund_id) DO UPDATE
+            SET status      = EXCLUDED.status,
+                amount      = EXCLUDED.amount,
+                updated_at  = now()
+    </insert>
+
+    <select id="findAllByTenantKey" resultMap="refundResultMap">
+        SELECT id, tenant_key, external_refund_id, external_payment_id,
+               external_customer_id, amount, currency, status, occurred_at,
+               created_at, updated_at
+        FROM refunds
+        WHERE tenant_key = #{tenantKey}
+        ORDER BY occurred_at DESC
+    </select>
+
+    <select id="findByExternalRefundId" resultMap="refundResultMap">
+        SELECT id, tenant_key, external_refund_id, external_payment_id,
+               external_customer_id, amount, currency, status, occurred_at,
+               created_at, updated_at
+        FROM refunds
+        WHERE external_refund_id = #{externalRefundId}
+        LIMIT 1
+    </select>
+
+    <select id="findById" resultMap="refundResultMap">
+        SELECT id, tenant_key, external_refund_id, external_payment_id,
+               external_customer_id, amount, currency, status, occurred_at,
+               created_at, updated_at
+        FROM refunds
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+</mapper>

@@ -110,6 +110,7 @@
             <column name="external_customer_id"       value="cus_iqkvDemo0001"/>
             <column name="status"                     value="active"/>
             <column name="plan_id"                    value="price_1IQKVDemoProMonthly"/>
+            <column name="quantity"                   valueNumeric="5"/>
             <column name="current_period_start"       valueDate="2026-05-01T00:00:00"/>
             <column name="current_period_end"         valueDate="2026-06-01T00:00:00"/>
             <column name="cancel_at_period_end"       valueBoolean="false"/>
@@ -118,9 +119,51 @@
             <column name="created_at"                 valueDate="2026-05-13T12:00:00"/>
             <column name="updated_at"                 valueDate="2026-05-13T12:00:00"/>
         </insert>
+        <insert tableName="subscriptions" schemaName="public">
+            <column name="id"                         value="00000000-0000-0000-0b12-000000000002"/>
+            <column name="tenant_key"                 value="demo0001"/>
+            <column name="external_subscription_id"   value="sub_iqkvDemo0001Trial"/>
+            <column name="external_customer_id"       value="cus_iqkvDemo0001"/>
+            <column name="status"                     value="trialing"/>
+            <column name="plan_id"                    value="price_1IQKVDemoTeamMonthly"/>
+            <column name="quantity"                   valueNumeric="10"/>
+            <column name="trial_start"                valueDate="2026-05-15T00:00:00"/>
+            <column name="trial_end"                  valueDate="2026-05-29T00:00:00"/>
+            <column name="current_period_start"       valueDate="2026-05-15T00:00:00"/>
+            <column name="current_period_end"         valueDate="2026-05-29T00:00:00"/>
+            <column name="cancel_at_period_end"       valueBoolean="false"/>
+            <column name="subject_type"               value="TENANT"/>
+            <column name="subject_key"                value="demo0001"/>
+            <column name="created_at"                 valueDate="2026-05-15T12:00:00"/>
+            <column name="updated_at"                 valueDate="2026-05-15T12:00:00"/>
+        </insert>
         <rollback>
             <delete tableName="subscriptions" schemaName="public">
-                <where>id = '00000000-0000-0000-0b12-000000000001'</where>
+                <where>id IN (
+                    '00000000-0000-0000-0b12-000000000001',
+                    '00000000-0000-0000-0b12-000000000002'
+                )</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20260519120000-demo-refunds" author="iqkv" context="demo">
+        <insert tableName="refunds" schemaName="public">
+            <column name="id"                   value="00000000-0000-0000-0b13-000000000001"/>
+            <column name="tenant_key"           value="demo0001"/>
+            <column name="external_refund_id"   value="re_1IQKVDemoRefund001"/>
+            <column name="external_payment_id"  value="pi_1IQKVDemoPayment001"/>
+            <column name="external_customer_id" value="cus_iqkvDemo0001"/>
+            <column name="amount"               valueNumeric="1500"/>
+            <column name="currency"             value="USD"/>
+            <column name="status"               value="succeeded"/>
+            <column name="occurred_at"           valueDate="2026-05-18T10:00:00"/>
+            <column name="created_at"           valueDate="2026-05-18T10:00:00"/>
+            <column name="updated_at"           valueDate="2026-05-18T10:00:00"/>
+        </insert>
+        <rollback>
+            <delete tableName="refunds" schemaName="public">
+                <where>tenant_key = 'demo0001'</where>
             </delete>
         </rollback>
     </changeSet>

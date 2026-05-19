@@ -40,6 +40,9 @@ public class Subscription {
   private String externalCustomerId;      // payment-gateway-agnostic (e.g. Stripe cus_xxx)
   private String status;                  // active | past_due | canceled | unpaid | trialing
   private String planId;                  // nullable — payment gateway price/plan reference
+  private Long quantity;                  // nullable — number of seats/units
+  private Instant trialStart;             // nullable
+  private Instant trialEnd;               // nullable
   private Instant currentPeriodStart;
   private Instant currentPeriodEnd;
   private boolean cancelAtPeriodEnd;
@@ -58,6 +61,9 @@ public class Subscription {
                       final String externalCustomerId,
                       final String status,
                       final String planId,
+                      final Long quantity,
+                      final Instant trialStart,
+                      final Instant trialEnd,
                       final Instant currentPeriodStart,
                       final Instant currentPeriodEnd,
                       final boolean cancelAtPeriodEnd,
@@ -72,6 +78,9 @@ public class Subscription {
     this.externalCustomerId = externalCustomerId;
     this.status = status;
     this.planId = planId;
+    this.quantity = quantity;
+    this.trialStart = trialStart;
+    this.trialEnd = trialEnd;
     this.currentPeriodStart = currentPeriodStart;
     this.currentPeriodEnd = currentPeriodEnd;
     this.cancelAtPeriodEnd = cancelAtPeriodEnd;
@@ -128,6 +137,30 @@ public class Subscription {
 
   public void setPlanId(String planId) {
     this.planId = planId;
+  }
+
+  public Long getQuantity() {
+    return quantity;
+  }
+
+  public void setQuantity(Long quantity) {
+    this.quantity = quantity;
+  }
+
+  public Instant getTrialStart() {
+    return trialStart;
+  }
+
+  public void setTrialStart(Instant trialStart) {
+    this.trialStart = trialStart;
+  }
+
+  public Instant getTrialEnd() {
+    return trialEnd;
+  }
+
+  public void setTrialEnd(Instant trialEnd) {
+    this.trialEnd = trialEnd;
   }
 
   public Instant getCurrentPeriodStart() {

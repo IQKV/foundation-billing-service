@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="20260519120000-add-subscription-quantity-and-trial" author="iqkv">
+        <addColumn tableName="subscriptions" schemaName="public">
+            <column name="quantity" type="BIGINT"/>
+            <column name="trial_start" type="TIMESTAMP"/>
+            <column name="trial_end" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260519120001-create-refunds" author="iqkv">
+        <createTable tableName="refunds" schemaName="public">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_key" type="VARCHAR(21)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="external_refund_id" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_refunds_external_refund_id"/>
+            </column>
+            <column name="external_payment_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="external_customer_id" type="VARCHAR(255)"/>
+            <column name="amount" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="occurred_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_refunds_tenant_key" tableName="refunds" schemaName="public">
+            <column name="tenant_key"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

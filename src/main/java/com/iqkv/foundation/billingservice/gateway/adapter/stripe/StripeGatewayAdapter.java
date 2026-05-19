@@ -295,12 +295,9 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
     final var stripe = deserializeSubscription(event);
     final Instant occurredAt = Instant.ofEpochSecond(event.getCreated());
 
-    // Stripe 32.x: currentPeriodStart/End are not available on Subscription directly.
-    // Use billingCycleAnchor as period start and trialEnd/startDate as available context.
-    final Instant periodStart = stripe.getBillingCycleAnchor() != null
-        ? Instant.ofEpochSecond(stripe.getBillingCycleAnchor()) : null;
-    final Instant periodEnd = stripe.getTrialEnd() != null
-        ? Instant.ofEpochSecond(stripe.getTrialEnd()) : null;
+    final Long quantity = stripe.getItems() != null && !stripe.getItems().getData().isEmpty()
+        ? stripe.getItems().getData().get(0).getQuantity()
+        : null;
 
     return new GatewaySubscriptionEvent(
         event.getId(),
@@ -310,8 +307,11 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
         stripe.getCustomer(),
         stripe.getStatus(),
         extractPlanId(stripe),
-        periodStart,
-        periodEnd,
+        quantity,
+        stripe.getTrialStart() != null ? Instant.ofEpochSecond(stripe.getTrialStart()) : null,
+        stripe.getTrialEnd() != null ? Instant.ofEpochSecond(stripe.getTrialEnd()) : null,
+        stripe.getBillingCycleAnchor() != null ? Instant.ofEpochSecond(stripe.getBillingCycleAnchor()) : null,
+        stripe.getTrialEnd() != null ? Instant.ofEpochSecond(stripe.getTrialEnd()) : null,
         Boolean.TRUE.equals(stripe.getCancelAtPeriodEnd()),
         stripe.getEndedAt() != null ? Instant.ofEpochSecond(stripe.getEndedAt()) : null,
         stripe.getMetadata() != null ? Map.copyOf(stripe.getMetadata()) : Map.of()
