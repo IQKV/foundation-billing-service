@@ -116,14 +116,18 @@ public final class SubscriptionDtos {
    * Query parameters for the admin refund list endpoint.
    */
   public record RefundListQuery(
-      @jakarta.validation.constraints.Min(0) int page,
-      @jakarta.validation.constraints.Min(1) @jakarta.validation.constraints.Max(100) int size,
+      @jakarta.validation.constraints.Min(0) Integer page,
+      @jakarta.validation.constraints.Min(1) @jakarta.validation.constraints.Max(100) Integer size,
       String sortBy,
       String sortDir,
       String tenantKey
   ) {
-    public RefundListQuery() {
-      this(0, 20, "occurredAt", "desc", null);
+    public RefundListQuery(Integer page, Integer size, String sortBy, String sortDir, String tenantKey) {
+      this.page = page != null ? page : 0;
+      this.size = size != null ? size : 20;
+      this.sortBy = sortBy != null ? sortBy : "occurredAt";
+      this.sortDir = sortDir != null ? sortDir : "desc";
+      this.tenantKey = tenantKey;
     }
   }
 
@@ -193,8 +197,8 @@ public final class SubscriptionDtos {
    * @param tenantKey  filter by specific tenant
    */
   public record SubscriptionListQuery(
-      @jakarta.validation.constraints.Min(0) int page,
-      @jakarta.validation.constraints.Min(1) @jakarta.validation.constraints.Max(100) int size,
+      @jakarta.validation.constraints.Min(0) Integer page,
+      @jakarta.validation.constraints.Min(1) @jakarta.validation.constraints.Max(100) Integer size,
       String sortBy,
       String sortDir,
       String search,
@@ -202,8 +206,15 @@ public final class SubscriptionDtos {
       String tenantKey
   ) {
     /** Canonical defaults applied when the controller binds an empty query string. */
-    public SubscriptionListQuery() {
-      this(0, 20, "createdAt", "desc", null, null, null);
+    public SubscriptionListQuery(Integer page, Integer size, String sortBy, String sortDir, String search,
+                                String status, String tenantKey) {
+      this.page = page != null ? page : 0;
+      this.size = size != null ? size : 20;
+      this.sortBy = sortBy != null ? sortBy : "createdAt";
+      this.sortDir = sortDir != null ? sortDir : "desc";
+      this.search = search;
+      this.status = status;
+      this.tenantKey = tenantKey;
     }
   }
 }
