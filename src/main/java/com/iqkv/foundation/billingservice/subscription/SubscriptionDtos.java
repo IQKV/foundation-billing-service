@@ -122,7 +122,8 @@ public final class SubscriptionDtos {
       String sortDir,
       String tenantKey
   ) {
-    public RefundListQuery(Integer page, Integer size, String sortBy, String sortDir, String tenantKey) {
+    public RefundListQuery(final Integer page, final Integer size, final String sortBy, final String sortDir,
+                          final String tenantKey) {
       this.page = page != null ? page : 0;
       this.size = size != null ? size : 20;
       this.sortBy = sortBy != null ? sortBy : "occurredAt";
@@ -206,8 +207,8 @@ public final class SubscriptionDtos {
       String tenantKey
   ) {
     /** Canonical defaults applied when the controller binds an empty query string. */
-    public SubscriptionListQuery(Integer page, Integer size, String sortBy, String sortDir, String search,
-                                String status, String tenantKey) {
+    public SubscriptionListQuery(final Integer page, final Integer size, final String sortBy, final String sortDir,
+                                 final String search, final String status, final String tenantKey) {
       this.page = page != null ? page : 0;
       this.size = size != null ? size : 20;
       this.sortBy = sortBy != null ? sortBy : "createdAt";
