@@ -18,6 +18,7 @@ package com.iqkv.foundation.billingservice.subscription;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -26,8 +27,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
+import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
+import com.iqkv.foundation.billingservice.settings.BillingSettings;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
+import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,7 +50,16 @@ class SubscriptionServiceTest {
   private SubscriptionMapper subscriptionMapper;
 
   @Mock
+  private RefundMapper refundMapper;
+
+  @Mock
   private SubscriptionSubjectResolver subjectResolver;
+
+  @Mock
+  private PaymentGatewayPort paymentGatewayPort;
+
+  @Mock
+  private BillingSettingsMapper billingSettingsMapper;
 
   @InjectMocks
   private SubscriptionService subscriptionService;
@@ -162,6 +178,67 @@ class SubscriptionServiceTest {
     assertThat(result).extracting(Subscription::getTenantKey).containsOnly(tenantKey);
     verify(subjectResolver).resolveSubject(tenantKey, userId);
     verify(subscriptionMapper).findBySubject("TENANT", tenantKey);
+  }
+
+  @Test
+  @DisplayName("Should update subscription when tenant matches")
+  void shouldUpdateSubscriptionWhenTenantMatches() {
+    // Arrange
+    final String tenantKey = "tenant-123";
+    final String externalSubId = "sub_abc";
+    final var subscription = createSubscription(tenantKey, "active");
+    subscription.setExternalSubscriptionId(externalSubId);
+    final var request = new SubscriptionDtos.UpdateSubscriptionRequest("price_456", 2L, "always_invoice");
+
+    when(subscriptionMapper.findByExternalSubscriptionId(externalSubId)).thenReturn(Optional.of(subscription));
+
+    // Act
+    subscriptionService.updateSubscription(tenantKey, externalSubId, request);
+
+    // Assert
+    verify(subscriptionMapper).findByExternalSubscriptionId(externalSubId);
+    verify(paymentGatewayPort).updateSubscription(any(UpdateSubscriptionCommand.class));
+  }
+
+  @Test
+  @DisplayName("Should throw TenantContextMismatchException when updating subscription of another tenant")
+  void shouldThrowExceptionWhenUpdatingSubscriptionOfAnotherTenant() {
+    // Arrange
+    final String tenantKey = "tenant-123";
+    final String externalSubId = "sub_abc";
+    final var subscription = createSubscription("other-tenant", "active");
+    subscription.setExternalSubscriptionId(externalSubId);
+    final var request = new SubscriptionDtos.UpdateSubscriptionRequest("price_456", 2L, "always_invoice");
+
+    when(subscriptionMapper.findByExternalSubscriptionId(externalSubId)).thenReturn(Optional.of(subscription));
+
+    // Act & Assert
+    assertThatThrownBy(() -> subscriptionService.updateSubscription(tenantKey, externalSubId, request))
+        .isInstanceOf(TenantContextMismatchException.class)
+        .hasMessageContaining("does not belong to tenant");
+  }
+
+  @Test
+  @DisplayName("Should create refund when tenant matches")
+  void shouldCreateRefundWhenTenantMatches() {
+    // Arrange
+    final String tenantKey = "tenant-123";
+    final String externalCustomerId = "cus_abc";
+    final var settings = new BillingSettings();
+    settings.setTenantKey(tenantKey);
+    settings.setExternalCustomerId(externalCustomerId);
+    final var request = new SubscriptionDtos.CreateRefundRequest("ch_123", 1000L, "requested_by_customer");
+
+    when(billingSettingsMapper.findByTenantKey(tenantKey)).thenReturn(Optional.of(settings));
+    when(paymentGatewayPort.createRefund(any())).thenReturn("ref_123");
+
+    // Act
+    final var result = subscriptionService.createRefund(tenantKey, request);
+
+    // Assert
+    assertThat(result.refundId()).isEqualTo("ref_123");
+    verify(billingSettingsMapper).findByTenantKey(tenantKey);
+    verify(paymentGatewayPort).createRefund(any());
   }
 
   private Subscription createSubscription(final String tenantKey, final String status) {

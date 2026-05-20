@@ -73,7 +73,7 @@ public class PaymentRestResource {
       @RequestBody final SubscriptionDtos.CreateRefundRequest request,
       @AuthenticationPrincipal final Jwt jwt) {
     enforceOwnership(tenantKey, jwt);
-    return ResponseEntity.ok(subscriptionService.createRefund(request));
+    return ResponseEntity.ok(subscriptionService.createRefund(tenantKey, request));
   }
 
   @GetMapping("/{tenantKey}/refunds")

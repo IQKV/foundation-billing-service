@@ -211,20 +211,28 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
    */
   @Override
   public String createRefund(final CreateRefundCommand command) {
-    final RefundCreateParams.Builder builder = RefundCreateParams.builder()
-        .setCharge(command.paymentId());
-
-    if (command.amount() != null) {
-      builder.setAmount(command.amount());
-    }
-
-    if (command.reason() != null) {
-      builder.setReason(RefundCreateParams.Reason.valueOf(command.reason().toUpperCase()));
-    }
-
-    command.metadata().forEach(builder::putMetadata);
-
     try {
+      if (command.externalCustomerId() != null && !command.externalCustomerId().isBlank()) {
+        final Charge charge = Charge.retrieve(command.paymentId());
+        if (!command.externalCustomerId().equals(charge.getCustomer())) {
+          throw new PaymentGatewayException("Payment " + command.paymentId()
+                                            + " does not belong to customer " + command.externalCustomerId());
+        }
+      }
+
+      final RefundCreateParams.Builder builder = RefundCreateParams.builder()
+          .setCharge(command.paymentId());
+
+      if (command.amount() != null) {
+        builder.setAmount(command.amount());
+      }
+
+      if (command.reason() != null) {
+        builder.setReason(RefundCreateParams.Reason.valueOf(command.reason().toUpperCase()));
+      }
+
+      command.metadata().forEach(builder::putMetadata);
+
       final Refund refund = Refund.create(builder.build());
       log.debug("Created Stripe refund {} for charge {}", refund.getId(), command.paymentId());
       return refund.getId();

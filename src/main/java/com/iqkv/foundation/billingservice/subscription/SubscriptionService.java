@@ -27,6 +27,7 @@ import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSett
 import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
+import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -137,8 +138,16 @@ public class SubscriptionService {
    * Updates an existing subscription.
    */
   public void updateSubscription(
+      final String tenantKey,
       final String externalSubscriptionId,
       final SubscriptionDtos.UpdateSubscriptionRequest request) {
+    final Subscription subscription = subscriptionMapper.findByExternalSubscriptionId(externalSubscriptionId)
+        .orElseThrow(() -> new ResourceNotFoundException("Subscription not found: " + externalSubscriptionId));
+
+    if (!tenantKey.equals(subscription.getTenantKey())) {
+      throw new TenantContextMismatchException("Subscription " + externalSubscriptionId + " does not belong to tenant " + tenantKey);
+    }
+
     final var command = new UpdateSubscriptionCommand(
         externalSubscriptionId,
         request.priceId(),
@@ -153,12 +162,22 @@ public class SubscriptionService {
   /**
    * Creates a refund for a payment.
    */
-  public SubscriptionDtos.RefundResponse createRefund(final SubscriptionDtos.CreateRefundRequest request) {
+  public SubscriptionDtos.RefundResponse createRefund(
+      final String tenantKey,
+      final SubscriptionDtos.CreateRefundRequest request) {
+    final var settings = billingSettingsMapper.findByTenantKey(tenantKey)
+        .orElseThrow(() -> new ResourceNotFoundException("Billing settings not found for tenant: " + tenantKey));
+
+    if (settings.getExternalCustomerId() == null) {
+      throw new IllegalStateException("External customer ID not found for tenant: " + tenantKey);
+    }
+
     final var command = new CreateRefundCommand(
         request.paymentId(),
+        settings.getExternalCustomerId(),
         request.amount(),
         request.reason(),
-        java.util.Map.of()
+        java.util.Map.of("tenantKey", tenantKey)
     );
 
     final String refundId = paymentGatewayPort.createRefund(command);

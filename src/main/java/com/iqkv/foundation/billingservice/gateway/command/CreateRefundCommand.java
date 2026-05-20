@@ -21,13 +21,15 @@ import java.util.Map;
 /**
  * Gateway-agnostic command for creating a refund.
  *
- * @param paymentId external payment ID (PaymentIntent ID or Charge ID) (required)
- * @param amount    amount to refund in cents (optional, null for full refund)
- * @param reason    reason for refund (optional)
- * @param metadata  additional metadata to attach to the refund
+ * @param paymentId          external payment ID (PaymentIntent ID or Charge ID) (required)
+ * @param externalCustomerId external customer ID (optional, used for ownership verification)
+ * @param amount             amount to refund in cents (optional, null for full refund)
+ * @param reason             reason for refund (optional)
+ * @param metadata           additional metadata to attach to the refund
  */
 public record CreateRefundCommand(
     String paymentId,
+    String externalCustomerId,
     Long amount,
     String reason,
     Map<String, String> metadata
@@ -37,5 +39,9 @@ public record CreateRefundCommand(
       throw new IllegalArgumentException("Payment ID is required");
     }
     metadata = metadata != null ? Map.copyOf(metadata) : Map.of();
+  }
+
+  public CreateRefundCommand(String paymentId, Long amount, String reason, Map<String, String> metadata) {
+    this(paymentId, null, amount, reason, metadata);
   }
 }

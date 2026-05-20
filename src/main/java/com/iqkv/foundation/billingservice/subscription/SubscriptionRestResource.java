@@ -138,7 +138,7 @@ public class SubscriptionRestResource {
       @RequestBody final SubscriptionDtos.UpdateSubscriptionRequest request,
       @AuthenticationPrincipal final Jwt jwt) {
     enforceOwnership(tenantKey, jwt);
-    subscriptionService.updateSubscription(externalSubscriptionId, request);
+    subscriptionService.updateSubscription(tenantKey, externalSubscriptionId, request);
     return ResponseEntity.noContent().build();
   }
 
