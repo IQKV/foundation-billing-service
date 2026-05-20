@@ -41,7 +41,8 @@ public record CreateRefundCommand(
     metadata = metadata != null ? Map.copyOf(metadata) : Map.of();
   }
 
-  public CreateRefundCommand(String paymentId, Long amount, String reason, Map<String, String> metadata) {
+  public CreateRefundCommand(final String paymentId, final Long amount, final String reason,
+                             final Map<String, String> metadata) {
     this(paymentId, null, amount, reason, metadata);
   }
 }
