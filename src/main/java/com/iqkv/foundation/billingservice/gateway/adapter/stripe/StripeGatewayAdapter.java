@@ -210,6 +210,74 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
    * {@inheritDoc}
    */
   @Override
+  public void cancelSubscription(final String subscriptionId, final boolean cancelAtPeriodEnd) {
+    try {
+      final com.stripe.model.Subscription subscription =
+          com.stripe.model.Subscription.retrieve(subscriptionId);
+
+      if (cancelAtPeriodEnd) {
+        final SubscriptionUpdateParams params = SubscriptionUpdateParams.builder()
+            .setCancelAtPeriodEnd(true)
+            .build();
+        subscription.update(params);
+        log.debug("Set Stripe subscription {} to cancel at period end", subscriptionId);
+      } else {
+        subscription.cancel();
+        log.debug("Canceled Stripe subscription {} immediately", subscriptionId);
+      }
+    } catch (final StripeException e) {
+      throw new PaymentGatewayException("Failed to cancel Stripe subscription: " + subscriptionId, e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void pauseSubscription(final String subscriptionId) {
+    try {
+      final com.stripe.model.Subscription subscription =
+          com.stripe.model.Subscription.retrieve(subscriptionId);
+
+      final SubscriptionUpdateParams params = SubscriptionUpdateParams.builder()
+          .setPauseCollection(SubscriptionUpdateParams.PauseCollection.builder()
+              .setBehavior(SubscriptionUpdateParams.PauseCollection.Behavior.MARK_UNCOLLECTIBLE)
+              .build())
+          .build();
+
+      subscription.update(params);
+      log.debug("Paused Stripe subscription {}", subscriptionId);
+    } catch (final StripeException e) {
+      throw new PaymentGatewayException("Failed to pause Stripe subscription: " + subscriptionId, e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void reactivateSubscription(final String subscriptionId) {
+    try {
+      final com.stripe.model.Subscription subscription =
+          com.stripe.model.Subscription.retrieve(subscriptionId);
+
+      final SubscriptionUpdateParams params = SubscriptionUpdateParams.builder()
+          .setPauseCollection(SubscriptionUpdateParams.PauseCollection.builder()
+              .setBehavior(null) // Setting behavior to null removes pause_collection in Stripe SDK
+              .build())
+          .build();
+
+      subscription.update(params);
+      log.debug("Reactivated Stripe subscription {}", subscriptionId);
+    } catch (final StripeException e) {
+      throw new PaymentGatewayException("Failed to reactivate Stripe subscription: " + subscriptionId, e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public String createRefund(final CreateRefundCommand command) {
     try {
       if (command.externalCustomerId() != null && !command.externalCustomerId().isBlank()) {

@@ -70,6 +70,31 @@ public interface PaymentGatewayPort {
   void updateSubscription(UpdateSubscriptionCommand command);
 
   /**
+   * Cancels an existing subscription.
+   *
+   * @param subscriptionId      external subscription ID
+   * @param cancelAtPeriodEnd whether to cancel at the end of the period or immediately
+   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if cancellation fails
+   */
+  void cancelSubscription(String subscriptionId, boolean cancelAtPeriodEnd);
+
+  /**
+   * Pauses an existing subscription.
+   *
+   * @param subscriptionId external subscription ID
+   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if pausing fails
+   */
+  void pauseSubscription(String subscriptionId);
+
+  /**
+   * Reactivates a paused subscription.
+   *
+   * @param subscriptionId external subscription ID
+   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if reactivation fails
+   */
+  void reactivateSubscription(String subscriptionId);
+
+  /**
    * Creates a refund for a payment.
    *
    * @param command the refund creation command

@@ -264,6 +264,10 @@ public class SubscriptionService {
     final Subscription subscription = subscriptionMapper.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException("Subscription not found: " + id));
 
+    boolean gatewayUpdateNeeded = false;
+    String newPriceId = null;
+    Long newQuantity = null;
+
     if (request.status() != null) {
       subscription.setStatus(request.status());
       if ("canceled".equalsIgnoreCase(request.status()) && subscription.getCanceledAt() == null) {
@@ -277,6 +281,14 @@ public class SubscriptionService {
 
     if (request.quantity() != null) {
       subscription.setQuantity(request.quantity());
+      newQuantity = request.quantity();
+      gatewayUpdateNeeded = true;
+    }
+
+    if (request.planId() != null) {
+      subscription.setPlanId(request.planId());
+      newPriceId = request.planId();
+      gatewayUpdateNeeded = true;
     }
 
     if (request.trialStart() != null) {
@@ -289,8 +301,88 @@ public class SubscriptionService {
 
     if (request.cancelAtPeriodEnd() != null) {
       subscription.setCancelAtPeriodEnd(request.cancelAtPeriodEnd());
+      // We handle cancelAtPeriodEnd via a dedicated gateway call or as part of update
+      paymentGatewayPort.cancelSubscription(subscription.getExternalSubscriptionId(), request.cancelAtPeriodEnd());
     }
 
+    if (gatewayUpdateNeeded) {
+      final var command = new UpdateSubscriptionCommand(
+          subscription.getExternalSubscriptionId(),
+          newPriceId,
+          newQuantity,
+          null,
+          java.util.Map.of()
+      );
+      paymentGatewayPort.updateSubscription(command);
+    }
+
+    subscription.setUpdatedAt(java.time.LocalDateTime.now());
+    subscriptionMapper.update(subscription);
+
+    return SubscriptionDtoMapper.toAdminResponse(subscription);
+  }
+
+  /**
+   * Cancels an existing subscription.
+   *
+   * @param id                the subscription's unique identifier
+   * @param cancelAtPeriodEnd whether to cancel at the end of the period or immediately
+   * @return the updated subscription
+   */
+  @org.springframework.transaction.annotation.Transactional
+  public SubscriptionDtos.AdminSubscriptionResponse cancelSubscription(final UUID id, final boolean cancelAtPeriodEnd) {
+    final Subscription subscription = subscriptionMapper.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Subscription not found: " + id));
+
+    paymentGatewayPort.cancelSubscription(subscription.getExternalSubscriptionId(), cancelAtPeriodEnd);
+
+    if (!cancelAtPeriodEnd) {
+      subscription.setStatus("canceled");
+      subscription.setCanceledAt(java.time.Instant.now());
+    } else {
+      subscription.setCancelAtPeriodEnd(true);
+    }
+
+    subscription.setUpdatedAt(java.time.LocalDateTime.now());
+    subscriptionMapper.update(subscription);
+
+    return SubscriptionDtoMapper.toAdminResponse(subscription);
+  }
+
+  /**
+   * Pauses an existing subscription.
+   *
+   * @param id the subscription's unique identifier
+   * @return the updated subscription
+   */
+  @org.springframework.transaction.annotation.Transactional
+  public SubscriptionDtos.AdminSubscriptionResponse pauseSubscription(final UUID id) {
+    final Subscription subscription = subscriptionMapper.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Subscription not found: " + id));
+
+    paymentGatewayPort.pauseSubscription(subscription.getExternalSubscriptionId());
+
+    subscription.setStatus("paused");
+    subscription.setUpdatedAt(java.time.LocalDateTime.now());
+    subscriptionMapper.update(subscription);
+
+    return SubscriptionDtoMapper.toAdminResponse(subscription);
+  }
+
+  /**
+   * Reactivates a paused subscription.
+   *
+   * @param id the subscription's unique identifier
+   * @return the updated subscription
+   */
+  @org.springframework.transaction.annotation.Transactional
+  public SubscriptionDtos.AdminSubscriptionResponse reactivateSubscription(final UUID id) {
+    final Subscription subscription = subscriptionMapper.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Subscription not found: " + id));
+
+    paymentGatewayPort.reactivateSubscription(subscription.getExternalSubscriptionId());
+
+    subscription.setStatus("active");
     subscription.setUpdatedAt(java.time.LocalDateTime.now());
     subscriptionMapper.update(subscription);
 

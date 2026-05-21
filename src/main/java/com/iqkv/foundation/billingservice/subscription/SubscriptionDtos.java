@@ -178,6 +178,7 @@ public final class SubscriptionDtos {
   public record AdminUpdateSubscriptionRequest(
       String status,
       Long quantity,
+      String planId,
       Instant trialStart,
       Instant trialEnd,
       Instant currentPeriodEnd,

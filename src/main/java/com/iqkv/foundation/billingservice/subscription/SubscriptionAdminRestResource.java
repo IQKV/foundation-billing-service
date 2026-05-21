@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -104,6 +105,46 @@ public class SubscriptionAdminRestResource {
       @Parameter(description = "Subscription UUID") @PathVariable UUID id,
       @RequestBody SubscriptionDtos.AdminUpdateSubscriptionRequest request) {
     return ResponseEntity.ok(subscriptionService.patchSubscription(id, request));
+  }
+
+  @PostMapping("/{id}/cancel")
+  @Operation(summary = "Cancel subscription", description = "Cancels the subscription via the payment gateway.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Subscription canceled"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+      @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_ADMIN required", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Subscription not found", content = @Content)
+  })
+  public ResponseEntity<SubscriptionDtos.AdminSubscriptionResponse> cancelSubscription(
+      @Parameter(description = "Subscription UUID") @PathVariable UUID id,
+      @org.springframework.web.bind.annotation.RequestParam(defaultValue = "true") boolean cancelAtPeriodEnd) {
+    return ResponseEntity.ok(subscriptionService.cancelSubscription(id, cancelAtPeriodEnd));
+  }
+
+  @PostMapping("/{id}/pause")
+  @Operation(summary = "Pause subscription", description = "Pauses the subscription via the payment gateway.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Subscription paused"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+      @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_ADMIN required", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Subscription not found", content = @Content)
+  })
+  public ResponseEntity<SubscriptionDtos.AdminSubscriptionResponse> pauseSubscription(
+      @Parameter(description = "Subscription UUID") @PathVariable UUID id) {
+    return ResponseEntity.ok(subscriptionService.pauseSubscription(id));
+  }
+
+  @PostMapping("/{id}/reactivate")
+  @Operation(summary = "Reactivate subscription", description = "Reactivates a paused subscription via the payment gateway.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Subscription reactivated"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+      @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_ADMIN required", content = @Content),
+      @ApiResponse(responseCode = "404", description = "Subscription not found", content = @Content)
+  })
+  public ResponseEntity<SubscriptionDtos.AdminSubscriptionResponse> reactivateSubscription(
+      @Parameter(description = "Subscription UUID") @PathVariable UUID id) {
+    return ResponseEntity.ok(subscriptionService.reactivateSubscription(id));
   }
 
   @DeleteMapping("/{id}")
