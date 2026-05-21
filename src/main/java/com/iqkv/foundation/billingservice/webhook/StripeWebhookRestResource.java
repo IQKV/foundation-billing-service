@@ -63,10 +63,10 @@ public class StripeWebhookRestResource {
   @Operation(
       summary = "Receive Stripe webhook",
       description = "Verifies the Stripe-Signature header, normalizes the event, then processes it "
-          + "idempotently. Always returns 200 after the idempotency check to prevent Stripe retries "
-          + "on business logic failures. No authentication required — secured by Stripe signature verification.")
+                    + "idempotently. Always returns 200 after the idempotency check to prevent Stripe retries "
+                    + "on business logic failures. No authentication required — secured by Stripe signature verification.")
   @Parameter(name = "Stripe-Signature", in = ParameterIn.HEADER, required = true,
-      description = "Stripe webhook signature (t=timestamp,v1=hash)")
+             description = "Stripe webhook signature (t=timestamp,v1=hash)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Event received and processed"),
       @ApiResponse(responseCode = "400", description = "Invalid Stripe signature")

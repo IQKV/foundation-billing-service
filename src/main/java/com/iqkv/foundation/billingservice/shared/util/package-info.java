@@ -18,4 +18,5 @@
  * Utility classes shared across all bounded contexts (e.g. date helpers, string utilities).
  * Classes in this package must not depend on any bounded-context or infrastructure packages.
  */
+
 package com.iqkv.foundation.billingservice.shared.util;

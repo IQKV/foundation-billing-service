@@ -67,12 +67,12 @@ public class SubscriptionRestResource {
   @Operation(
       summary = "Get active subscription",
       description = "Returns the active Stripe subscription for the given tenant. "
-          + "No gateway round-trip — reads local cache. "
-          + "Requires TENANT_OWNER authority. The authenticated tenant must match the tenantKey path variable.")
+                    + "No gateway round-trip — reads local cache. "
+                    + "Requires TENANT_OWNER authority. The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Active subscription returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -93,11 +93,11 @@ public class SubscriptionRestResource {
   @Operation(
       summary = "Get all subscriptions",
       description = "Returns all subscriptions for the given tenant ordered by created_at DESC. May be empty. "
-          + "Requires TENANT_OWNER authority. The authenticated tenant must match the tenantKey path variable.")
+                    + "Requires TENANT_OWNER authority. The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Subscription list returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -117,7 +117,7 @@ public class SubscriptionRestResource {
   @Operation(
       summary = "Create checkout session",
       description = "Creates a Stripe Checkout Session for subscription creation. "
-          + "Requires TENANT_OWNER authority.")
+                    + "Requires TENANT_OWNER authority.")
   public ResponseEntity<SubscriptionDtos.CheckoutSessionResponse> createCheckout(
       @PathVariable @Pattern(regexp = "[a-z0-9]{8}") final String tenantKey,
       @RequestBody final SubscriptionDtos.CreateCheckoutSessionRequest request,
@@ -131,7 +131,7 @@ public class SubscriptionRestResource {
   @Operation(
       summary = "Update subscription",
       description = "Updates an existing subscription (upgrade/downgrade, quantity change). "
-          + "Requires TENANT_OWNER authority.")
+                    + "Requires TENANT_OWNER authority.")
   public ResponseEntity<Void> updateSubscription(
       @PathVariable @Pattern(regexp = "[a-z0-9]{8}") final String tenantKey,
       @PathVariable final String externalSubscriptionId,
@@ -147,9 +147,9 @@ public class SubscriptionRestResource {
   @Operation(
       summary = "Get active subscription for current subject",
       description = "Returns the active subscription for the resolved subject (tenant in multi-tenant mode, "
-          + "user in single-tenant mode). Requires TENANT_OWNER or MEMBER authority.")
+                    + "user in single-tenant mode). Requires TENANT_OWNER or MEMBER authority.")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Active subscription returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -169,9 +169,9 @@ public class SubscriptionRestResource {
   @Operation(
       summary = "Get all subscriptions for current subject",
       description = "Returns all subscriptions for the resolved subject (tenant in multi-tenant mode, "
-          + "user in single-tenant mode), ordered by created_at DESC. Requires TENANT_OWNER or MEMBER authority.")
+                    + "user in single-tenant mode), ordered by created_at DESC. Requires TENANT_OWNER or MEMBER authority.")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Subscription list returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),

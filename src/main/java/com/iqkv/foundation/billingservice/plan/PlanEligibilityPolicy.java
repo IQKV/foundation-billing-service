@@ -32,8 +32,8 @@ public interface PlanEligibilityPolicy {
    *
    * @param planCode    the plan code to validate
    * @param subjectType the active subscription subject type (TENANT or USER)
-   * @throws PlanNotFoundException       if no plan with the given {@code planCode} exists
-   * @throws PlanScopeMismatchException  if the plan's scope does not match {@code subjectType}
+   * @throws PlanNotFoundException      if no plan with the given {@code planCode} exists
+   * @throws PlanScopeMismatchException if the plan's scope does not match {@code subjectType}
    */
   void validatePlanEligibility(String planCode, SubjectType subjectType);
 }

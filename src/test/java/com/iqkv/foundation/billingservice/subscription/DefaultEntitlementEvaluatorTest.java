@@ -27,6 +27,7 @@ import java.util.UUID;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.plan.Plan;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +44,9 @@ class DefaultEntitlementEvaluatorTest {
 
   @Mock
   private PlanMapper planMapper;
+
+  @Mock
+  private MeterRegistry meterRegistry;
 
   @InjectMocks
   private DefaultEntitlementEvaluator entitlementEvaluator;

@@ -21,14 +21,14 @@ import java.util.Map;
 /**
  * Gateway-agnostic command for creating a checkout session.
  *
- * @param customerId       external customer ID (required)
- * @param priceId          external price ID (required)
- * @param successUrl       URL to redirect to after successful payment (required)
- * @param cancelUrl        URL to redirect to after cancelled payment (required)
- * @param trialPeriodDays  number of trial days (optional)
- * @param quantity         quantity of the item (optional)
+ * @param customerId          external customer ID (required)
+ * @param priceId             external price ID (required)
+ * @param successUrl          URL to redirect to after successful payment (required)
+ * @param cancelUrl           URL to redirect to after cancelled payment (required)
+ * @param trialPeriodDays     number of trial days (optional)
+ * @param quantity            quantity of the item (optional)
  * @param allowPromotionCodes whether to allow promotion codes (optional)
- * @param metadata         additional metadata to attach to the session
+ * @param metadata            additional metadata to attach to the session
  */
 public record CreateCheckoutSessionCommand(
     String customerId,

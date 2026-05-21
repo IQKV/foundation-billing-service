@@ -65,11 +65,11 @@ public class BillingSettingsRestResource {
   @Operation(
       summary = "Get billing settings",
       description = "Returns billing settings for the given tenant. Requires TENANT_OWNER authority. "
-          + "The authenticated tenant must match the tenantKey path variable.")
+                    + "The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Billing settings returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -94,11 +94,11 @@ public class BillingSettingsRestResource {
   @Operation(
       summary = "Update billing settings",
       description = "Partially updates billing settings. Only non-null fields are applied. "
-          + "Requires TENANT_OWNER authority. The authenticated tenant must match the tenantKey path variable.")
+                    + "Requires TENANT_OWNER authority. The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Billing settings updated"),
       @ApiResponse(responseCode = "400", description = "Validation error"),
@@ -121,11 +121,11 @@ public class BillingSettingsRestResource {
   @Operation(
       summary = "Create customer portal session",
       description = "Creates a Stripe Customer Portal session and returns the URL for redirection. "
-          + "Requires TENANT_OWNER authority. The authenticated tenant must match the tenantKey path variable.")
+                    + "Requires TENANT_OWNER authority. The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Portal session created"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),

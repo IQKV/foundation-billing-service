@@ -21,7 +21,8 @@ package com.iqkv.foundation.billingservice.subscription;
  */
 public final class SubscriptionDtoMapper {
 
-  private SubscriptionDtoMapper() {}
+  private SubscriptionDtoMapper() {
+  }
 
   /**
    * Maps a {@link Subscription} to the slim self-service {@link SubscriptionDtos.SubscriptionResponse}.

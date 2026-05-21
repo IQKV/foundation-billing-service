@@ -21,7 +21,8 @@ package com.iqkv.foundation.billingservice.subscription;
  */
 public final class RefundDtoMapper {
 
-  private RefundDtoMapper() {}
+  private RefundDtoMapper() {
+  }
 
   /**
    * Maps a {@link Refund} to the rich {@link SubscriptionDtos.AdminRefundResponse}.

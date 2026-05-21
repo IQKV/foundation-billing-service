@@ -1,311 +1,345 @@
 {
-  "groups": [
-    {
-      "name": "iqkv.db",
-      "description": "Intermediary database connection properties. Values are composed into spring.datasource by profile ymls."
-    },
-    {
-      "name": "iqkv.rabbitmq",
-      "description": "Intermediary RabbitMQ connection properties. Values are composed into spring.rabbitmq by profile ymls."
-    },
-    {
-      "name": "iqkv.mail",
-      "description": "Intermediary mail connection properties. Values are composed into spring.mail and iqkv.notification.mail."
-    },
-    {
-      "name": "iqkv.platform",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.PlatformConfigurationProperties",
-      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.PlatformConfigurationProperties",
-      "description": "Platform-wide operational settings. Must be consistent across all core services (IAM, Billing, Gateway)."
-    },
-    {
-      "name": "iqkv.billing",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.BillingConfigurationProperties",
-      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.BillingConfigurationProperties",
-      "description": "Billing-specific configuration. Provides fallback values for single-tenant mode."
-    },
-    {
-      "name": "iqkv.payment",
-      "description": "Payment gateway configuration."
-    },
-    {
-      "name": "iqkv.payment.gateway",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayConfigurationProperties",
-      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayConfigurationProperties",
-      "description": "Active payment gateway selection. Determines which PaymentGatewayPort adapter is used at runtime."
-    },
-    {
-      "name": "iqkv.stripe",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties",
-      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties",
-      "description": "Stripe adapter configuration. Required when iqkv.payment.gateway.type=STRIPE."
-    },
-    {
-      "name": "iqkv.auth",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties",
-      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties",
-      "description": "Authentication and JWT configuration."
-    },
-    {
-      "name": "iqkv.auth.jwt",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties$Jwt",
-      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties",
-      "description": "JWT token verification settings."
-    },
-    {
-      "name": "iqkv.messaging",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.MessagingConfigurationProperties",
-      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.MessagingConfigurationProperties",
-      "description": "Messaging infrastructure configuration."
-    },
-    {
-      "name": "iqkv.messaging.rabbitmq",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.MessagingConfigurationProperties$Rabbitmq",
-      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.MessagingConfigurationProperties",
-      "description": "RabbitMQ messaging configuration."
-    },
-    {
-      "name": "iqkv.notification",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties",
-      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties",
-      "description": "Notification and email configuration."
-    },
-    {
-      "name": "iqkv.notification.mail",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties$Mail",
-      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties",
-      "description": "Email notification settings."
-    },
-    {
-      "name": "iqkv.liquibase",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.LiquibaseConfigurationProperties",
-      "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.LiquibaseConfigurationProperties",
-      "description": "Liquibase database migration configuration for the custom LiquibaseRunner."
-    }
-  ],
-  "properties": [
-    {
-      "name": "iqkv.db.host",
-      "type": "java.lang.String",
-      "description": "Database server hostname.",
-      "defaultValue": "localhost"
-    },
-    {
-      "name": "iqkv.db.port",
-      "type": "java.lang.Integer",
-      "description": "Database server port.",
-      "defaultValue": 5432
-    },
-    {
-      "name": "iqkv.db.name",
-      "type": "java.lang.String",
-      "description": "Database name.",
-      "defaultValue": "billing"
-    },
-    {
-      "name": "iqkv.db.username",
-      "type": "java.lang.String",
-      "description": "Database username.",
-      "defaultValue": "billing"
-    },
-    {
-      "name": "iqkv.db.password",
-      "type": "java.lang.String",
-      "description": "Database password.",
-      "defaultValue": "billing"
-    },
-    {
-      "name": "iqkv.rabbitmq.host",
-      "type": "java.lang.String",
-      "description": "RabbitMQ broker hostname.",
-      "defaultValue": "localhost"
-    },
-    {
-      "name": "iqkv.rabbitmq.port",
-      "type": "java.lang.Integer",
-      "description": "RabbitMQ broker AMQP port.",
-      "defaultValue": 5672
-    },
-    {
-      "name": "iqkv.rabbitmq.username",
-      "type": "java.lang.String",
-      "description": "RabbitMQ username.",
-      "defaultValue": "billing"
-    },
-    {
-      "name": "iqkv.rabbitmq.password",
-      "type": "java.lang.String",
-      "description": "RabbitMQ password.",
-      "defaultValue": "billing"
-    },
-    {
-      "name": "iqkv.mail.host",
-      "type": "java.lang.String",
-      "description": "SMTP server hostname.",
-      "defaultValue": "localhost"
-    },
-    {
-      "name": "iqkv.mail.port",
-      "type": "java.lang.Integer",
-      "description": "SMTP server port.",
-      "defaultValue": 587
-    },
-    {
-      "name": "iqkv.mail.username",
-      "type": "java.lang.String",
-      "description": "SMTP authentication username.",
-      "defaultValue": "dev"
-    },
-    {
-      "name": "iqkv.mail.password",
-      "type": "java.lang.String",
-      "description": "SMTP authentication password.",
-      "defaultValue": "dev"
-    },
-    {
-      "name": "iqkv.mail.from",
-      "type": "java.lang.String",
-      "description": "Default From address for outgoing emails.",
-      "defaultValue": "noreply@iqkv.com"
-    },
-    {
-      "name": "iqkv.mail.from-name",
-      "type": "java.lang.String",
-      "description": "Display name for the From address in outgoing emails.",
-      "defaultValue": "IQ Key Value"
-    },
-    {
-      "name": "iqkv.mail.reply-to",
-      "type": "java.lang.String",
-      "description": "Default Reply-To address for outgoing emails."
-    },
-    {
-      "name": "iqkv.platform.rollout-mode",
-      "type": "com.iqkv.foundation.billingservice.infrastructure.config.RolloutMode",
-      "description": "Platform-wide operational mode. Must match across all core services. MULTI_TENANT: subscriptions are scoped per tenant; owner fields required in tenant.created events. SINGLE_TENANT: subscriptions are scoped per user; owner fields optional in tenant.created events.",
-      "defaultValue": "MULTI_TENANT"
-    },
-    {
-      "name": "iqkv.billing.default-contact-email",
-      "type": "java.lang.String",
-      "description": "Fallback billing contact email for SINGLE_TENANT mode. Used when tenant.created event has no ownerEmail. Fallback chain: (1) ownerEmail from event → (2) this value → (3) null (payment gateway customer created without email)."
-    },
-    {
-      "name": "iqkv.payment.gateway.type",
-      "type": "com.iqkv.foundation.billingservice.gateway.GatewayType",
-      "description": "Active payment gateway adapter. Determines which PaymentGatewayPort implementation is used. Currently only STRIPE is implemented.",
-      "defaultValue": "STRIPE"
-    },
-    {
-      "name": "iqkv.stripe.secret-key",
-      "type": "java.lang.String",
-      "description": "Stripe API secret key. Required when iqkv.payment.gateway.type=STRIPE. Use test keys (sk_test_*) for development, live keys (sk_live_*) for production.",
-      "defaultValue": "sk_test_placeholder"
-    },
-    {
-      "name": "iqkv.stripe.webhook-secret",
-      "type": "java.lang.String",
-      "description": "Stripe webhook signing secret. Required when iqkv.payment.gateway.type=STRIPE. Used to verify webhook event signatures at POST /api/v1/billing/webhooks/stripe.",
-      "defaultValue": "whsec_placeholder"
-    },
-    {
-      "name": "iqkv.auth.jwt.public-key-path",
-      "type": "java.lang.String",
-      "description": "Path to the RSA public key PEM file used for verifying JWTs. Supports classpath: and file: prefixes.",
-      "defaultValue": "classpath:keys/public.pem"
-    },
-    {
-      "name": "iqkv.messaging.rabbitmq.enabled",
-      "type": "java.lang.Boolean",
-      "description": "Enables RabbitMQ messaging. When false, all AMQP beans are skipped (used in test profile).",
-      "defaultValue": true
-    },
-    {
-      "name": "iqkv.notification.mail.from",
-      "type": "java.lang.String",
-      "description": "From address used in outgoing notification emails. Resolved from iqkv.mail.from."
-    },
-    {
-      "name": "iqkv.notification.mail.from-name",
-      "type": "java.lang.String",
-      "description": "Display name for the From address in outgoing notification emails. Resolved from iqkv.mail.from-name."
-    },
-    {
-      "name": "iqkv.notification.mail.reply-to",
-      "type": "java.lang.String",
-      "description": "Reply-To address used in outgoing notification emails. Resolved from iqkv.mail.reply-to."
-    },
-    {
-      "name": "iqkv.notification.default-locale",
-      "type": "java.lang.String",
-      "description": "Default locale for notification templates. Must be a valid BCP 47 language tag (e.g. en, en-US).",
-      "defaultValue": "en"
-    },
-    {
-      "name": "iqkv.notification.base-url",
-      "type": "java.lang.String",
-      "description": "Base URL of the frontend application, used to construct links in notification emails.",
-      "defaultValue": "http://localhost:3000"
-    },
-    {
-      "name": "iqkv.liquibase.change-log",
-      "type": "java.lang.String",
-      "description": "Classpath location of the Liquibase changelog master file.",
-      "defaultValue": "db/changelog/db.changelog-master.xml"
-    },
-    {
-      "name": "iqkv.liquibase.contexts",
-      "type": "java.lang.String",
-      "description": "Active Liquibase contexts. Set to 'demo' on non-production profiles to apply demo seed changelogs; omit for schema-only."
-    }
-  ],
-  "hints": [
-    {
-      "name": "iqkv.platform.rollout-mode",
-      "values": [
-        { "value": "MULTI_TENANT", "description": "Multi-tenant mode: subscriptions scoped per tenant." },
-        { "value": "SINGLE_TENANT", "description": "Single-tenant mode: subscriptions scoped per user." }
-      ]
-    },
-    {
-      "name": "iqkv.payment.gateway.type",
-      "values": [
-        { "value": "STRIPE", "description": "Stripe payment gateway (implemented). Requires iqkv.stripe.* properties." }
-      ]
-    },
-    {
-      "name": "iqkv.stripe.secret-key",
-      "values": [
-        { "value": "sk_test_*", "description": "Test mode secret key for development and staging." },
-        { "value": "sk_live_*", "description": "Live mode secret key for production." }
-      ]
-    },
-    {
-      "name": "iqkv.stripe.webhook-secret",
-      "values": [
-        { "value": "whsec_*", "description": "Webhook signing secret from the Stripe dashboard." }
-      ]
-    },
-    {
-      "name": "iqkv.auth.jwt.public-key-path",
-      "values": [
-        { "value": "classpath:keys/public.pem", "description": "Bundled dev key (not for production)." },
-        { "value": "file:/run/secrets/public.pem", "description": "Docker secret mount path." }
-      ]
-    },
-    {
-      "name": "iqkv.notification.default-locale",
-      "values": [
-        { "value": "en" },
-        { "value": "uk" }
-      ]
-    },
-    {
-      "name": "iqkv.messaging.rabbitmq.enabled",
-      "values": [
-        { "value": true, "description": "Enable RabbitMQ — required for all non-test profiles." },
-        { "value": false, "description": "Disable RabbitMQ — used in test profile." }
-      ]
-    }
-  ]
+    "groups": [
+        {
+            "name": "iqkv.db",
+            "description": "Intermediary database connection properties. Values are composed into spring.datasource by profile ymls."
+        },
+        {
+            "name": "iqkv.rabbitmq",
+            "description": "Intermediary RabbitMQ connection properties. Values are composed into spring.rabbitmq by profile ymls."
+        },
+        {
+            "name": "iqkv.mail",
+            "description": "Intermediary mail connection properties. Values are composed into spring.mail and iqkv.notification.mail."
+        },
+        {
+            "name": "iqkv.platform",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.PlatformConfigurationProperties",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.PlatformConfigurationProperties",
+            "description": "Platform-wide operational settings. Must be consistent across all core services (IAM, Billing, Gateway)."
+        },
+        {
+            "name": "iqkv.billing",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.BillingConfigurationProperties",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.BillingConfigurationProperties",
+            "description": "Billing-specific configuration. Provides fallback values for single-tenant mode."
+        },
+        {
+            "name": "iqkv.payment",
+            "description": "Payment gateway configuration."
+        },
+        {
+            "name": "iqkv.payment.gateway",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayConfigurationProperties",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.PaymentGatewayConfigurationProperties",
+            "description": "Active payment gateway selection. Determines which PaymentGatewayPort adapter is used at runtime."
+        },
+        {
+            "name": "iqkv.stripe",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties",
+            "description": "Stripe adapter configuration. Required when iqkv.payment.gateway.type=STRIPE."
+        },
+        {
+            "name": "iqkv.auth",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties",
+            "description": "Authentication and JWT configuration."
+        },
+        {
+            "name": "iqkv.auth.jwt",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties$Jwt",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties",
+            "description": "JWT token verification settings."
+        },
+        {
+            "name": "iqkv.messaging",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.MessagingConfigurationProperties",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.MessagingConfigurationProperties",
+            "description": "Messaging infrastructure configuration."
+        },
+        {
+            "name": "iqkv.messaging.rabbitmq",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.MessagingConfigurationProperties$Rabbitmq",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.MessagingConfigurationProperties",
+            "description": "RabbitMQ messaging configuration."
+        },
+        {
+            "name": "iqkv.notification",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties",
+            "description": "Notification and email configuration."
+        },
+        {
+            "name": "iqkv.notification.mail",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties$Mail",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties",
+            "description": "Email notification settings."
+        },
+        {
+            "name": "iqkv.liquibase",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.LiquibaseConfigurationProperties",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.LiquibaseConfigurationProperties",
+            "description": "Liquibase database migration configuration for the custom LiquibaseRunner."
+        }
+    ],
+    "properties": [
+        {
+            "name": "iqkv.db.host",
+            "type": "java.lang.String",
+            "description": "Database server hostname.",
+            "defaultValue": "localhost"
+        },
+        {
+            "name": "iqkv.db.port",
+            "type": "java.lang.Integer",
+            "description": "Database server port.",
+            "defaultValue": 5432
+        },
+        {
+            "name": "iqkv.db.name",
+            "type": "java.lang.String",
+            "description": "Database name.",
+            "defaultValue": "billing"
+        },
+        {
+            "name": "iqkv.db.username",
+            "type": "java.lang.String",
+            "description": "Database username.",
+            "defaultValue": "billing"
+        },
+        {
+            "name": "iqkv.db.password",
+            "type": "java.lang.String",
+            "description": "Database password.",
+            "defaultValue": "billing"
+        },
+        {
+            "name": "iqkv.rabbitmq.host",
+            "type": "java.lang.String",
+            "description": "RabbitMQ broker hostname.",
+            "defaultValue": "localhost"
+        },
+        {
+            "name": "iqkv.rabbitmq.port",
+            "type": "java.lang.Integer",
+            "description": "RabbitMQ broker AMQP port.",
+            "defaultValue": 5672
+        },
+        {
+            "name": "iqkv.rabbitmq.username",
+            "type": "java.lang.String",
+            "description": "RabbitMQ username.",
+            "defaultValue": "billing"
+        },
+        {
+            "name": "iqkv.rabbitmq.password",
+            "type": "java.lang.String",
+            "description": "RabbitMQ password.",
+            "defaultValue": "billing"
+        },
+        {
+            "name": "iqkv.mail.host",
+            "type": "java.lang.String",
+            "description": "SMTP server hostname.",
+            "defaultValue": "localhost"
+        },
+        {
+            "name": "iqkv.mail.port",
+            "type": "java.lang.Integer",
+            "description": "SMTP server port.",
+            "defaultValue": 587
+        },
+        {
+            "name": "iqkv.mail.username",
+            "type": "java.lang.String",
+            "description": "SMTP authentication username.",
+            "defaultValue": "dev"
+        },
+        {
+            "name": "iqkv.mail.password",
+            "type": "java.lang.String",
+            "description": "SMTP authentication password.",
+            "defaultValue": "dev"
+        },
+        {
+            "name": "iqkv.mail.from",
+            "type": "java.lang.String",
+            "description": "Default From address for outgoing emails.",
+            "defaultValue": "noreply@iqkv.com"
+        },
+        {
+            "name": "iqkv.mail.from-name",
+            "type": "java.lang.String",
+            "description": "Display name for the From address in outgoing emails.",
+            "defaultValue": "IQ Key Value"
+        },
+        {
+            "name": "iqkv.mail.reply-to",
+            "type": "java.lang.String",
+            "description": "Default Reply-To address for outgoing emails."
+        },
+        {
+            "name": "iqkv.platform.rollout-mode",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.RolloutMode",
+            "description": "Platform-wide operational mode. Must match across all core services. MULTI_TENANT: subscriptions are scoped per tenant; owner fields required in tenant.created events. SINGLE_TENANT: subscriptions are scoped per user; owner fields optional in tenant.created events.",
+            "defaultValue": "MULTI_TENANT"
+        },
+        {
+            "name": "iqkv.billing.default-contact-email",
+            "type": "java.lang.String",
+            "description": "Fallback billing contact email for SINGLE_TENANT mode. Used when tenant.created event has no ownerEmail. Fallback chain: (1) ownerEmail from event → (2) this value → (3) null (payment gateway customer created without email)."
+        },
+        {
+            "name": "iqkv.payment.gateway.type",
+            "type": "com.iqkv.foundation.billingservice.gateway.GatewayType",
+            "description": "Active payment gateway adapter. Determines which PaymentGatewayPort implementation is used. Currently only STRIPE is implemented.",
+            "defaultValue": "STRIPE"
+        },
+        {
+            "name": "iqkv.stripe.secret-key",
+            "type": "java.lang.String",
+            "description": "Stripe API secret key. Required when iqkv.payment.gateway.type=STRIPE. Use test keys (sk_test_*) for development, live keys (sk_live_*) for production.",
+            "defaultValue": "sk_test_placeholder"
+        },
+        {
+            "name": "iqkv.stripe.webhook-secret",
+            "type": "java.lang.String",
+            "description": "Stripe webhook signing secret. Required when iqkv.payment.gateway.type=STRIPE. Used to verify webhook event signatures at POST /api/v1/billing/webhooks/stripe.",
+            "defaultValue": "whsec_placeholder"
+        },
+        {
+            "name": "iqkv.auth.jwt.public-key-path",
+            "type": "java.lang.String",
+            "description": "Path to the RSA public key PEM file used for verifying JWTs. Supports classpath: and file: prefixes.",
+            "defaultValue": "classpath:keys/public.pem"
+        },
+        {
+            "name": "iqkv.messaging.rabbitmq.enabled",
+            "type": "java.lang.Boolean",
+            "description": "Enables RabbitMQ messaging. When false, all AMQP beans are skipped (used in test profile).",
+            "defaultValue": true
+        },
+        {
+            "name": "iqkv.notification.mail.from",
+            "type": "java.lang.String",
+            "description": "From address used in outgoing notification emails. Resolved from iqkv.mail.from."
+        },
+        {
+            "name": "iqkv.notification.mail.from-name",
+            "type": "java.lang.String",
+            "description": "Display name for the From address in outgoing notification emails. Resolved from iqkv.mail.from-name."
+        },
+        {
+            "name": "iqkv.notification.mail.reply-to",
+            "type": "java.lang.String",
+            "description": "Reply-To address used in outgoing notification emails. Resolved from iqkv.mail.reply-to."
+        },
+        {
+            "name": "iqkv.notification.default-locale",
+            "type": "java.lang.String",
+            "description": "Default locale for notification templates. Must be a valid BCP 47 language tag (e.g. en, en-US).",
+            "defaultValue": "en"
+        },
+        {
+            "name": "iqkv.notification.base-url",
+            "type": "java.lang.String",
+            "description": "Base URL of the frontend application, used to construct links in notification emails.",
+            "defaultValue": "http://localhost:3000"
+        },
+        {
+            "name": "iqkv.liquibase.change-log",
+            "type": "java.lang.String",
+            "description": "Classpath location of the Liquibase changelog master file.",
+            "defaultValue": "db/changelog/db.changelog-master.xml"
+        },
+        {
+            "name": "iqkv.liquibase.contexts",
+            "type": "java.lang.String",
+            "description": "Active Liquibase contexts. Set to 'demo' on non-production profiles to apply demo seed changelogs; omit for schema-only."
+        }
+    ],
+    "hints": [
+        {
+            "name": "iqkv.platform.rollout-mode",
+            "values": [
+                {
+                    "value": "MULTI_TENANT",
+                    "description": "Multi-tenant mode: subscriptions scoped per tenant."
+                },
+                {
+                    "value": "SINGLE_TENANT",
+                    "description": "Single-tenant mode: subscriptions scoped per user."
+                }
+            ]
+        },
+        {
+            "name": "iqkv.payment.gateway.type",
+            "values": [
+                {
+                    "value": "STRIPE",
+                    "description": "Stripe payment gateway (implemented). Requires iqkv.stripe.* properties."
+                }
+            ]
+        },
+        {
+            "name": "iqkv.stripe.secret-key",
+            "values": [
+                {
+                    "value": "sk_test_*",
+                    "description": "Test mode secret key for development and staging."
+                },
+                {
+                    "value": "sk_live_*",
+                    "description": "Live mode secret key for production."
+                }
+            ]
+        },
+        {
+            "name": "iqkv.stripe.webhook-secret",
+            "values": [
+                {
+                    "value": "whsec_*",
+                    "description": "Webhook signing secret from the Stripe dashboard."
+                }
+            ]
+        },
+        {
+            "name": "iqkv.auth.jwt.public-key-path",
+            "values": [
+                {
+                    "value": "classpath:keys/public.pem",
+                    "description": "Bundled dev key (not for production)."
+                },
+                {
+                    "value": "file:/run/secrets/public.pem",
+                    "description": "Docker secret mount path."
+                }
+            ]
+        },
+        {
+            "name": "iqkv.notification.default-locale",
+            "values": [
+                {
+                    "value": "en"
+                },
+                {
+                    "value": "uk"
+                }
+            ]
+        },
+        {
+            "name": "iqkv.messaging.rabbitmq.enabled",
+            "values": [
+                {
+                    "value": true,
+                    "description": "Enable RabbitMQ — required for all non-test profiles."
+                },
+                {
+                    "value": false,
+                    "description": "Disable RabbitMQ — used in test profile."
+                }
+            ]
+        }
+    ]
 }

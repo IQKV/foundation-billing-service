@@ -21,6 +21,7 @@ import jakarta.mail.internet.MimeMessage;
 import java.util.Locale;
 
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -39,15 +40,18 @@ public class EmailService {
   private final TemplateEngine templateEngine;
   private final NotificationConfigurationProperties notificationProps;
   private final MessageSource messageSource;
+  private final MeterRegistry meterRegistry;
 
   public EmailService(final JavaMailSender javaMailSender,
                       final TemplateEngine templateEngine,
                       final NotificationConfigurationProperties notificationProps,
-                      final MessageSource messageSource) {
+                      final MessageSource messageSource,
+                      final MeterRegistry meterRegistry) {
     this.javaMailSender = javaMailSender;
     this.templateEngine = templateEngine;
     this.notificationProps = notificationProps;
     this.messageSource = messageSource;
+    this.meterRegistry = meterRegistry;
   }
 
   public void send(final NotificationEvent event) {
@@ -78,8 +82,10 @@ public class EmailService {
 
       javaMailSender.send(mimeMessage);
       log.info("Email sent: type={} to={}", event.getType(), event.getRecipientEmail());
+      meterRegistry.counter("billing_emails_sent_total", "type", event.getType().name(), "status", "success").increment();
     } catch (final MessagingException | java.io.UnsupportedEncodingException e) {
       log.error("Failed to send email: type={} to={}", event.getType(), event.getRecipientEmail(), e);
+      meterRegistry.counter("billing_emails_sent_total", "type", event.getType().name(), "status", "failure").increment();
       throw new com.iqkv.foundation.billingservice.shared.exception.MessagingException(
           "Failed to send email to " + event.getRecipientEmail(), e);
     }

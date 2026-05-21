@@ -30,7 +30,8 @@ import java.util.UUID;
  */
 public final class BillingSettingsDtos {
 
-  private BillingSettingsDtos() {}
+  private BillingSettingsDtos() {
+  }
 
   /**
    * PATCH request body — all fields are optional; only non-null values are applied.
@@ -52,7 +53,8 @@ public final class BillingSettingsDtos {
 
       @NotBlank @Pattern(regexp = "[A-Z]{3}", message = "must be a 3-letter ISO 4217 currency code")
       String currency
-  ) {}
+  ) {
+  }
 
   /**
    * Read-only view of a tenant's billing settings.
@@ -69,14 +71,16 @@ public final class BillingSettingsDtos {
       String currency,
       Instant createdAt,
       Instant updatedAt
-  ) {}
+  ) {
+  }
 
   /**
    * Response body for the customer portal session request.
    *
    * @param url the URL of the portal session
    */
-  public record PortalSessionResponse(String url) {}
+  public record PortalSessionResponse(String url) {
+  }
 
   // ─── Admin DTOs (PLATFORM_ADMIN) ───────────────────────────────────────────
 
@@ -96,7 +100,8 @@ public final class BillingSettingsDtos {
       UUID profileOwnerId,
       Instant createdAt,
       Instant updatedAt
-  ) {}
+  ) {
+  }
 
   /**
    * Request body for {@code POST /admin/tenants/{tenantKey}/billing-settings}.
@@ -123,7 +128,8 @@ public final class BillingSettingsDtos {
       String currency,
 
       UUID profileOwnerId
-  ) {}
+  ) {
+  }
 
   /**
    * Request body for {@code PUT} — replaces mutable fields; use {@code null} on optional fields to clear them.
@@ -150,7 +156,8 @@ public final class BillingSettingsDtos {
       String currency,
 
       UUID profileOwnerId
-  ) {}
+  ) {
+  }
 
   /**
    * Request body for {@code PATCH} — only non-null fields are applied.
@@ -177,5 +184,6 @@ public final class BillingSettingsDtos {
       String currency,
 
       UUID profileOwnerId
-  ) {}
+  ) {
+  }
 }

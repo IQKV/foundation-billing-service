@@ -1,51 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper">
 
     <resultMap id="billingSettingsResultMap"
                type="com.iqkv.foundation.billingservice.settings.BillingSettings">
-        <id     property="id"                   column="id"/>
-        <result property="tenantKey"            column="tenant_key"/>
-        <result property="externalCustomerId"   column="external_customer_id"/>
-        <result property="billingEmail"         column="billing_email"/>
-        <result property="companyName"          column="company_name"/>
-        <result property="billingAddress"       column="billing_address"/>
-        <result property="taxId"                column="tax_id"/>
-        <result property="taxIdType"            column="tax_id_type"/>
-        <result property="currency"             column="currency"/>
-        <result property="profileOwnerId"       column="profile_owner_id"/>
-        <result property="createdAt"            column="created_at"/>
-        <result property="updatedAt"            column="updated_at"/>
+        <id property="id" column="id"/>
+        <result property="tenantKey" column="tenant_key"/>
+        <result property="externalCustomerId" column="external_customer_id"/>
+        <result property="billingEmail" column="billing_email"/>
+        <result property="companyName" column="company_name"/>
+        <result property="billingAddress" column="billing_address"/>
+        <result property="taxId" column="tax_id"/>
+        <result property="taxIdType" column="tax_id_type"/>
+        <result property="currency" column="currency"/>
+        <result property="profileOwnerId" column="profile_owner_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.iqkv.foundation.billingservice.settings.BillingSettings">
         INSERT INTO billing_settings
-            (id, tenant_key, external_customer_id, billing_email, company_name,
-             billing_address, tax_id, tax_id_type, currency, profile_owner_id,
-             created_at, updated_at)
+        (id, tenant_key, external_customer_id, billing_email, company_name,
+        billing_address, tax_id, tax_id_type, currency, profile_owner_id,
+        created_at, updated_at)
         VALUES
-            (COALESCE(#{id}::uuid, gen_random_uuid()),
-             #{tenantKey}, #{externalCustomerId}, #{billingEmail}, #{companyName},
-             #{billingAddress}::jsonb, #{taxId}, #{taxIdType},
-             COALESCE(#{currency}, 'USD'),
-             #{profileOwnerId},
-             COALESCE(#{createdAt}, now()),
-             COALESCE(#{updatedAt}, now()))
+        (COALESCE(#{id}::uuid, gen_random_uuid()),
+        #{tenantKey}, #{externalCustomerId}, #{billingEmail}, #{companyName},
+        #{billingAddress}::jsonb, #{taxId}, #{taxIdType},
+        COALESCE(#{currency}, 'USD'),
+        #{profileOwnerId},
+        COALESCE(#{createdAt}, now()),
+        COALESCE(#{updatedAt}, now()))
     </insert>
 
     <select id="findByTenantKey" resultMap="billingSettingsResultMap">
         SELECT id, tenant_key, external_customer_id, billing_email, company_name,
-               billing_address, tax_id, tax_id_type, currency, profile_owner_id,
-               created_at, updated_at
+        billing_address, tax_id, tax_id_type, currency, profile_owner_id,
+        created_at, updated_at
         FROM billing_settings
         WHERE tenant_key = #{tenantKey}
     </select>
 
     <select id="findByExternalCustomerId" resultMap="billingSettingsResultMap">
         SELECT id, tenant_key, external_customer_id, billing_email, company_name,
-               billing_address, tax_id, tax_id_type, currency, profile_owner_id,
-               created_at, updated_at
+        billing_address, tax_id, tax_id_type, currency, profile_owner_id,
+        created_at, updated_at
         FROM billing_settings
         WHERE external_customer_id = #{externalCustomerId}
     </select>
@@ -57,21 +57,21 @@
     <update id="updateExternalCustomerId">
         UPDATE billing_settings
         SET external_customer_id = #{externalCustomerId},
-            updated_at           = now()
+        updated_at = now()
         WHERE tenant_key = #{tenantKey}
     </update>
 
     <update id="update" parameterType="com.iqkv.foundation.billingservice.settings.BillingSettings">
         UPDATE billing_settings
         SET external_customer_id = #{externalCustomerId},
-            billing_email        = #{billingEmail},
-            company_name         = #{companyName},
-            billing_address      = #{billingAddress}::jsonb,
-            tax_id               = #{taxId},
-            tax_id_type          = #{taxIdType},
-            currency             = #{currency},
-            profile_owner_id     = #{profileOwnerId},
-            updated_at           = now()
+        billing_email = #{billingEmail},
+        company_name = #{companyName},
+        billing_address = #{billingAddress}::jsonb,
+        tax_id = #{taxId},
+        tax_id_type = #{taxIdType},
+        currency = #{currency},
+        profile_owner_id = #{profileOwnerId},
+        updated_at = now()
         WHERE tenant_key = #{tenantKey}
     </update>
 
@@ -82,7 +82,7 @@
     <update id="clearProfileOwnerById">
         UPDATE billing_settings
         SET profile_owner_id = NULL,
-            updated_at       = now()
+        updated_at = now()
         WHERE profile_owner_id = #{profileOwnerId}::uuid
     </update>
 

@@ -64,9 +64,9 @@ public class BillingSettingsAdminRestResource {
 
   @GetMapping
   @Operation(summary = "Get billing settings for tenant",
-      description = "Returns the billing settings row for the given tenant key.")
+             description = "Returns the billing settings row for the given tenant key.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Billing settings returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
@@ -82,7 +82,7 @@ public class BillingSettingsAdminRestResource {
 
   @PostMapping
   @Operation(summary = "Create billing settings for tenant",
-      description = "Creates the billing settings record for a tenant. Returns 409 if a row already exists.")
+             description = "Creates the billing settings record for a tenant. Returns 409 if a row already exists.")
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Billing settings created"),
       @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
@@ -101,7 +101,7 @@ public class BillingSettingsAdminRestResource {
 
   @PutMapping
   @Operation(summary = "Replace billing settings for tenant",
-      description = "Replaces all mutable fields on the tenant's billing settings. Optional fields in the body may be null to clear them.")
+             description = "Replaces all mutable fields on the tenant's billing settings. Optional fields in the body may be null to clear them.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Billing settings replaced"),
       @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
@@ -119,7 +119,7 @@ public class BillingSettingsAdminRestResource {
 
   @PatchMapping
   @Operation(summary = "Patch billing settings for tenant",
-      description = "Partially updates billing settings; only non-null JSON fields are applied.")
+             description = "Partially updates billing settings; only non-null JSON fields are applied.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Billing settings updated"),
       @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
@@ -137,7 +137,7 @@ public class BillingSettingsAdminRestResource {
 
   @DeleteMapping
   @Operation(summary = "Delete billing settings for tenant",
-      description = "Permanently deletes the billing settings row for the tenant.")
+             description = "Permanently deletes the billing settings row for the tenant.")
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Billing settings deleted"),
       @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),

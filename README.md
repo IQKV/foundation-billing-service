@@ -24,6 +24,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 - **Webhook processing** — payment gateway webhooks are ingested and processed idempotently; duplicate delivery is safe
 - **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, `invoice.created`, `invoice.finalized`, `invoice.updated`, `payment.failed`, and `refund.created` to the platform event bus
 - **Multi-gateway strategy** — `PaymentGatewayPort` interface decouples business logic from gateway SDKs; Stripe is the active implementation
+- **Observability** — instrumented with Micrometer for Prometheus metrics; includes a custom Grafana dashboard for business KPIs (revenue, subscriptions, webhook health)
 
 ## Quick Links
 
@@ -218,7 +219,14 @@ Note: The root `compose.yaml` is for development purposes only and is self-conta
 | `GET /actuator/prometheus` | Prometheus scrape endpoint  |
 | `GET /swagger-ui.html`     | API documentation           |
 
-A Grafana dashboard (`docker/grafana/`) provides real-time visibility into service health and JVM metrics using Prometheus as the data source.
+The service is instrumented with custom business metrics:
+
+- **Revenue & Payments**: `billing_revenue_total`, `billing_payments_total` (success/failure)
+- **Subscriptions**: `billing_subscriptions_active_count`, `billing_subscriptions_total` (lifecycle)
+- **Webhook Health**: `billing_webhooks_total`, `billing_webhooks_processing_duration_seconds`
+- **System Health**: `billing_emails_sent_total`, `billing_entitlements_check_total`
+
+A Grafana dashboard (`docker/grafana/provisioning/dashboards/BillingService.json`) is provided to visualize these KPIs alongside standard JVM metrics.
 
 ## Project Structure
 

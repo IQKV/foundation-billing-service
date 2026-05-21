@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.iqkv.foundation.billingservice.infrastructure.persistence.WebhookLogMapper">
 
     <resultMap id="webhookLogResultMap"
                type="com.iqkv.foundation.billingservice.webhook.WebhookLog">
-        <id     property="id"              column="id"/>
+        <id property="id" column="id"/>
         <result property="externalEventId" column="external_event_id"/>
-        <result property="eventType"       column="event_type"/>
-        <result property="status"          column="status"/>
-        <result property="errorMessage"    column="error_message"/>
-        <result property="receivedAt"      column="received_at"/>
-        <result property="processedAt"     column="processed_at"/>
+        <result property="eventType" column="event_type"/>
+        <result property="status" column="status"/>
+        <result property="errorMessage" column="error_message"/>
+        <result property="receivedAt" column="received_at"/>
+        <result property="processedAt" column="processed_at"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.iqkv.foundation.billingservice.webhook.WebhookLog">
         INSERT INTO webhook_log
-            (id, external_event_id, event_type, status, error_message, received_at, processed_at)
+        (id, external_event_id, event_type, status, error_message, received_at, processed_at)
         VALUES
-            (COALESCE(#{id}::uuid, gen_random_uuid()),
-             #{externalEventId},
-             #{eventType},
-             COALESCE(#{status}, 'RECEIVED'),
-             #{errorMessage},
-             COALESCE(#{receivedAt}, now()),
-             #{processedAt})
+        (COALESCE(#{id}::uuid, gen_random_uuid()),
+        #{externalEventId},
+        #{eventType},
+        COALESCE(#{status}, 'RECEIVED'),
+        #{errorMessage},
+        COALESCE(#{receivedAt}, now()),
+        #{processedAt})
     </insert>
 
     <select id="existsByExternalEventId" resultType="boolean">
@@ -33,9 +33,9 @@
 
     <update id="updateStatus">
         UPDATE webhook_log
-        SET status        = #{status},
-            error_message = #{errorMessage},
-            processed_at  = #{processedAt}
+        SET status = #{status},
+        error_message = #{errorMessage},
+        processed_at = #{processedAt}
         WHERE external_event_id = #{externalEventId}
     </update>
 

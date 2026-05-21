@@ -30,5 +30,6 @@ public final class JwtClaimNames {
   public static final String TENANT_ID = "tenant_id";
   public static final String AUTHORITIES = "authorities";
 
-  private JwtClaimNames() {}
+  private JwtClaimNames() {
+  }
 }

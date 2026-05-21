@@ -42,6 +42,8 @@ import com.iqkv.foundation.billingservice.subscription.Subscription;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubject;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubjectResolver;
 import com.iqkv.foundation.billingservice.userbilling.UserBillingSettingsService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,9 +65,9 @@ public class WebhookProcessingService {
 
   private static final Logger log = LoggerFactory.getLogger(WebhookProcessingService.class);
 
-  static final String STATUS_RECEIVED  = "RECEIVED";
+  static final String STATUS_RECEIVED = "RECEIVED";
   static final String STATUS_PROCESSED = "PROCESSED";
-  static final String STATUS_FAILED    = "FAILED";
+  static final String STATUS_FAILED = "FAILED";
 
   private final WebhookLogMapper webhookLogMapper;
   private final SubscriptionMapper subscriptionMapper;
@@ -76,6 +78,7 @@ public class WebhookProcessingService {
   private final NotificationConfigurationProperties notificationProps;
   private final SubscriptionSubjectResolver subjectResolver;
   private final PlanEligibilityPolicy planEligibilityPolicy;
+  private final MeterRegistry meterRegistry;
 
   /**
    * Optional — only present in {@code SINGLE_TENANT} mode.
@@ -93,7 +96,8 @@ public class WebhookProcessingService {
                                   final MessagingService messagingService,
                                   final NotificationConfigurationProperties notificationProps,
                                   final SubscriptionSubjectResolver subjectResolver,
-                                  final PlanEligibilityPolicy planEligibilityPolicy) {
+                                  final PlanEligibilityPolicy planEligibilityPolicy,
+                                  final MeterRegistry meterRegistry) {
     this.webhookLogMapper = webhookLogMapper;
     this.subscriptionMapper = subscriptionMapper;
     this.refundMapper = refundMapper;
@@ -103,6 +107,7 @@ public class WebhookProcessingService {
     this.notificationProps = notificationProps;
     this.subjectResolver = subjectResolver;
     this.planEligibilityPolicy = planEligibilityPolicy;
+    this.meterRegistry = meterRegistry;
   }
 
   /**
@@ -117,6 +122,7 @@ public class WebhookProcessingService {
 
     if (webhookLogMapper.existsByExternalEventId(externalEventId)) {
       log.debug("Duplicate webhook event received, skipping: {}", externalEventId);
+      meterRegistry.counter("billing_webhooks_total", "event_type", eventType, "status", "duplicate").increment();
       return true;
     }
 
@@ -130,12 +136,18 @@ public class WebhookProcessingService {
         null
     ));
 
+    final Timer.Sample sample = Timer.start(meterRegistry);
     try {
       dispatch(event);
       webhookLogMapper.updateStatus(externalEventId, STATUS_PROCESSED, null, Instant.now());
+      sample.stop(meterRegistry.timer("billing_webhooks_processing_duration_seconds", "event_type", eventType, "status", "processed"));
+      meterRegistry.counter("billing_webhooks_total", "event_type", eventType, "status", "processed").increment();
     } catch (final Exception e) {
       log.error("Failed to process webhook event {}: {}", externalEventId, e.getMessage(), e);
       webhookLogMapper.updateStatus(externalEventId, STATUS_FAILED, e.getMessage(), null);
+      sample.stop(meterRegistry.timer("billing_webhooks_processing_duration_seconds", "event_type", eventType, "status", "failed"));
+      meterRegistry.counter("billing_webhooks_total", "event_type", eventType, "status", "failed").increment();
+      meterRegistry.counter("billing_webhooks_errors_total", "event_type", eventType, "exception", e.getClass().getSimpleName()).increment();
     }
 
     return false;
@@ -147,13 +159,13 @@ public class WebhookProcessingService {
 
   private void dispatch(final GatewayWebhookEvent event) {
     switch (event) {
-      case GatewaySubscriptionEvent sub when sub.isCreated()  -> handleSubscriptionCreated(sub);
-      case GatewaySubscriptionEvent sub when sub.isUpdated()  -> handleSubscriptionUpdated(sub);
-      case GatewaySubscriptionEvent sub when sub.isDeleted()  -> handleSubscriptionDeleted(sub);
-      case GatewaySubscriptionEvent sub                       -> log.debug("Unhandled subscription event type: {}", sub.eventType());
-      case GatewayInvoiceEvent inv                            -> handleInvoiceEvent(inv);
-      case GatewayPaymentFailureEvent pay                     -> handlePaymentFailed(pay);
-      case GatewayRefundEvent ref                             -> handleRefundEvent(ref);
+      case GatewaySubscriptionEvent sub when sub.isCreated() -> handleSubscriptionCreated(sub);
+      case GatewaySubscriptionEvent sub when sub.isUpdated() -> handleSubscriptionUpdated(sub);
+      case GatewaySubscriptionEvent sub when sub.isDeleted() -> handleSubscriptionDeleted(sub);
+      case GatewaySubscriptionEvent sub -> log.debug("Unhandled subscription event type: {}", sub.eventType());
+      case GatewayInvoiceEvent inv -> handleInvoiceEvent(inv);
+      case GatewayPaymentFailureEvent pay -> handlePaymentFailed(pay);
+      case GatewayRefundEvent ref -> handleRefundEvent(ref);
     }
   }
 
@@ -184,6 +196,12 @@ public class WebhookProcessingService {
     subscription.setSubjectKey(subject.key());
     subscriptionMapper.upsert(subscription);
 
+    meterRegistry.counter("billing_subscriptions_total",
+        "action", "created",
+        "plan_id", nullToEmpty(subscription.getPlanId()),
+        "subject_type", subscription.getSubjectType()
+    ).increment();
+
     messagingService.publishSubscriptionCreated(
         tenantKey,
         subscription.getExternalSubscriptionId(),
@@ -199,6 +217,12 @@ public class WebhookProcessingService {
   private void handleSubscriptionUpdated(final GatewaySubscriptionEvent event) {
     final var subscription = toSubscription(event);
     subscriptionMapper.upsert(subscription);
+
+    meterRegistry.counter("billing_subscriptions_total",
+        "action", "updated",
+        "plan_id", nullToEmpty(subscription.getPlanId()),
+        "status", nullToEmpty(subscription.getStatus())
+    ).increment();
 
     final String tenantKey = subscription.getTenantKey();
     if (tenantKey != null && !tenantKey.isBlank()) {
@@ -229,6 +253,12 @@ public class WebhookProcessingService {
     subscription.setStatus("canceled");
     subscription.setCanceledAt(event.canceledAt() != null ? event.canceledAt() : Instant.now());
     subscriptionMapper.upsert(subscription);
+
+    meterRegistry.counter("billing_subscriptions_total",
+        "action", "deleted",
+        "plan_id", nullToEmpty(subscription.getPlanId()),
+        "subject_type", subscription.getSubjectType() != null ? subscription.getSubjectType() : SubjectType.TENANT.name()
+    ).increment();
 
     final String tenantKey = event.metadata().get("tenantKey");
     if (tenantKey == null || tenantKey.isBlank()) {
@@ -281,6 +311,11 @@ public class WebhookProcessingService {
 
     switch (event.eventType()) {
       case "invoice.payment_succeeded" -> {
+        meterRegistry.counter("billing_payments_total", "status", "success", "currency", currency).increment();
+        if (event.amountPaid() != null) {
+          meterRegistry.counter("billing_revenue_total", "currency", currency).increment(event.amountPaid() / 100.0);
+        }
+
         messagingService.publishInvoicePaid(
             tenantKey,
             event.externalInvoiceId(),
@@ -417,6 +452,13 @@ public class WebhookProcessingService {
     final var billingSettings = billingSettingsOpt.get();
     final String tenantKey = billingSettings.getTenantKey();
     final var subjectContext = resolveSubjectFromSubscription(event.externalSubscriptionId(), tenantKey);
+    final String currency = billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD";
+
+    meterRegistry.counter("billing_payments_total",
+        "status", "failed",
+        "currency", currency,
+        "reason", nullToEmpty(event.failureReason())
+    ).increment();
 
     messagingService.publishPaymentFailed(
         tenantKey,

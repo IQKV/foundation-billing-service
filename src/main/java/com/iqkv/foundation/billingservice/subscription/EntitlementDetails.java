@@ -21,11 +21,11 @@ import java.time.Instant;
 /**
  * Represents the entitlement details derived from an active subscription.
  *
- * @param subject             the subscription subject (type + key)
- * @param planId              the payment-gateway plan/price reference
- * @param status              the subscription status (active, trialing, past_due, etc.)
- * @param currentPeriodEnd    when the current billing period ends
- * @param featureSet          JSON string of features granted by the plan (may be null)
+ * @param subject          the subscription subject (type + key)
+ * @param planId           the payment-gateway plan/price reference
+ * @param status           the subscription status (active, trialing, past_due, etc.)
+ * @param currentPeriodEnd when the current billing period ends
+ * @param featureSet       JSON string of features granted by the plan (may be null)
  */
 public record EntitlementDetails(
     SubscriptionSubject subject,

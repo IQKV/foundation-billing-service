@@ -33,8 +33,7 @@ public interface UserBillingSettingsService {
    *
    * @param userId the user ID from the JWT subject claim
    * @return the existing or newly created {@link UserBillingSettings}
-   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException
-   *         if Stripe customer creation fails
+   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if Stripe customer creation fails
    */
   UserBillingSettings getOrCreateUserBillingSettings(UUID userId);
 
@@ -43,8 +42,7 @@ public interface UserBillingSettingsService {
    *
    * @param userId the user ID
    * @return the URL of the portal session
-   * @throws com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException
-   *         if no settings or external customer ID exist for the user
+   * @throws com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException if no settings or external customer ID exist for the user
    */
   String createPortalSession(UUID userId);
 }

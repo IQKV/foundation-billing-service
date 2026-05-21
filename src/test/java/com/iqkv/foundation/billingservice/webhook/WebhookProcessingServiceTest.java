@@ -46,6 +46,8 @@ import com.iqkv.foundation.billingservice.settings.BillingSettings;
 import com.iqkv.foundation.billingservice.subscription.SubjectType;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubject;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubjectResolver;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -85,9 +87,11 @@ class WebhookProcessingServiceTest {
   private PlanEligibilityPolicy planEligibilityPolicy;
 
   private WebhookProcessingService webhookProcessingService;
+  private MeterRegistry meterRegistry;
 
   @BeforeEach
   void setUp() {
+    meterRegistry = new SimpleMeterRegistry();
     webhookProcessingService = new WebhookProcessingService(
         webhookLogMapper,
         subscriptionMapper,
@@ -97,7 +101,8 @@ class WebhookProcessingServiceTest {
         messagingService,
         notificationProps,
         subjectResolver,
-        planEligibilityPolicy
+        planEligibilityPolicy,
+        meterRegistry
     );
   }
 

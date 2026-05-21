@@ -25,7 +25,8 @@ import java.util.UUID;
  */
 public final class SubscriptionDtos {
 
-  private SubscriptionDtos() {}
+  private SubscriptionDtos() {
+  }
 
   // ─── Self-service DTOs (used by SubscriptionRestResource) ────────────────
 
@@ -46,7 +47,8 @@ public final class SubscriptionDtos {
       Instant currentPeriodEnd,
       boolean cancelAtPeriodEnd,
       Instant canceledAt
-  ) {}
+  ) {
+  }
 
   /**
    * Request body for creating a checkout session.
@@ -58,12 +60,14 @@ public final class SubscriptionDtos {
       Integer trialPeriodDays,
       Long quantity,
       Boolean allowPromotionCodes
-  ) {}
+  ) {
+  }
 
   /**
    * Response containing the checkout session URL.
    */
-  public record CheckoutSessionResponse(String checkoutUrl) {}
+  public record CheckoutSessionResponse(String checkoutUrl) {
+  }
 
   /**
    * Request body for updating a subscription.
@@ -72,7 +76,8 @@ public final class SubscriptionDtos {
       String priceId,
       Long quantity,
       String prorationBehavior
-  ) {}
+  ) {
+  }
 
   /**
    * Request body for creating a refund.
@@ -81,10 +86,14 @@ public final class SubscriptionDtos {
       String paymentId,
       Long amount,
       String reason
-  ) {}
+  ) {
+  }
 
-  /** Response containing the refund ID. */
-  public record RefundResponse(String refundId) {}
+  /**
+   * Response containing the refund ID.
+   */
+  public record RefundResponse(String refundId) {
+  }
 
   /**
    * Rich refund response returned by admin endpoints.
@@ -101,16 +110,20 @@ public final class SubscriptionDtos {
       Instant occurredAt,
       java.time.LocalDateTime createdAt,
       java.time.LocalDateTime updatedAt
-  ) {}
+  ) {
+  }
 
-  /** Paginated list of refunds returned by the admin list endpoint. */
+  /**
+   * Paginated list of refunds returned by the admin list endpoint.
+   */
   public record PagedRefundResponse(
       java.util.List<AdminRefundResponse> content,
       int page,
       int size,
       long totalElements,
       int totalPages
-  ) {}
+  ) {
+  }
 
   /**
    * Query parameters for the admin refund list endpoint.
@@ -123,7 +136,7 @@ public final class SubscriptionDtos {
       String tenantKey
   ) {
     public RefundListQuery(final Integer page, final Integer size, final String sortBy, final String sortDir,
-                          final String tenantKey) {
+                           final String tenantKey) {
       this.page = page != null ? page : 0;
       this.size = size != null ? size : 20;
       this.sortBy = sortBy != null ? sortBy : "occurredAt";
@@ -155,7 +168,8 @@ public final class SubscriptionDtos {
       String subjectKey,
       java.time.LocalDateTime createdAt,
       java.time.LocalDateTime updatedAt
-  ) {}
+  ) {
+  }
 
   /**
    * Request body for partial subscription update (PATCH semantics).
@@ -168,19 +182,26 @@ public final class SubscriptionDtos {
       Instant trialEnd,
       Instant currentPeriodEnd,
       Boolean cancelAtPeriodEnd
-  ) {}
+  ) {
+  }
 
-  /** Total subscription count returned by the admin count endpoint. */
-  public record SubscriptionCountResponse(long total) {}
+  /**
+   * Total subscription count returned by the admin count endpoint.
+   */
+  public record SubscriptionCountResponse(long total) {
+  }
 
-  /** Paginated list of subscriptions returned by the admin list endpoint. */
+  /**
+   * Paginated list of subscriptions returned by the admin list endpoint.
+   */
   public record PagedSubscriptionResponse(
       java.util.List<AdminSubscriptionResponse> content,
       int page,
       int size,
       long totalElements,
       int totalPages
-  ) {}
+  ) {
+  }
 
   /**
    * Query parameters for the admin subscription list endpoint.
@@ -189,13 +210,13 @@ public final class SubscriptionDtos {
    * All filter/sort fields are optional — absent values fall back to safe defaults
    * in the service layer.
    *
-   * @param page       zero-based page index (default 0)
-   * @param size       page size 1–100 (default 20)
-   * @param sortBy     sort field: tenantKey | planId | status | createdAt | updatedAt
-   * @param sortDir    sort direction: asc | desc
-   * @param search     free-text search on tenantKey and planId (case-insensitive)
-   * @param status     exact status filter: active | canceled | past_due | trialing | unpaid
-   * @param tenantKey  filter by specific tenant
+   * @param page      zero-based page index (default 0)
+   * @param size      page size 1–100 (default 20)
+   * @param sortBy    sort field: tenantKey | planId | status | createdAt | updatedAt
+   * @param sortDir   sort direction: asc | desc
+   * @param search    free-text search on tenantKey and planId (case-insensitive)
+   * @param status    exact status filter: active | canceled | past_due | trialing | unpaid
+   * @param tenantKey filter by specific tenant
    */
   public record SubscriptionListQuery(
       @jakarta.validation.constraints.Min(0) Integer page,
@@ -206,7 +227,9 @@ public final class SubscriptionDtos {
       String status,
       String tenantKey
   ) {
-    /** Canonical defaults applied when the controller binds an empty query string. */
+    /**
+     * Canonical defaults applied when the controller binds an empty query string.
+     */
     public SubscriptionListQuery(final Integer page, final Integer size, final String sortBy, final String sortDir,
                                  final String search, final String status, final String tenantKey) {
       this.page = page != null ? page : 0;

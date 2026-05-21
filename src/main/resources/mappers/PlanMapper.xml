@@ -1,40 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper">
 
     <resultMap id="planResultMap"
                type="com.iqkv.foundation.billingservice.plan.Plan">
-        <id     property="id"            column="id"/>
-        <result property="planCode"      column="plan_code"/>
-        <result property="displayName"   column="display_name"/>
+        <id property="id" column="id"/>
+        <result property="planCode" column="plan_code"/>
+        <result property="displayName" column="display_name"/>
         <result property="billingPeriod" column="billing_period"/>
-        <result property="priceMinor"    column="price_minor"/>
-        <result property="currency"      column="currency"/>
-        <result property="featureSet"    column="feature_set"/>
-        <result property="scope"         column="scope"/>
-        <result property="active"        column="active"/>
-        <result property="createdAt"     column="created_at"/>
-        <result property="updatedAt"     column="updated_at"/>
+        <result property="priceMinor" column="price_minor"/>
+        <result property="currency" column="currency"/>
+        <result property="featureSet" column="feature_set"/>
+        <result property="scope" column="scope"/>
+        <result property="active" column="active"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <select id="findById" resultMap="planResultMap">
         SELECT id, plan_code, display_name, billing_period, price_minor, currency,
-               feature_set, scope, active, created_at, updated_at
+        feature_set, scope, active, created_at, updated_at
         FROM plan_catalog
         WHERE id = #{id}::uuid
     </select>
 
     <select id="findByPlanCode" resultMap="planResultMap">
         SELECT id, plan_code, display_name, billing_period, price_minor, currency,
-               feature_set, scope, active, created_at, updated_at
+        feature_set, scope, active, created_at, updated_at
         FROM plan_catalog
         WHERE plan_code = #{planCode}
     </select>
 
     <select id="findAllActive" resultMap="planResultMap">
         SELECT id, plan_code, display_name, billing_period, price_minor, currency,
-               feature_set, scope, active, created_at, updated_at
+        feature_set, scope, active, created_at, updated_at
         FROM plan_catalog
         WHERE active = true
         ORDER BY plan_code ASC
@@ -42,36 +42,36 @@
 
     <select id="findAll" resultMap="planResultMap">
         SELECT id, plan_code, display_name, billing_period, price_minor, currency,
-               feature_set, scope, active, created_at, updated_at
+        feature_set, scope, active, created_at, updated_at
         FROM plan_catalog
         ORDER BY plan_code ASC
     </select>
 
     <insert id="insert" parameterType="com.iqkv.foundation.billingservice.plan.Plan">
         INSERT INTO plan_catalog
-            (id, plan_code, display_name, billing_period, price_minor, currency,
-             feature_set, scope, active, created_at, updated_at)
+        (id, plan_code, display_name, billing_period, price_minor, currency,
+        feature_set, scope, active, created_at, updated_at)
         VALUES
-            (COALESCE(#{id}::uuid, gen_random_uuid()),
-             #{planCode}, #{displayName}, #{billingPeriod}, #{priceMinor},
-             COALESCE(#{currency}, 'USD'),
-             #{featureSet},
-             #{scope},
-             COALESCE(#{active}, true),
-             COALESCE(#{createdAt}, now()),
-             COALESCE(#{updatedAt}, now()))
+        (COALESCE(#{id}::uuid, gen_random_uuid()),
+        #{planCode}, #{displayName}, #{billingPeriod}, #{priceMinor},
+        COALESCE(#{currency}, 'USD'),
+        #{featureSet},
+        #{scope},
+        COALESCE(#{active}, true),
+        COALESCE(#{createdAt}, now()),
+        COALESCE(#{updatedAt}, now()))
     </insert>
 
     <update id="update" parameterType="com.iqkv.foundation.billingservice.plan.Plan">
         UPDATE plan_catalog
-        SET display_name   = #{displayName},
-            billing_period = #{billingPeriod},
-            price_minor    = #{priceMinor},
-            currency       = #{currency},
-            feature_set    = #{featureSet},
-            scope          = #{scope},
-            active         = #{active},
-            updated_at     = now()
+        SET display_name = #{displayName},
+        billing_period = #{billingPeriod},
+        price_minor = #{priceMinor},
+        currency = #{currency},
+        feature_set = #{featureSet},
+        scope = #{scope},
+        active = #{active},
+        updated_at = now()
         WHERE plan_code = #{planCode}
     </update>
 

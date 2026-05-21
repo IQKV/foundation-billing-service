@@ -1,58 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper">
 
     <resultMap id="userBillingSettingsResultMap"
                type="com.iqkv.foundation.billingservice.userbilling.UserBillingSettings">
-        <id     property="id"                   column="id"/>
-        <result property="userId"               column="user_id"/>
-        <result property="externalCustomerId"   column="external_customer_id"/>
-        <result property="billingEmail"         column="billing_email"/>
-        <result property="companyName"          column="company_name"/>
-        <result property="billingAddress"       column="billing_address"/>
-        <result property="taxId"                column="tax_id"/>
-        <result property="taxIdType"            column="tax_id_type"/>
-        <result property="currency"             column="currency"/>
-        <result property="createdAt"            column="created_at"/>
-        <result property="updatedAt"            column="updated_at"/>
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="externalCustomerId" column="external_customer_id"/>
+        <result property="billingEmail" column="billing_email"/>
+        <result property="companyName" column="company_name"/>
+        <result property="billingAddress" column="billing_address"/>
+        <result property="taxId" column="tax_id"/>
+        <result property="taxIdType" column="tax_id_type"/>
+        <result property="currency" column="currency"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <select id="findByUserId" resultMap="userBillingSettingsResultMap">
         SELECT id, user_id, external_customer_id, billing_email, company_name,
-               billing_address, tax_id, tax_id_type, currency, created_at, updated_at
+        billing_address, tax_id, tax_id_type, currency, created_at, updated_at
         FROM user_billing_settings
         WHERE user_id = #{userId}::uuid
     </select>
 
     <insert id="insert" parameterType="com.iqkv.foundation.billingservice.userbilling.UserBillingSettings">
         INSERT INTO user_billing_settings
-            (id, user_id, external_customer_id, billing_email, company_name,
-             billing_address, tax_id, tax_id_type, currency, created_at, updated_at)
+        (id, user_id, external_customer_id, billing_email, company_name,
+        billing_address, tax_id, tax_id_type, currency, created_at, updated_at)
         VALUES
-            (COALESCE(#{id}::uuid, gen_random_uuid()),
-             #{userId}::uuid,
-             #{externalCustomerId},
-             #{billingEmail},
-             #{companyName},
-             #{billingAddress},
-             #{taxId},
-             #{taxIdType},
-             COALESCE(#{currency}, 'USD'),
-             COALESCE(#{createdAt}, now()),
-             COALESCE(#{updatedAt}, now()))
+        (COALESCE(#{id}::uuid, gen_random_uuid()),
+        #{userId}::uuid,
+        #{externalCustomerId},
+        #{billingEmail},
+        #{companyName},
+        #{billingAddress},
+        #{taxId},
+        #{taxIdType},
+        COALESCE(#{currency}, 'USD'),
+        COALESCE(#{createdAt}, now()),
+        COALESCE(#{updatedAt}, now()))
     </insert>
 
     <update id="update" parameterType="com.iqkv.foundation.billingservice.userbilling.UserBillingSettings">
         UPDATE user_billing_settings
         SET external_customer_id = #{externalCustomerId},
-            billing_email        = #{billingEmail},
-            company_name         = #{companyName},
-            billing_address      = #{billingAddress},
-            tax_id               = #{taxId},
-            tax_id_type          = #{taxIdType},
-            currency             = #{currency},
-            updated_at           = now()
+        billing_email = #{billingEmail},
+        company_name = #{companyName},
+        billing_address = #{billingAddress},
+        tax_id = #{taxId},
+        tax_id_type = #{taxIdType},
+        currency = #{currency},
+        updated_at = now()
         WHERE user_id = #{userId}::uuid
     </update>
 

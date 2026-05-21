@@ -21,4 +21,5 @@
  * using the Stripe Java SDK. Translates Stripe-specific models and events into
  * gateway-agnostic domain types.
  */
+
 package com.iqkv.foundation.billingservice.gateway.adapter.stripe;

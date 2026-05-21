@@ -1,134 +1,147 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en" th:lang="${#locale.language}">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title th:text="#{email.subscription-cancelled.page-title}">Subscription cancelled</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f8f9fa;
-    }
-    .email-container {
-      background-color: #ffffff;
-      border-radius: 8px;
-      padding: 40px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .logo {
-      font-size: 28px;
-      font-weight: bold;
-      color: #2563eb;
-      margin-bottom: 10px;
-    }
-    .title {
-      font-size: 24px;
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 20px;
-    }
-    .content {
-      font-size: 16px;
-      color: #4b5563;
-      margin-bottom: 30px;
-    }
-    .details-box {
-      background-color: #fef2f2;
-      border: 1px solid #fca5a5;
-      border-radius: 6px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-    .details-box h3 {
-      font-size: 14px;
-      font-weight: 600;
-      color: #991b1b;
-      margin: 0 0 12px 0;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 0;
-      border-bottom: 1px solid #fecaca;
-      font-size: 14px;
-    }
-    .detail-row:last-child {
-      border-bottom: none;
-    }
-    .detail-label {
-      color: #6b7280;
-      font-weight: 500;
-    }
-    .detail-value {
-      color: #1f2937;
-      font-weight: 600;
-    }
-    .info-notice {
-      background-color: #eff6ff;
-      border-left: 4px solid #2563eb;
-      border-radius: 6px;
-      padding: 15px;
-      margin: 20px 0;
-      font-size: 14px;
-      color: #1e40af;
-    }
-    .footer {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
-      font-size: 14px;
-      color: #6b7280;
-      text-align: center;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{email.subscription-cancelled.page-title}">Subscription cancelled</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+        }
+
+        .content {
+            font-size: 16px;
+            color: #4b5563;
+            margin-bottom: 30px;
+        }
+
+        .details-box {
+            background-color: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .details-box h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #991b1b;
+            margin: 0 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #fecaca;
+            font-size: 14px;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .info-notice {
+            background-color: #eff6ff;
+            border-left: 4px solid #2563eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #1e40af;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            font-size: 14px;
+            color: #6b7280;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 <div class="email-container">
-  <div class="header">
-    <div class="logo" th:text="#{email.common.logo}">IQ Key Value</div>
-    <h1 class="title" th:text="#{email.subscription-cancelled.title}">Your Subscription Has Been Cancelled</h1>
-  </div>
-
-  <div class="content">
-    <p th:text="#{email.common.greeting}">Hello,</p>
-    <p th:text="#{email.subscription-cancelled.intro}">We have processed the cancellation of your subscription.</p>
-
-    <div class="details-box">
-      <h3 th:text="#{email.subscription-cancelled.details-heading}">Cancellation details</h3>
-      <div class="detail-row" th:if="${companyName != null and !companyName.isEmpty()}">
-        <span class="detail-label" th:text="#{email.subscription-cancelled.label.company}">Company</span>
-        <span class="detail-value" th:text="${companyName}"></span>
-      </div>
-      <div class="detail-row" th:if="${externalSubscriptionId != null and !externalSubscriptionId.isEmpty()}">
-        <span class="detail-label" th:text="#{email.subscription-cancelled.label.subscription-id}">Subscription ID</span>
-        <span class="detail-value" th:text="${externalSubscriptionId}"></span>
-      </div>
+    <div class="header">
+        <div class="logo" th:text="#{email.common.logo}">IQ Key Value</div>
+        <h1 class="title" th:text="#{email.subscription-cancelled.title}">Your Subscription Has Been Cancelled</h1>
     </div>
 
-    <p th:text="#{email.subscription-cancelled.outro}">Your data will be retained according to our data retention policy. If you have any questions, please contact support.</p>
+    <div class="content">
+        <p th:text="#{email.common.greeting}">Hello,</p>
+        <p th:text="#{email.subscription-cancelled.intro}">We have processed the cancellation of your subscription.</p>
 
-    <div class="info-notice" th:text="#{email.subscription-cancelled.reactivate}">
-      You can reactivate your subscription at any time from your account dashboard.
+        <div class="details-box">
+            <h3 th:text="#{email.subscription-cancelled.details-heading}">Cancellation details</h3>
+            <div class="detail-row" th:if="${companyName != null and !companyName.isEmpty()}">
+                <span class="detail-label" th:text="#{email.subscription-cancelled.label.company}">Company</span>
+                <span class="detail-value" th:text="${companyName}"></span>
+            </div>
+            <div class="detail-row" th:if="${externalSubscriptionId != null and !externalSubscriptionId.isEmpty()}">
+                <span class="detail-label" th:text="#{email.subscription-cancelled.label.subscription-id}">Subscription ID</span>
+                <span class="detail-value" th:text="${externalSubscriptionId}"></span>
+            </div>
+        </div>
+
+        <p th:text="#{email.subscription-cancelled.outro}">Your data will be retained according to our data retention policy. If you have any questions, please contact support.</p>
+
+        <div class="info-notice" th:text="#{email.subscription-cancelled.reactivate}">
+            You can reactivate your subscription at any time from your account dashboard.
+        </div>
+
+        <p><span th:text="#{email.common.regards}">Best regards,</span><br>
+            <span th:text="#{email.common.team}">The IQ Key Value Team</span></p>
     </div>
 
-    <p><span th:text="#{email.common.regards}">Best regards,</span><br>
-      <span th:text="#{email.common.team}">The IQ Key Value Team</span></p>
-  </div>
-
-  <div class="footer">
-    <p th:text="#{email.common.footer.copyright}">&copy; 2026 IQ Key Value. All rights reserved.</p>
-  </div>
+    <div class="footer">
+        <p th:text="#{email.common.footer.copyright}">&copy; 2026 IQ Key Value. All rights reserved.</p>
+    </div>
 </div>
 </body>
 </html>

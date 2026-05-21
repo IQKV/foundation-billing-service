@@ -28,6 +28,7 @@ import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMappe
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 
 /**
@@ -47,17 +48,20 @@ public class SubscriptionService {
   private final SubscriptionSubjectResolver subjectResolver;
   private final PaymentGatewayPort paymentGatewayPort;
   private final BillingSettingsMapper billingSettingsMapper;
+  private final MeterRegistry meterRegistry;
 
   public SubscriptionService(final SubscriptionMapper subscriptionMapper,
                              final RefundMapper refundMapper,
                              final SubscriptionSubjectResolver subjectResolver,
                              final PaymentGatewayPort paymentGatewayPort,
-                             final BillingSettingsMapper billingSettingsMapper) {
+                             final BillingSettingsMapper billingSettingsMapper,
+                             final MeterRegistry meterRegistry) {
     this.subscriptionMapper = subscriptionMapper;
     this.refundMapper = refundMapper;
     this.subjectResolver = subjectResolver;
     this.paymentGatewayPort = paymentGatewayPort;
     this.billingSettingsMapper = billingSettingsMapper;
+    this.meterRegistry = meterRegistry;
   }
 
   // ─── Self-service ──────────────────────────────────────────────────────────
@@ -131,6 +135,7 @@ public class SubscriptionService {
     );
 
     final String url = paymentGatewayPort.createCheckoutSession(command);
+    meterRegistry.counter("billing_checkout_sessions_total", "plan_id", request.priceId()).increment();
     return new SubscriptionDtos.CheckoutSessionResponse(url);
   }
 
@@ -157,6 +162,7 @@ public class SubscriptionService {
     );
 
     paymentGatewayPort.updateSubscription(command);
+    meterRegistry.counter("billing_subscription_updates_total", "plan_id", request.priceId()).increment();
   }
 
   /**
@@ -181,6 +187,7 @@ public class SubscriptionService {
     );
 
     final String refundId = paymentGatewayPort.createRefund(command);
+    meterRegistry.counter("billing_refunds_issued_total", "reason", request.reason() != null ? request.reason() : "unknown").increment();
     return new SubscriptionDtos.RefundResponse(refundId);
   }
 

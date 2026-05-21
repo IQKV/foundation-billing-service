@@ -33,4 +33,5 @@
  * (ports and adapters). The domain layer depends on {@link com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort},
  * while infrastructure provides concrete adapters (e.g., {@code StripeGatewayAdapter}).
  */
+
 package com.iqkv.foundation.billingservice.gateway;

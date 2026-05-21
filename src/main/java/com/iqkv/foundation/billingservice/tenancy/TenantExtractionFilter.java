@@ -94,9 +94,9 @@ public class TenantExtractionFilter extends OncePerRequestFilter {
     final String method = request.getMethod();
 
     return path.startsWith("/actuator/")
-        || path.startsWith("/api-docs/")
-        || path.startsWith("/swagger-ui/")
-        || ("POST".equalsIgnoreCase(method) && path.equals("/api/v1/billing/webhooks/stripe"));
+           || path.startsWith("/api-docs/")
+           || path.startsWith("/swagger-ui/")
+           || ("POST".equalsIgnoreCase(method) && path.equals("/api/v1/billing/webhooks/stripe"));
   }
 
   private String resolveTenantId(final HttpServletRequest request) {

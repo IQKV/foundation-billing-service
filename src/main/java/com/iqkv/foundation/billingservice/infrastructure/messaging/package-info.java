@@ -18,4 +18,5 @@
  * Messaging infrastructure: event publishers, message-broker configuration, and outbox patterns.
  * Domain events are defined in bounded-context {@code domain.event} packages and referenced here.
  */
+
 package com.iqkv.foundation.billingservice.infrastructure.messaging;

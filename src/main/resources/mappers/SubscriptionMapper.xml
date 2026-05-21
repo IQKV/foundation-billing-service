@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper">
 
     <resultMap id="subscriptionResultMap"
                type="com.iqkv.foundation.billingservice.subscription.Subscription">
-        <id     property="id"                       column="id"/>
-        <result property="tenantKey"                column="tenant_key"/>
-        <result property="externalSubscriptionId"   column="external_subscription_id"/>
-        <result property="externalCustomerId"       column="external_customer_id"/>
-        <result property="status"                   column="status"/>
-        <result property="planId"                   column="plan_id"/>
-        <result property="quantity"                 column="quantity"/>
-        <result property="trialStart"               column="trial_start"/>
-        <result property="trialEnd"                 column="trial_end"/>
-        <result property="currentPeriodStart"       column="current_period_start"/>
-        <result property="currentPeriodEnd"         column="current_period_end"/>
-        <result property="cancelAtPeriodEnd"        column="cancel_at_period_end"/>
-        <result property="canceledAt"               column="canceled_at"/>
-        <result property="subjectType"              column="subject_type"/>
-        <result property="subjectKey"               column="subject_key"/>
-        <result property="createdAt"                column="created_at"/>
-        <result property="updatedAt"                column="updated_at"/>
+        <id property="id" column="id"/>
+        <result property="tenantKey" column="tenant_key"/>
+        <result property="externalSubscriptionId" column="external_subscription_id"/>
+        <result property="externalCustomerId" column="external_customer_id"/>
+        <result property="status" column="status"/>
+        <result property="planId" column="plan_id"/>
+        <result property="quantity" column="quantity"/>
+        <result property="trialStart" column="trial_start"/>
+        <result property="trialEnd" column="trial_end"/>
+        <result property="currentPeriodStart" column="current_period_start"/>
+        <result property="currentPeriodEnd" column="current_period_end"/>
+        <result property="cancelAtPeriodEnd" column="cancel_at_period_end"/>
+        <result property="canceledAt" column="canceled_at"/>
+        <result property="subjectType" column="subject_type"/>
+        <result property="subjectKey" column="subject_key"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <sql id="subscriptionColumns">
@@ -35,87 +35,94 @@
 
     <insert id="upsert" parameterType="com.iqkv.foundation.billingservice.subscription.Subscription">
         INSERT INTO subscriptions
-            (id, tenant_key, external_subscription_id, external_customer_id,
-             status, plan_id, quantity, trial_start, trial_end,
-             current_period_start, current_period_end,
-             cancel_at_period_end, canceled_at,
-             subject_type, subject_key,
-             created_at, updated_at)
+        (id, tenant_key, external_subscription_id, external_customer_id,
+        status, plan_id, quantity, trial_start, trial_end,
+        current_period_start, current_period_end,
+        cancel_at_period_end, canceled_at,
+        subject_type, subject_key,
+        created_at, updated_at)
         VALUES
-            (COALESCE(#{id}::uuid, gen_random_uuid()),
-             #{tenantKey}, #{externalSubscriptionId}, #{externalCustomerId},
-             #{status}, #{planId}, #{quantity}, #{trialStart}, #{trialEnd},
-             #{currentPeriodStart}, #{currentPeriodEnd},
-             #{cancelAtPeriodEnd}, #{canceledAt},
-             COALESCE(#{subjectType}, 'TENANT'),
-             COALESCE(#{subjectKey}, #{tenantKey}),
-             COALESCE(#{createdAt}, now()),
-             COALESCE(#{updatedAt}, now()))
+        (COALESCE(#{id}::uuid, gen_random_uuid()),
+        #{tenantKey}, #{externalSubscriptionId}, #{externalCustomerId},
+        #{status}, #{planId}, #{quantity}, #{trialStart}, #{trialEnd},
+        #{currentPeriodStart}, #{currentPeriodEnd},
+        #{cancelAtPeriodEnd}, #{canceledAt},
+        COALESCE(#{subjectType}, 'TENANT'),
+        COALESCE(#{subjectKey}, #{tenantKey}),
+        COALESCE(#{createdAt}, now()),
+        COALESCE(#{updatedAt}, now()))
         ON CONFLICT (external_subscription_id) DO UPDATE
-            SET status                = EXCLUDED.status,
-                plan_id               = EXCLUDED.plan_id,
-                quantity              = EXCLUDED.quantity,
-                trial_start           = EXCLUDED.trial_start,
-                trial_end             = EXCLUDED.trial_end,
-                current_period_start  = EXCLUDED.current_period_start,
-                current_period_end    = EXCLUDED.current_period_end,
-                cancel_at_period_end  = EXCLUDED.cancel_at_period_end,
-                canceled_at           = EXCLUDED.canceled_at,
-                subject_type          = EXCLUDED.subject_type,
-                subject_key           = EXCLUDED.subject_key,
-                updated_at            = now()
+        SET status = EXCLUDED.status,
+        plan_id = EXCLUDED.plan_id,
+        quantity = EXCLUDED.quantity,
+        trial_start = EXCLUDED.trial_start,
+        trial_end = EXCLUDED.trial_end,
+        current_period_start = EXCLUDED.current_period_start,
+        current_period_end = EXCLUDED.current_period_end,
+        cancel_at_period_end = EXCLUDED.cancel_at_period_end,
+        canceled_at = EXCLUDED.canceled_at,
+        subject_type = EXCLUDED.subject_type,
+        subject_key = EXCLUDED.subject_key,
+        updated_at = now()
     </insert>
 
     <select id="findActiveByTenantKey" resultMap="subscriptionResultMap">
-        SELECT <include refid="subscriptionColumns"/>
+        SELECT
+        <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE tenant_key = #{tenantKey}
-          AND status NOT IN ('canceled', 'unpaid')
+        AND status NOT IN ('canceled', 'unpaid')
         ORDER BY current_period_end DESC
         LIMIT 1
     </select>
 
     <select id="findAllByTenantKey" resultMap="subscriptionResultMap">
-        SELECT <include refid="subscriptionColumns"/>
+        SELECT
+        <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE tenant_key = #{tenantKey}
         ORDER BY created_at DESC
     </select>
 
     <select id="findBySubject" resultMap="subscriptionResultMap">
-        SELECT <include refid="subscriptionColumns"/>
+        SELECT
+        <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE subject_type = #{subjectType}
-          AND subject_key  = #{subjectKey}
+        AND subject_key = #{subjectKey}
         ORDER BY created_at DESC
     </select>
 
     <select id="findActiveBySubject" resultMap="subscriptionResultMap">
-        SELECT <include refid="subscriptionColumns"/>
+        SELECT
+        <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE subject_type = #{subjectType}
-          AND subject_key  = #{subjectKey}
-          AND status = 'ACTIVE'
+        AND subject_key = #{subjectKey}
+        AND status = 'ACTIVE'
         LIMIT 1
     </select>
 
     <select id="findByExternalSubscriptionId" resultMap="subscriptionResultMap">
-        SELECT <include refid="subscriptionColumns"/>
+        SELECT
+        <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE external_subscription_id = #{externalSubscriptionId}
         LIMIT 1
     </select>
 
     <select id="findTrialsEndingBetween" resultMap="subscriptionResultMap">
-        SELECT <include refid="subscriptionColumns"/>
+        SELECT
+        <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE status = 'trialing'
-          AND current_period_end BETWEEN #{startDate} AND #{endDate}
+        AND current_period_end BETWEEN #{startDate} AND #{endDate}
         ORDER BY current_period_end ASC
     </select>
 
     <select id="findByStatus" resultMap="subscriptionResultMap">
-        SELECT <include refid="subscriptionColumns"/>
+        SELECT
+        <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE status = #{status}
         ORDER BY created_at DESC
@@ -126,7 +133,8 @@
          ═══════════════════════════════════════════════════════════════════════ -->
 
     <select id="findById" resultMap="subscriptionResultMap">
-        SELECT <include refid="subscriptionColumns"/>
+        SELECT
+        <include refid="subscriptionColumns"/>
         FROM subscriptions
         WHERE id = #{id}
         LIMIT 1
@@ -134,14 +142,14 @@
 
     <update id="update" parameterType="com.iqkv.foundation.billingservice.subscription.Subscription">
         UPDATE subscriptions
-        SET status                = #{status},
-            quantity              = #{quantity},
-            trial_start           = #{trialStart},
-            trial_end             = #{trialEnd},
-            current_period_end    = #{currentPeriodEnd},
-            cancel_at_period_end  = #{cancelAtPeriodEnd},
-            canceled_at           = #{canceledAt},
-            updated_at            = #{updatedAt}
+        SET status = #{status},
+        quantity = #{quantity},
+        trial_start = #{trialStart},
+        trial_end = #{trialEnd},
+        current_period_end = #{currentPeriodEnd},
+        cancel_at_period_end = #{cancelAtPeriodEnd},
+        canceled_at = #{canceledAt},
+        updated_at = #{updatedAt}
         WHERE id = #{id}
     </update>
 
@@ -150,13 +158,14 @@
     </delete>
 
     <select id="findAll" resultMap="subscriptionResultMap">
-        SELECT <include refid="subscriptionColumns"/>
+        SELECT
+        <include refid="subscriptionColumns"/>
         FROM subscriptions
         <where>
             <if test="search != null and search != ''">
                 (
-                    LOWER(tenant_key) LIKE LOWER(CONCAT('%', #{search}, '%'))
-                 OR LOWER(plan_id)    LIKE LOWER(CONCAT('%', #{search}, '%'))
+                LOWER(tenant_key) LIKE LOWER(CONCAT('%', #{search}, '%'))
+                OR LOWER(plan_id) LIKE LOWER(CONCAT('%', #{search}, '%'))
                 )
             </if>
             <if test="status != null and status != ''">
@@ -167,18 +176,18 @@
             </if>
         </where>
         ORDER BY
-            <choose>
-                <when test="sortBy == 'tenantKey'">tenant_key</when>
-                <when test="sortBy == 'planId'">plan_id</when>
-                <when test="sortBy == 'status'">status</when>
-                <when test="sortBy == 'updatedAt'">updated_at</when>
-                <otherwise>created_at</otherwise>
-            </choose>
-            <choose>
-                <when test="sortDir == 'asc'">ASC</when>
-                <otherwise>DESC</otherwise>
-            </choose>
-            , id ASC
+        <choose>
+            <when test="sortBy == 'tenantKey'">tenant_key</when>
+            <when test="sortBy == 'planId'">plan_id</when>
+            <when test="sortBy == 'status'">status</when>
+            <when test="sortBy == 'updatedAt'">updated_at</when>
+            <otherwise>created_at</otherwise>
+        </choose>
+        <choose>
+            <when test="sortDir == 'asc'">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>
+        , id ASC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
@@ -188,8 +197,8 @@
         <where>
             <if test="search != null and search != ''">
                 (
-                    LOWER(tenant_key) LIKE LOWER(CONCAT('%', #{search}, '%'))
-                 OR LOWER(plan_id)    LIKE LOWER(CONCAT('%', #{search}, '%'))
+                LOWER(tenant_key) LIKE LOWER(CONCAT('%', #{search}, '%'))
+                OR LOWER(plan_id) LIKE LOWER(CONCAT('%', #{search}, '%'))
                 )
             </if>
             <if test="status != null and status != ''">

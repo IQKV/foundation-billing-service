@@ -19,4 +19,5 @@
  * This is the top-level technical concern; it may reference all other packages but must not
  * contain any business logic.
  */
+
 package com.iqkv.foundation.billingservice.infrastructure.config;

@@ -20,4 +20,5 @@
  * <p>Commands represent intent to perform operations on payment gateways
  * (e.g., create customer, create subscription) in a gateway-independent manner.
  */
+
 package com.iqkv.foundation.billingservice.gateway.command;

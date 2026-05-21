@@ -33,42 +33,42 @@ public class RabbitMQConfig {
   // Shared exchange (all services publish here)
   // -------------------------------------------------------------------------
   public static final String EVENTS_EXCHANGE = "iqkv.events";
-  public static final String DLX_EXCHANGE    = "iqkv.dlx";
-  public static final String DLQ             = "iqkv.dlq";
+  public static final String DLX_EXCHANGE = "iqkv.dlx";
+  public static final String DLQ = "iqkv.dlq";
 
   // -------------------------------------------------------------------------
   // Billing queue names
   // -------------------------------------------------------------------------
-  public static final String TENANT_EVENTS_QUEUE  = "iqkv.billing.tenant.events";
-  public static final String USER_EVENTS_QUEUE    = "iqkv.billing.user.events";
-  public static final String NOTIFICATIONS_QUEUE  = "iqkv.billing.notifications";
+  public static final String TENANT_EVENTS_QUEUE = "iqkv.billing.tenant.events";
+  public static final String USER_EVENTS_QUEUE = "iqkv.billing.user.events";
+  public static final String NOTIFICATIONS_QUEUE = "iqkv.billing.notifications";
 
   // -------------------------------------------------------------------------
   // Routing keys — domain events
   // -------------------------------------------------------------------------
-  public static final String ROUTING_TENANT_CREATED             = "tenant.created";
-  public static final String ROUTING_TENANT_PROVISIONED         = "tenant.provisioned";
+  public static final String ROUTING_TENANT_CREATED = "tenant.created";
+  public static final String ROUTING_TENANT_PROVISIONED = "tenant.provisioned";
   public static final String ROUTING_TENANT_PROVISIONING_FAILED = "tenant.provisioning_failed";
-  public static final String ROUTING_TENANT_UPDATED             = "tenant.updated";
-  public static final String ROUTING_TENANT_DELETED             = "tenant.deleted";
-  public static final String ROUTING_TENANT_SUSPENDED           = "tenant.suspended";
-  public static final String ROUTING_USER_REMOVED               = "user.removed";
-  public static final String ROUTING_USER_DELETED               = "user.deleted";
-  public static final String ROUTING_SUBSCRIPTION_CREATED      = "subscription.created";
-  public static final String ROUTING_SUBSCRIPTION_CANCELLED     = "subscription.cancelled";
-  public static final String ROUTING_INVOICE_PAID               = "invoice.paid";
-  public static final String ROUTING_INVOICE_CREATED            = "invoice.created";
-  public static final String ROUTING_INVOICE_FINALIZED         = "invoice.finalized";
-  public static final String ROUTING_INVOICE_UPDATED           = "invoice.updated";
-  public static final String ROUTING_PAYMENT_FAILED             = "payment.failed";
-  public static final String ROUTING_REFUND_CREATED            = "refund.created";
+  public static final String ROUTING_TENANT_UPDATED = "tenant.updated";
+  public static final String ROUTING_TENANT_DELETED = "tenant.deleted";
+  public static final String ROUTING_TENANT_SUSPENDED = "tenant.suspended";
+  public static final String ROUTING_USER_REMOVED = "user.removed";
+  public static final String ROUTING_USER_DELETED = "user.deleted";
+  public static final String ROUTING_SUBSCRIPTION_CREATED = "subscription.created";
+  public static final String ROUTING_SUBSCRIPTION_CANCELLED = "subscription.cancelled";
+  public static final String ROUTING_INVOICE_PAID = "invoice.paid";
+  public static final String ROUTING_INVOICE_CREATED = "invoice.created";
+  public static final String ROUTING_INVOICE_FINALIZED = "invoice.finalized";
+  public static final String ROUTING_INVOICE_UPDATED = "invoice.updated";
+  public static final String ROUTING_PAYMENT_FAILED = "payment.failed";
+  public static final String ROUTING_REFUND_CREATED = "refund.created";
 
   // -------------------------------------------------------------------------
   // Routing keys — billing notification emails (scoped to avoid conflicts)
   // billing.email.# wildcard: adding new email types needs no config change
   // -------------------------------------------------------------------------
-  public static final String ROUTING_NOTIFICATION_BILLING_EMAIL          = "notification.billing.email";
-  public static final String ROUTING_NOTIFICATION_BILLING_EMAIL_PATTERN  = "notification.billing.#";
+  public static final String ROUTING_NOTIFICATION_BILLING_EMAIL = "notification.billing.email";
+  public static final String ROUTING_NOTIFICATION_BILLING_EMAIL_PATTERN = "notification.billing.#";
 
   private static final long TTL_24H_MS = 86_400_000L;
 

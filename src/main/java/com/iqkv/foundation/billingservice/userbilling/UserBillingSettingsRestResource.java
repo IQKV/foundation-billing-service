@@ -54,7 +54,7 @@ public class UserBillingSettingsRestResource {
   @Operation(
       summary = "Create customer portal session",
       description = "Creates a Stripe Customer Portal session for the authenticated user and returns the URL for redirection. "
-          + "Only active in SINGLE_TENANT mode.")
+                    + "Only active in SINGLE_TENANT mode.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Portal session created"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),

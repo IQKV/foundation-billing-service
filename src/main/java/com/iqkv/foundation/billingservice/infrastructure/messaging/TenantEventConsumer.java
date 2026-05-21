@@ -59,10 +59,10 @@ public class TenantEventConsumer {
   private final BillingContactResolver billingContactResolver;
 
   public TenantEventConsumer(final BillingSettingsMapper billingSettingsMapper,
-                              final PaymentGatewayPort paymentGatewayPort,
-                              final MessagingService messagingService,
-                              final NotificationConfigurationProperties notificationProps,
-                              final BillingContactResolver billingContactResolver) {
+                             final PaymentGatewayPort paymentGatewayPort,
+                             final MessagingService messagingService,
+                             final NotificationConfigurationProperties notificationProps,
+                             final BillingContactResolver billingContactResolver) {
     this.billingSettingsMapper = billingSettingsMapper;
     this.paymentGatewayPort = paymentGatewayPort;
     this.messagingService = messagingService;
@@ -77,11 +77,11 @@ public class TenantEventConsumer {
       return;
     }
     switch (event.getEventType()) {
-      case TENANT_CREATED             -> handleTenantCreated(event);
-      case TENANT_PROVISIONED         -> handleTenantProvisioned(event);
+      case TENANT_CREATED -> handleTenantCreated(event);
+      case TENANT_PROVISIONED -> handleTenantProvisioned(event);
       case TENANT_PROVISIONING_FAILED -> handleTenantProvisioningFailed(event);
-      case TENANT_SUSPENDED           -> handleTenantSuspended(event);
-      case TENANT_DELETED             -> handleTenantDeleted(event);
+      case TENANT_SUSPENDED -> handleTenantSuspended(event);
+      case TENANT_DELETED -> handleTenantDeleted(event);
       default -> log.debug("Unhandled tenant event type: {}", event.getEventType());
     }
   }

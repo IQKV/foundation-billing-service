@@ -21,4 +21,5 @@
  * The domain layer depends on these interfaces, while the infrastructure layer
  * provides concrete implementations (adapters).
  */
+
 package com.iqkv.foundation.billingservice.gateway.port;

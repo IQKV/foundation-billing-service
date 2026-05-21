@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Service for sending trial ending notifications.
- * 
+ *
  * <p>Runs daily to check for trials ending in 3 days and sends notification emails.
  * Uses ShedLock to ensure only one instance runs in a distributed environment.
  */
@@ -68,24 +68,24 @@ public class TrialNotificationService {
   @SchedulerLock(name = "trialEndingNotifications", lockAtMostFor = "PT10M", lockAtLeastFor = "PT1M")
   public void sendTrialEndingNotifications() {
     log.info("Starting trial ending notification job");
-    
+
     final Instant threeDaysFromNow = Instant.now().plus(3, ChronoUnit.DAYS);
     final Instant twoDaysFromNow = Instant.now().plus(2, ChronoUnit.DAYS);
-    
+
     // Find trials ending between 2-3 days from now (24-hour window)
     final var trialSubscriptions = subscriptionMapper.findTrialsEndingBetween(twoDaysFromNow, threeDaysFromNow);
-    
+
     int notificationsSent = 0;
     for (final var subscription : trialSubscriptions) {
       try {
         sendTrialEndingNotification(subscription);
         notificationsSent++;
       } catch (final Exception e) {
-        log.error("Failed to send trial ending notification for subscription {}: {}", 
+        log.error("Failed to send trial ending notification for subscription {}: {}",
             subscription.getExternalSubscriptionId(), e.getMessage(), e);
       }
     }
-    
+
     log.info("Trial ending notification job completed. Sent {} notifications", notificationsSent);
   }
 
@@ -97,28 +97,28 @@ public class TrialNotificationService {
   @SchedulerLock(name = "paymentOverdueNotifications", lockAtMostFor = "PT10M", lockAtLeastFor = "PT1M")
   public void sendPaymentOverdueNotifications() {
     log.info("Starting payment overdue notification job");
-    
+
     // Find subscriptions that are past_due
     final var overdueSubscriptions = subscriptionMapper.findByStatus("past_due");
-    
+
     int notificationsSent = 0;
     for (final var subscription : overdueSubscriptions) {
       try {
         sendPaymentOverdueNotification(subscription);
         notificationsSent++;
       } catch (final Exception e) {
-        log.error("Failed to send payment overdue notification for subscription {}: {}", 
+        log.error("Failed to send payment overdue notification for subscription {}: {}",
             subscription.getExternalSubscriptionId(), e.getMessage(), e);
       }
     }
-    
+
     log.info("Payment overdue notification job completed. Sent {} notifications", notificationsSent);
   }
 
   private void sendTrialEndingNotification(final Subscription subscription) {
     final String tenantKey = subscription.getTenantKey();
     if (tenantKey == null || tenantKey.isBlank()) {
-      log.warn("Cannot send trial ending notification - tenantKey is null for subscription {}", 
+      log.warn("Cannot send trial ending notification - tenantKey is null for subscription {}",
           subscription.getExternalSubscriptionId());
       return;
     }
@@ -138,8 +138,8 @@ public class TrialNotificationService {
                     ? subscription.getCurrentPeriodEnd().toString() : ""
             ),
             Instant.now()));
-        
-        log.info("Sent trial ending notification for tenant {}, subscription {}", 
+
+        log.info("Sent trial ending notification for tenant {}, subscription {}",
             tenantKey, subscription.getExternalSubscriptionId());
       }
     });
@@ -148,7 +148,7 @@ public class TrialNotificationService {
   private void sendPaymentOverdueNotification(final Subscription subscription) {
     final String tenantKey = subscription.getTenantKey();
     if (tenantKey == null || tenantKey.isBlank()) {
-      log.warn("Cannot send payment overdue notification - tenantKey is null for subscription {}", 
+      log.warn("Cannot send payment overdue notification - tenantKey is null for subscription {}",
           subscription.getExternalSubscriptionId());
       return;
     }
@@ -168,8 +168,8 @@ public class TrialNotificationService {
                     ? subscription.getCurrentPeriodEnd().toString() : ""
             ),
             Instant.now()));
-        
-        log.info("Sent payment overdue notification for tenant {}, subscription {}", 
+
+        log.info("Sent payment overdue notification for tenant {}, subscription {}",
             tenantKey, subscription.getExternalSubscriptionId());
       }
     });

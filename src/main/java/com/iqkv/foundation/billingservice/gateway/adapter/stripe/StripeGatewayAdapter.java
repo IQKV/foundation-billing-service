@@ -78,15 +78,15 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
 
   private static final Logger log = LoggerFactory.getLogger(StripeGatewayAdapter.class);
 
-  private static final String EVENT_SUBSCRIPTION_CREATED      = "customer.subscription.created";
-  private static final String EVENT_SUBSCRIPTION_UPDATED      = "customer.subscription.updated";
-  private static final String EVENT_SUBSCRIPTION_DELETED      = "customer.subscription.deleted";
-  private static final String EVENT_INVOICE_CREATED           = "invoice.created";
-  private static final String EVENT_INVOICE_FINALIZED         = "invoice.finalized";
-  private static final String EVENT_INVOICE_UPDATED           = "invoice.updated";
+  private static final String EVENT_SUBSCRIPTION_CREATED = "customer.subscription.created";
+  private static final String EVENT_SUBSCRIPTION_UPDATED = "customer.subscription.updated";
+  private static final String EVENT_SUBSCRIPTION_DELETED = "customer.subscription.deleted";
+  private static final String EVENT_INVOICE_CREATED = "invoice.created";
+  private static final String EVENT_INVOICE_FINALIZED = "invoice.finalized";
+  private static final String EVENT_INVOICE_UPDATED = "invoice.updated";
   private static final String EVENT_INVOICE_PAYMENT_SUCCEEDED = "invoice.payment_succeeded";
-  private static final String EVENT_INVOICE_PAYMENT_FAILED    = "invoice.payment_failed";
-  private static final String EVENT_CHARGE_REFUNDED           = "charge.refunded";
+  private static final String EVENT_INVOICE_PAYMENT_FAILED = "invoice.payment_failed";
+  private static final String EVENT_CHARGE_REFUNDED = "charge.refunded";
 
   private final StripeConfigurationProperties config;
 
@@ -251,7 +251,7 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
    */
   @Override
   public Optional<GatewayWebhookEvent> verifyAndParseWebhookEvent(final String payload,
-                                                                   final String signature) {
+                                                                  final String signature) {
     final Event event;
     try {
       event = Webhook.constructEvent(payload, signature, config.webhookSecret());
@@ -267,8 +267,8 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
            EVENT_INVOICE_FINALIZED,
            EVENT_INVOICE_UPDATED,
            EVENT_INVOICE_PAYMENT_SUCCEEDED -> Optional.of(toInvoiceEvent(event));
-      case EVENT_INVOICE_PAYMENT_FAILED    -> Optional.of(toPaymentFailureEvent(event));
-      case EVENT_CHARGE_REFUNDED           -> Optional.of(toRefundEvent(event));
+      case EVENT_INVOICE_PAYMENT_FAILED -> Optional.of(toPaymentFailureEvent(event));
+      case EVENT_CHARGE_REFUNDED -> Optional.of(toRefundEvent(event));
       default -> {
         log.debug("Unhandled Stripe event type: {}", event.getType());
         yield Optional.empty();
@@ -344,7 +344,7 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
   private GatewayPaymentFailureEvent toPaymentFailureEvent(final Event event) {
     final Invoice invoice = deserializeInvoice(event);
     final String failureReason = invoice.getLastFinalizationError() != null
-        && invoice.getLastFinalizationError().getMessage() != null
+                                 && invoice.getLastFinalizationError().getMessage() != null
         ? invoice.getLastFinalizationError().getMessage()
         : "Payment failed";
 

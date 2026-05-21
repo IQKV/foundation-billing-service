@@ -58,7 +58,7 @@ public class PlatformModeValidatorImpl implements PlatformModeValidator, Applica
   public void validate() {
     if (platformConfig == null || platformConfig.rolloutMode() == null) {
       final String message = "Platform rollout mode is not configured. "
-          + "Please set 'iqkv.platform.rollout-mode' to either 'MULTI_TENANT' or 'SINGLE_TENANT'.";
+                             + "Please set 'iqkv.platform.rollout-mode' to either 'MULTI_TENANT' or 'SINGLE_TENANT'.";
       log.error("Platform mode validation failed: {}", message);
       throw new InvalidPlatformModeException(message);
     }
@@ -90,8 +90,8 @@ public class PlatformModeValidatorImpl implements PlatformModeValidator, Applica
     if (defaultEmail == null || defaultEmail.isBlank()) {
       log.warn(
           "Single-tenant mode is active but 'iqkv.billing.default-contact-email' is not configured. "
-              + "Stripe customers created from bootstrap events will have no email address. "
-              + "Set 'iqkv.billing.default-contact-email' to suppress this warning.");
+          + "Stripe customers created from bootstrap events will have no email address. "
+          + "Set 'iqkv.billing.default-contact-email' to suppress this warning.");
     } else {
       log.info("Billing default contact email configured for single-tenant mode: {}", defaultEmail);
     }

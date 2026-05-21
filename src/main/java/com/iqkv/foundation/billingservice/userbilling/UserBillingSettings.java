@@ -46,16 +46,16 @@ public class UserBillingSettings {
   }
 
   public UserBillingSettings(final UUID id,
-                              final UUID userId,
-                              final String externalCustomerId,
-                              final String billingEmail,
-                              final String companyName,
-                              final String billingAddress,
-                              final String taxId,
-                              final String taxIdType,
-                              final String currency,
-                              final LocalDateTime createdAt,
-                              final LocalDateTime updatedAt) {
+                             final UUID userId,
+                             final String externalCustomerId,
+                             final String billingEmail,
+                             final String companyName,
+                             final String billingAddress,
+                             final String taxId,
+                             final String taxIdType,
+                             final String currency,
+                             final LocalDateTime createdAt,
+                             final LocalDateTime updatedAt) {
     this.id = id;
     this.userId = userId;
     this.externalCustomerId = externalCustomerId;

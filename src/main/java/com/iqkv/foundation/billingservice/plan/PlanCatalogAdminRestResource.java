@@ -64,7 +64,7 @@ public class PlanCatalogAdminRestResource {
 
   @GetMapping
   @Operation(summary = "List all plans",
-      description = "Returns every plan in the catalog (including inactive), ordered by plan_code.")
+             description = "Returns every plan in the catalog (including inactive), ordered by plan_code.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Plan list returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
@@ -77,7 +77,7 @@ public class PlanCatalogAdminRestResource {
   @GetMapping("/{planCode}")
   @Operation(summary = "Get plan by code")
   @Parameter(name = "planCode", in = ParameterIn.PATH, required = true,
-      description = "Unique plan identifier (e.g. pro-monthly)")
+             description = "Unique plan identifier (e.g. pro-monthly)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Plan returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
@@ -90,7 +90,7 @@ public class PlanCatalogAdminRestResource {
 
   @PostMapping
   @Operation(summary = "Create plan",
-      description = "Creates a new catalog plan. Returns 409 if planCode already exists.")
+             description = "Creates a new catalog plan. Returns 409 if planCode already exists.")
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Plan created"),
       @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
@@ -110,9 +110,9 @@ public class PlanCatalogAdminRestResource {
 
   @PutMapping("/{planCode}")
   @Operation(summary = "Replace plan",
-      description = "Replaces mutable fields for the plan identified by planCode (path identifier wins).")
+             description = "Replaces mutable fields for the plan identified by planCode (path identifier wins).")
   @Parameter(name = "planCode", in = ParameterIn.PATH, required = true,
-      description = "Unique plan identifier")
+             description = "Unique plan identifier")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Plan replaced"),
       @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
@@ -128,7 +128,7 @@ public class PlanCatalogAdminRestResource {
 
   @PatchMapping("/{planCode}")
   @Operation(summary = "Patch plan",
-      description = "Partially updates a plan; only non-null JSON fields are applied.")
+             description = "Partially updates a plan; only non-null JSON fields are applied.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Plan updated"),
       @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
@@ -144,7 +144,7 @@ public class PlanCatalogAdminRestResource {
 
   @DeleteMapping("/{planCode}")
   @Operation(summary = "Deactivate plan",
-      description = "Soft-deletes the plan by setting active = false (row retained for history).")
+             description = "Soft-deletes the plan by setting active = false (row retained for history).")
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Plan deactivated"),
       @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),

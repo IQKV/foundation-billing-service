@@ -54,7 +54,7 @@ public class PlanCatalogRestResource {
   @Operation(
       summary = "List all active plans",
       description = "Returns all active plans in the catalog, ordered by plan_code ASC. "
-          + "Accessible to any authenticated user.")
+                    + "Accessible to any authenticated user.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Plan list returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized")
@@ -68,7 +68,7 @@ public class PlanCatalogRestResource {
       summary = "Get plan by planCode",
       description = "Returns the plan with the given planCode. Accessible to any authenticated user.")
   @Parameter(name = "planCode", in = ParameterIn.PATH, required = true,
-      description = "Unique plan identifier (e.g. pro-monthly)")
+             description = "Unique plan identifier (e.g. pro-monthly)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Plan returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),

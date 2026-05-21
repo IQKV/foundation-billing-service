@@ -21,7 +21,8 @@ package com.iqkv.foundation.billingservice.settings;
  */
 public final class BillingSettingsDtoMapper {
 
-  private BillingSettingsDtoMapper() {}
+  private BillingSettingsDtoMapper() {
+  }
 
   public static BillingSettingsDtos.BillingSettingsResponse toResponse(final BillingSettings settings) {
     return new BillingSettingsDtos.BillingSettingsResponse(

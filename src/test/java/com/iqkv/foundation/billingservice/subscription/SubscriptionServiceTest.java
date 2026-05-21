@@ -35,6 +35,7 @@ import com.iqkv.foundation.billingservice.infrastructure.persistence.Subscriptio
 import com.iqkv.foundation.billingservice.settings.BillingSettings;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,6 +61,9 @@ class SubscriptionServiceTest {
 
   @Mock
   private BillingSettingsMapper billingSettingsMapper;
+
+  @Mock
+  private MeterRegistry meterRegistry;
 
   @InjectMocks
   private SubscriptionService subscriptionService;

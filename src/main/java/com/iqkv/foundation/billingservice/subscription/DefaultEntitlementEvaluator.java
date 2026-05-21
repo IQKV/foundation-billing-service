@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -38,11 +39,14 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
 
   private final SubscriptionMapper subscriptionMapper;
   private final PlanMapper planMapper;
+  private final MeterRegistry meterRegistry;
 
   public DefaultEntitlementEvaluator(final SubscriptionMapper subscriptionMapper,
-                                     final PlanMapper planMapper) {
+                                     final PlanMapper planMapper,
+                                     final MeterRegistry meterRegistry) {
     this.subscriptionMapper = subscriptionMapper;
     this.planMapper = planMapper;
+    this.meterRegistry = meterRegistry;
   }
 
   @Override
@@ -52,11 +56,14 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
 
     if (activeSubscription.isEmpty()) {
       log.debug("No active subscription found for subject type={} key={}", subject.type(), subject.key());
+      meterRegistry.counter("billing_entitlements_check_total", "result", "denied").increment();
       return Optional.empty();
     }
 
     final Subscription subscription = activeSubscription.get();
     final String featureSet = resolveFeatureSet(subscription.getPlanId());
+
+    meterRegistry.counter("billing_entitlements_check_total", "result", "allowed", "plan_id", nullToEmpty(subscription.getPlanId())).increment();
 
     return Optional.of(new EntitlementDetails(
         subject,
@@ -65,6 +72,10 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
         subscription.getCurrentPeriodEnd(),
         featureSet
     ));
+  }
+
+  private String nullToEmpty(String str) {
+    return str == null ? "" : str;
   }
 
   /**
