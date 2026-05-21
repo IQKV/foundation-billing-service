@@ -28,6 +28,8 @@ import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.plan.Plan;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,11 +47,19 @@ class DefaultEntitlementEvaluatorTest {
   @Mock
   private PlanMapper planMapper;
 
-  @Mock
   private MeterRegistry meterRegistry;
 
-  @InjectMocks
   private DefaultEntitlementEvaluator entitlementEvaluator;
+
+  @BeforeEach
+  void setUp() {
+    meterRegistry = new SimpleMeterRegistry();
+    entitlementEvaluator = new DefaultEntitlementEvaluator(
+        subscriptionMapper,
+        planMapper,
+        meterRegistry
+    );
+  }
 
   @Test
   @DisplayName("Should return entitlement details when active subscription exists with plan")
