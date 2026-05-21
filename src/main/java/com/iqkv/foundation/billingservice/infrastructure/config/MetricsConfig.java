@@ -29,7 +29,7 @@ public class MetricsConfig {
   private final SubscriptionMapper subscriptionMapper;
   private final MeterRegistry meterRegistry;
 
-  public MetricsConfig(SubscriptionMapper subscriptionMapper, MeterRegistry meterRegistry) {
+  public MetricsConfig(final SubscriptionMapper subscriptionMapper, final MeterRegistry meterRegistry) {
     this.subscriptionMapper = subscriptionMapper;
     this.meterRegistry = meterRegistry;
   }
