@@ -181,14 +181,16 @@ pnpm install
 cp .env.example .env.local
 # Edit .env.local — set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET at minimum
 
-# Start dependencies (PostgreSQL on :5432, RabbitMQ on :5672)
+# Start infrastructure (PostgreSQL, RabbitMQ, MailHog, IAM-service)
 docker compose up -d
 
-# Run the service
-./mvnw spring-boot:run -Pdev
+# Run the service (locally via IDE or CLI)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 # → API:      http://localhost:8080
 # → Actuator: http://localhost:8081/actuator/health
 # → Swagger:  http://localhost:8080/swagger-ui.html
+# → MailHog:  http://localhost:8025
+# → IAM API:  http://localhost:8082
 ```
 
 ## Environment Variables
@@ -244,9 +246,11 @@ docker compose up -d
 # Build image
 docker build -t iqkv/foundation-billing-service:latest .
 
-# Run full stack (service + dependencies)
+# Run full stack (Billing Service + IAM Service + Infrastructure)
 docker compose -f compose.container.yaml up -d
 ```
+
+Note: The root `compose.yaml` is for development purposes only and is self-contained. It starts all required external services (PostgreSQL with pre-initialized `billing` and `iam` databases, RabbitMQ, MailHog, and the IAM Service) but excludes the Billing Service itself, which should be run locally in your IDE for a better development experience.
 
 ## Monitoring
 

@@ -11,11 +11,30 @@ services:
       file: compose.base.yaml
       service: rabbitmq-billing
 
+  # MailHog for local email testing
+  mailhog:
+    extends:
+      file: compose.base.yaml
+      service: mailhog
+
+  # IAM Service for Billing
+  iam-service:
+    extends:
+      file: compose.base.yaml
+      service: iam-service
+
   # Billing Service - Full platform run including build phase
   billing-service:
     extends:
       file: compose.base.yaml
       service: billing-service
+    depends_on:
+      postgres-billing:
+        condition: service_healthy
+      rabbitmq-billing:
+        condition: service_healthy
+      iam-service:
+        condition: service_started
 
 networks:
   billing-service-network:

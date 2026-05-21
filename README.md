@@ -144,14 +144,16 @@ pnpm install
 cp .env.example .env.local
 # Edit .env.local — defaults work for local Docker setup
 
-# Start dependencies (PostgreSQL on :5432, RabbitMQ on :5672)
+# Start infrastructure (PostgreSQL, RabbitMQ, MailHog, IAM-service)
 docker compose up -d
 
-# Run the service
-./mvnw spring-boot:run -Pdev
+# Run the service (locally via IDE or CLI)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 # → API:      http://localhost:8080
 # → Actuator: http://localhost:8081/actuator/health
 # → Swagger:  http://localhost:8080/swagger-ui.html
+# → MailHog:  http://localhost:8025
+# → IAM API:  http://localhost:8082
 ```
 
 ## Environment Variables
@@ -199,11 +201,13 @@ Copy `.env.example` to `.env.local` (or `.env.uat` / `.env.prd`) and fill in pro
 # Build image
 docker build -t iqkv/foundation-billing-service:latest .
 
-# Run full stack (service + dependencies)
+# Run full stack (Billing Service + IAM Service + Infrastructure)
 docker compose -f compose.container.yaml up -d
 ```
 
 The Dockerfile uses a multi-stage build: Maven compiles in `eclipse-temurin:25-jdk-alpine`, the runtime stage uses `eclipse-temurin:25-jre-alpine` with a non-root `appuser` and layered JAR extraction for optimal cache reuse.
+
+Note: The root `compose.yaml` is for development purposes only and is self-contained. It starts all required external services (PostgreSQL with pre-initialized `billing` and `iam` databases, RabbitMQ, MailHog, and the IAM Service) but excludes the Billing Service itself, which should be run locally in your IDE for a better development experience.
 
 ## Monitoring
 

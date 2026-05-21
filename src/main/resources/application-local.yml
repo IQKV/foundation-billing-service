@@ -2,7 +2,7 @@
 # Spring Boot configuration for the "local" profile.
 # Overrides base: enables Liquibase with demo data, relaxes actuator,
 # enables debug logging, uses MailHog for email.
-# Run infrastructure with: docker compose up postgres-billing rabbitmq-billing mailhog
+# Run infrastructure with: docker compose up postgres-billing rabbitmq-billing mailhog iam-service
 # ===================================================================
 
 spring:

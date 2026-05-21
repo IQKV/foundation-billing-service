@@ -13,6 +13,9 @@ services:
       - "5432:5432"
     volumes:
       - postgres_billing_data:/var/lib/postgresql/data
+      - ./docker/postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+      - ./docker/postgres/init-billing.sql:/docker-entrypoint-initdb.d/init-billing.sql:ro
+      - ./docker/postgres/init-iam.sql:/docker-entrypoint-initdb.d/init-iam.sql:ro
     networks:
       - billing-service-network
     healthcheck:
@@ -129,6 +132,48 @@ services:
         reservations:
           cpus: "0.25"
           memory: 384M
+
+  # IAM Service - External service for Billing
+  iam-service:
+    image: iqkv/foundation-iam-service:latest
+    container_name: foundation-iam-service-dev
+    environment:
+      # Spring Configuration
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_APPLICATION_NAME: foundation-iam-service
+
+      # Database Configuration
+      DB_HOST: postgres-billing
+      DB_PORT: 5432
+      DB_NAME: iam
+      DB_USERNAME: svc_iam_dba
+      DB_PASSWORD: svc_iam_dba
+
+      # RabbitMQ Configuration
+      RABBITMQ_HOST: rabbitmq-billing
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: svc_billing_rmq
+      RABBITMQ_PASSWORD: svc_billing_rmq
+
+      # JVM Configuration
+      JAVA_OPTS: >-
+        -Xms256m
+        -Xmx512m
+        -XX:+UseG1GC
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -Djava.security.egd=file:/dev/./urandom
+    ports:
+      - "8082:8080" # IAM service API (mapped to 8082 to avoid conflict with Billing on 8080)
+      - "8083:8081" # Actuator / management
+    depends_on:
+      postgres-billing:
+        condition: service_healthy
+      rabbitmq-billing:
+        condition: service_healthy
+    networks:
+      - billing-service-network
+    restart: unless-stopped
 
   # MailHog for local email testing
   mailhog:

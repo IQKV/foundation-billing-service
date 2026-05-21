@@ -17,11 +17,11 @@ services:
       file: compose.base.yaml
       service: mailhog
 
-  # Billing Service - Full platform run including build phase
-  billing-service:
+  # IAM Service for Billing
+  iam-service:
     extends:
       file: compose.base.yaml
-      service: billing-service
+      service: iam-service
 
   # SonarQube for code quality analysis
   sonar:
