@@ -99,14 +99,54 @@ Base path: `/api/v1/billing`
 
 ### Plan Catalog (platform admin)
 
-| Method   | Path                      | Auth                 | Description                                     |
-| -------- | ------------------------- | -------------------- | ----------------------------------------------- |
-| `GET`    | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive)             |
-| `GET`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                            |
-| `POST`   | `/admin/plans`            | JWT `PLATFORM_ADMIN` | Create a plan                                   |
-| `PUT`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan                                  |
-| `PATCH`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Partially update a plan                         |
-| `DELETE` | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Deactivate a plan (soft-delete, `active=false`) |
+| Method   | Path                  | Auth                 | Description                            |
+| -------- | --------------------- | -------------------- | -------------------------------------- |
+| `GET`    | `/admin/plans`        | JWT `PLATFORM_ADMIN` | List all plans (paginated, filterable) |
+| `GET`    | `/admin/plans/count`  | JWT `PLATFORM_ADMIN` | Total plans count                      |
+| `GET`    | `/admin/plans/{id}`   | JWT `PLATFORM_ADMIN` | Get plan by ID                         |
+| `POST`   | `/admin/plans`        | JWT `PLATFORM_ADMIN` | Create new plan                        |
+| `PATCH`  | `/admin/plans/{id}`   | JWT `PLATFORM_ADMIN` | Update plan details                    |
+| `DELETE` | `/admin/plans/{id}`   | JWT `PLATFORM_ADMIN` | Delete plan                            |
+
+## Events & Messaging
+
+The Billing service publishes payment-related events to RabbitMQ for downstream consumption.
+
+**Exchange**: `iqkv.events` (Topic)
+
+### Subscription Events (`subscription.*`)
+
+| Routing Key | Event Type | Description |
+| :--- | :--- | :--- |
+| `subscription.created` | `SUBSCRIPTION_CREATED` | New subscription activated for a tenant. |
+| `subscription.cancelled` | `SUBSCRIPTION_CANCELLED` | Subscription ended. |
+
+### Invoice Events (`invoice.*`)
+
+| Routing Key | Event Type | Description |
+| :--- | :--- | :--- |
+| `invoice.created` | `INVOICE_CREATED` | Draft invoice generated. |
+| `invoice.finalized` | `INVOICE_FINALIZED` | Invoice finalized and ready for payment. |
+| `invoice.paid` | `INVOICE_PAID` | Payment successfully received. |
+| `invoice.updated` | `INVOICE_UPDATED` | Invoice metadata changed. |
+
+### Payment Events (`payment.*`)
+
+| Routing Key | Event Type | Description |
+| :--- | :--- | :--- |
+| `payment.failed` | `PAYMENT_FAILED` | Payment transaction failed (e.g. card declined). |
+
+### Refund Events (`refund.*`)
+
+| Routing Key | Event Type | Description |
+| :--- | :--- | :--- |
+| `refund.created` | `REFUND_CREATED` | Refund initiated. |
+
+### Notifications (`notification.billing.*`)
+
+| Routing Key | Description |
+| :--- | :--- |
+| `notification.billing.email` | Billing-specific emails (Invoice Paid, Payment Overdue). |
 
 ### Webhooks
 
