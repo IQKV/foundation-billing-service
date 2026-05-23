@@ -18,6 +18,9 @@ package com.iqkv.foundation.billingservice.infrastructure.messaging;
 
 import java.time.Instant;
 
+import com.iqkv.foundation.audit.model.event.AuditActor;
+import com.iqkv.foundation.audit.model.event.AuditableEvent;
+
 /**
  * Represents invoice lifecycle events published by the Billing service.
  *
@@ -25,7 +28,7 @@ import java.time.Instant;
  * {@code TENANT}/{@code tenantKey} in multi-tenant mode, or {@code USER}/{@code userId}
  * in single-tenant mode.
  */
-public class InvoiceEvent {
+public class InvoiceEvent implements AuditableEvent {
 
   public enum EventType {
     INVOICE_PAID,
@@ -44,6 +47,7 @@ public class InvoiceEvent {
   private Instant occurredAt;
   private String subjectType;     // TENANT | USER
   private String subjectKey;      // tenantKey or userId depending on subjectType
+  private AuditActor actor;
 
   /**
    * No-args constructor for deserialization.
@@ -68,6 +72,16 @@ public class InvoiceEvent {
     this.occurredAt = occurredAt;
     this.subjectType = subjectType;
     this.subjectKey = subjectKey;
+  }
+
+  @Override
+  public AuditActor getActor() {
+    return actor;
+  }
+
+  @Override
+  public void setActor(final AuditActor actor) {
+    this.actor = actor;
   }
 
   public String getTenantKey() {

@@ -18,6 +18,7 @@ package com.iqkv.foundation.billingservice.infrastructure.messaging;
 
 import java.time.Instant;
 
+import com.iqkv.foundation.audit.spi.context.AuditEventEnricher;
 import com.iqkv.foundation.billingservice.infrastructure.config.RabbitMQConfig;
 import com.iqkv.foundation.billingservice.shared.exception.MessagingException;
 import org.slf4j.Logger;
@@ -260,6 +261,7 @@ public class MessagingService {
 
   private void publish(final String exchange, final String routingKey, final Object payload) {
     try {
+      AuditEventEnricher.enrich(payload);
       rabbitTemplate.convertAndSend(exchange, routingKey, payload);
       log.debug("Published event to exchange={} routingKey={}", exchange, routingKey);
     } catch (final AmqpException e) {
