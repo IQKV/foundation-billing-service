@@ -63,12 +63,12 @@ public class SubscriptionRestResource {
   }
 
   @GetMapping("/{tenantKey}/active")
-  @PreAuthorize("hasAuthority('TENANT_OWNER')")
+  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'MEMBER')")
   @Operation(
       summary = "Get active subscription",
       description = "Returns the active Stripe subscription for the given tenant. "
                     + "No gateway round-trip — reads local cache. "
-                    + "Requires TENANT_OWNER authority. The authenticated tenant must match the tenantKey path variable.")
+                    + "Requires TENANT_OWNER or MEMBER authority. The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
              description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
@@ -76,7 +76,7 @@ public class SubscriptionRestResource {
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Active subscription returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
-      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER or tenant mismatch"),
+      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER/MEMBER or tenant mismatch"),
       @ApiResponse(responseCode = "404", description = "No active subscription found")
   })
   public ResponseEntity<SubscriptionDtos.SubscriptionResponse> getActive(
