@@ -118,12 +118,14 @@ iqkv:
     default-contact-email: ${DEFAULT_BILLING_EMAIL:}  # Fallback email for single-tenant mode (optional)
     stripe:
       schema:
-        # Array of products to seed into the plan catalog and synchronize with Stripe.
+        # Map of products to seed into the plan catalog and synchronize with Stripe.
         # Products defined here are considered the "source of truth".
-        products: []
+        # Maps allow merging configurations from different profiles.
+        products: {}
         # Example:
         # products:
-        #   - planCode: "basic-monthly"
+        #   basic-monthly:
+        #     planCode: "basic-monthly"
         #     displayName: "Basic Monthly"
         #     billingPeriod: "MONTHLY"
         #     priceMinor: 1000

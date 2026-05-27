@@ -16,7 +16,7 @@
 
 package com.iqkv.foundation.billingservice.infrastructure.config;
 
-import java.util.List;
+import java.util.Collection;
 
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
@@ -57,7 +57,7 @@ public class BillingSeedRunner implements ApplicationRunner {
   @Override
   @Transactional
   public void run(final ApplicationArguments args) {
-    final List<StripeProductSchema> products = billingProps.stripe().schema().products();
+    final Collection<StripeProductSchema> products = billingProps.stripe().schema().products().values();
     if (products.isEmpty()) {
       log.debug("No products found in configuration for seeding");
       return;

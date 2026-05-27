@@ -40,14 +40,16 @@ iqkv:
     stripe:
       schema:
         products:
-          - planCode: "basic-monthly"
+          basic-monthly:
+            planCode: "basic-monthly"
             displayName: "Basic Monthly (Local)"
             billingPeriod: "MONTHLY"
             priceMinor: 500
             currency: "USD"
             scope: "TENANT"
             active: true
-          - planCode: "pro-monthly"
+          pro-monthly:
+            planCode: "pro-monthly"
             displayName: "Pro Monthly (Local)"
             billingPeriod: "MONTHLY"
             priceMinor: 1500

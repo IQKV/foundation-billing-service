@@ -20,7 +20,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -43,22 +43,22 @@ public record BillingConfigurationProperties(
 ) {
   public BillingConfigurationProperties {
     if (stripe == null) {
-      stripe = new StripeProperties(new SchemaProperties(Collections.emptyList()));
+      stripe = new StripeProperties(new SchemaProperties(Collections.emptyMap()));
     }
   }
 
   public record StripeProperties(@Valid SchemaProperties schema) {
     public StripeProperties {
       if (schema == null) {
-        schema = new SchemaProperties(Collections.emptyList());
+        schema = new SchemaProperties(Collections.emptyMap());
       }
     }
   }
 
-  public record SchemaProperties(@Valid List<StripeProductSchema> products) {
+  public record SchemaProperties(@Valid Map<String, StripeProductSchema> products) {
     public SchemaProperties {
       if (products == null) {
-        products = Collections.emptyList();
+        products = Collections.emptyMap();
       }
     }
   }
