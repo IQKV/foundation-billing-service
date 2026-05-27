@@ -342,8 +342,8 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
         createNewPrice = true;
       } else {
         final Price price = Price.retrieve(priceId);
-        if (!price.getUnitAmount().equals(Long.valueOf(plan.getPriceMinor())) ||
-            !price.getCurrency().equalsIgnoreCase(plan.getCurrency())) {
+        if (!price.getUnitAmount().equals(Long.valueOf(plan.getPriceMinor()))
+            || !price.getCurrency().equalsIgnoreCase(plan.getCurrency())) {
           createNewPrice = true;
           log.info("Price changed for plan {}, creating new Stripe price", plan.getPlanCode());
         }

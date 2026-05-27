@@ -18,7 +18,6 @@ package com.iqkv.foundation.billingservice.infrastructure.config;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
-
 import java.util.Collections;
 import java.util.Map;
 
