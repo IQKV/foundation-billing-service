@@ -41,6 +41,10 @@ public record PlanPatchRequest(
     @Pattern(regexp = "TENANT|USER", message = "must be TENANT or USER")
     String scope,
 
+    String externalProductId,
+
+    String externalPriceId,
+
     Boolean active
 ) {
 }

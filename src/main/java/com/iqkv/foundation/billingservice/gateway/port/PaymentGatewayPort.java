@@ -24,6 +24,7 @@ import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
 import com.iqkv.foundation.billingservice.gateway.command.CreateRefundCommand;
 import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
+import com.iqkv.foundation.billingservice.plan.Plan;
 
 /**
  * Port interface for payment gateway operations (Strategy pattern).
@@ -102,6 +103,15 @@ public interface PaymentGatewayPort {
    * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if refund fails
    */
   String createRefund(CreateRefundCommand command);
+
+  /**
+   * Synchronizes a plan with the payment gateway (creates or updates product and price).
+   *
+   * @param plan the plan to synchronize
+   * @return the external price ID from the gateway
+   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if synchronization fails
+   */
+  String syncProduct(Plan plan);
 
   /**
    * Verifies the webhook signature and, if valid, parses the payload into a normalized domain event.

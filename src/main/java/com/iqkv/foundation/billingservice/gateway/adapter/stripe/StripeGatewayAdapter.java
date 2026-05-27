@@ -32,6 +32,7 @@ import com.iqkv.foundation.billingservice.gateway.event.GatewaySubscriptionEvent
 import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties;
+import com.iqkv.foundation.billingservice.plan.Plan;
 import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException;
 import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
 import com.stripe.Stripe;
@@ -41,11 +42,15 @@ import com.stripe.model.Charge;
 import com.stripe.model.Customer;
 import com.stripe.model.Event;
 import com.stripe.model.Invoice;
+import com.stripe.model.Price;
+import com.stripe.model.Product;
 import com.stripe.model.Refund;
 import com.stripe.model.SubscriptionItem;
 import com.stripe.model.billingportal.Session;
 import com.stripe.net.Webhook;
 import com.stripe.param.CustomerCreateParams;
+import com.stripe.param.PriceCreateParams;
+import com.stripe.param.ProductCreateParams;
 import com.stripe.param.RefundCreateParams;
 import com.stripe.param.SubscriptionUpdateParams;
 import com.stripe.param.billingportal.SessionCreateParams;
@@ -289,7 +294,8 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
       }
 
       final RefundCreateParams.Builder builder = RefundCreateParams.builder()
-          .setCharge(command.paymentId());
+          .setCharge(command.paymentId())
+          .putMetadata("managed_by", "foundation-billing-service");
 
       if (command.amount() != null) {
         builder.setAmount(command.amount());
@@ -306,6 +312,69 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
       return refund.getId();
     } catch (final StripeException e) {
       throw new PaymentGatewayException("Failed to create Stripe refund for charge: " + command.paymentId(), e);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String syncProduct(final Plan plan) {
+    try {
+      String productId = plan.getExternalProductId();
+      if (productId == null || productId.isBlank()) {
+        final ProductCreateParams productParams = ProductCreateParams.builder()
+            .setName(plan.getDisplayName())
+            .setActive(plan.getActive())
+            .putMetadata("plan_code", plan.getPlanCode())
+            .putMetadata("managed_by", "foundation-billing-service")
+            .build();
+        final Product product = Product.create(productParams);
+        productId = product.getId();
+        plan.setExternalProductId(productId);
+        log.debug("Created Stripe product {} for plan {}", productId, plan.getPlanCode());
+      }
+
+      String priceId = plan.getExternalPriceId();
+      boolean createNewPrice = false;
+
+      if (priceId == null || priceId.isBlank()) {
+        createNewPrice = true;
+      } else {
+        final Price price = Price.retrieve(priceId);
+        if (!price.getUnitAmount().equals(Long.valueOf(plan.getPriceMinor())) ||
+            !price.getCurrency().equalsIgnoreCase(plan.getCurrency())) {
+          createNewPrice = true;
+          log.info("Price changed for plan {}, creating new Stripe price", plan.getPlanCode());
+        }
+      }
+
+      if (createNewPrice) {
+        final PriceCreateParams.Recurring.Interval interval =
+            "ANNUAL".equalsIgnoreCase(plan.getBillingPeriod())
+                ? PriceCreateParams.Recurring.Interval.YEAR
+                : PriceCreateParams.Recurring.Interval.MONTH;
+
+        final PriceCreateParams priceParams = PriceCreateParams.builder()
+            .setProduct(productId)
+            .setUnitAmount(Long.valueOf(plan.getPriceMinor()))
+            .setCurrency(plan.getCurrency())
+            .setRecurring(PriceCreateParams.Recurring.builder()
+                .setInterval(interval)
+                .build())
+            .setActive(plan.getActive())
+            .putMetadata("plan_code", plan.getPlanCode())
+            .putMetadata("managed_by", "foundation-billing-service")
+            .build();
+        final Price price = Price.create(priceParams);
+        priceId = price.getId();
+        plan.setExternalPriceId(priceId);
+        log.debug("Created Stripe price {} for product {}", priceId, productId);
+      }
+
+      return priceId;
+    } catch (final StripeException e) {
+      throw new PaymentGatewayException("Failed to sync product/price with Stripe for plan: " + plan.getPlanCode(), e);
     }
   }
 

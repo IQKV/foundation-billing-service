@@ -14,28 +14,16 @@
  * limitations under the License.
  */
 
-package com.iqkv.foundation.billingservice.plan;
+package com.iqkv.foundation.billingservice.infrastructure.config;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 /**
- * Request body for plan catalog create and update operations.
- *
- * <p>All fields are required for POST (create). For PUT (update), the {@code planCode}
- * is taken from the path variable and the remaining fields replace the existing values.
- *
- * @param planCode      unique plan identifier (e.g. {@code pro-monthly})
- * @param displayName   human-readable plan name
- * @param billingPeriod billing cycle — {@code MONTHLY} or {@code ANNUAL}
- * @param priceMinor    price in the smallest currency unit (e.g. cents for USD)
- * @param currency      ISO 4217 currency code (e.g. {@code USD})
- * @param featureSet    JSON string describing plan features (nullable)
- * @param scope         subject scope — {@code TENANT} or {@code USER}
- * @param active        whether the plan is visible to users
+ * Configuration for a single product in the Stripe catalog.
  */
-public record PlanRequest(
+public record StripeProductSchema(
     @NotBlank String planCode,
     @NotBlank String displayName,
     @NotBlank String billingPeriod,
@@ -43,8 +31,6 @@ public record PlanRequest(
     @NotBlank String currency,
     String featureSet,
     @NotBlank String scope,
-    String externalProductId,
-    String externalPriceId,
     Boolean active
 ) {
 }

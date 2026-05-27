@@ -41,3 +41,21 @@ iqkv:
   stripe:
     secret-key: ${STRIPE_SECRET_KEY}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+  billing:
+    stripe:
+      schema:
+        products:
+          - planCode: "basic-monthly"
+            displayName: "Basic Monthly"
+            billingPeriod: "MONTHLY"
+            priceMinor: 1000
+            currency: "USD"
+            scope: "TENANT"
+            active: true
+          - planCode: "pro-monthly"
+            displayName: "Pro Monthly"
+            billingPeriod: "MONTHLY"
+            priceMinor: 3000
+            currency: "USD"
+            scope: "TENANT"
+            active: true

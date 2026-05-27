@@ -36,6 +36,8 @@ class PlanRequestTest {
         "USD",
         "{\"feature1\": true, \"feature2\": false}",
         "TENANT",
+        "prod_123",
+        "price_123",
         true
     );
 
@@ -47,6 +49,8 @@ class PlanRequestTest {
     assertThat(request.currency()).isEqualTo("USD");
     assertThat(request.featureSet()).isEqualTo("{\"feature1\": true, \"feature2\": false}");
     assertThat(request.scope()).isEqualTo("TENANT");
+    assertThat(request.externalProductId()).isEqualTo("prod_123");
+    assertThat(request.externalPriceId()).isEqualTo("price_123");
     assertThat(request.active()).isTrue();
   }
 
@@ -62,6 +66,8 @@ class PlanRequestTest {
         "USD",
         null,
         "USER",
+        null,
+        null,
         true
     );
 
@@ -82,6 +88,8 @@ class PlanRequestTest {
         "EUR",
         "{\"unlimited\": true}",
         "TENANT",
+        null,
+        null,
         true
     );
 
@@ -96,10 +104,10 @@ class PlanRequestTest {
   void shouldSupportRecordEquality() {
     // Arrange
     final var request1 = new PlanRequest(
-        "pro-monthly", "Professional", "MONTHLY", 2999, "USD", null, "TENANT", true
+        "pro-monthly", "Professional", "MONTHLY", 2999, "USD", null, "TENANT", null, null, true
     );
     final var request2 = new PlanRequest(
-        "pro-monthly", "Professional", "MONTHLY", 2999, "USD", null, "TENANT", true
+        "pro-monthly", "Professional", "MONTHLY", 2999, "USD", null, "TENANT", null, null, true
     );
 
     // Assert
@@ -112,7 +120,7 @@ class PlanRequestTest {
   void shouldHaveMeaningfulToString() {
     // Arrange
     final var request = new PlanRequest(
-        "pro-monthly", "Professional", "MONTHLY", 2999, "USD", null, "TENANT", true
+        "pro-monthly", "Professional", "MONTHLY", 2999, "USD", null, "TENANT", null, null, true
     );
 
     // Act
@@ -131,7 +139,7 @@ class PlanRequestTest {
   void shouldCreateInactivePlan() {
     // Arrange & Act
     final var request = new PlanRequest(
-        "legacy-plan", "Legacy Plan", "MONTHLY", 1999, "USD", null, "TENANT", false
+        "legacy-plan", "Legacy Plan", "MONTHLY", 1999, "USD", null, "TENANT", null, null, false
     );
 
     // Assert

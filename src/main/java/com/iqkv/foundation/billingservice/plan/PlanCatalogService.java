@@ -94,6 +94,12 @@ public class PlanCatalogService {
     if (request.scope() != null) {
       plan.setScope(request.scope());
     }
+    if (request.externalProductId() != null) {
+      plan.setExternalProductId(request.externalProductId());
+    }
+    if (request.externalPriceId() != null) {
+      plan.setExternalPriceId(request.externalPriceId());
+    }
     if (request.active() != null) {
       plan.setActive(request.active());
     }
@@ -121,6 +127,8 @@ public class PlanCatalogService {
     plan.setCurrency(request.currency() != null ? request.currency() : "USD");
     plan.setFeatureSet(request.featureSet());
     plan.setScope(request.scope());
+    plan.setExternalProductId(request.externalProductId());
+    plan.setExternalPriceId(request.externalPriceId());
     plan.setActive(request.active() != null ? request.active() : Boolean.TRUE);
     return plan;
   }

@@ -38,6 +38,8 @@ public class Plan {
   private String currency;        // default "USD"
   private String featureSet;      // JSON string of feature flags/limits
   private String scope;           // TENANT | USER
+  private String externalProductId;
+  private String externalPriceId;
   private Boolean active;         // default true
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
@@ -53,6 +55,8 @@ public class Plan {
               final String currency,
               final String featureSet,
               final String scope,
+              final String externalProductId,
+              final String externalPriceId,
               final Boolean active,
               final LocalDateTime createdAt,
               final LocalDateTime updatedAt) {
@@ -64,6 +68,8 @@ public class Plan {
     this.currency = currency;
     this.featureSet = featureSet;
     this.scope = scope;
+    this.externalProductId = externalProductId;
+    this.externalPriceId = externalPriceId;
     this.active = active;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
@@ -131,6 +137,22 @@ public class Plan {
 
   public void setScope(String scope) {
     this.scope = scope;
+  }
+
+  public String getExternalProductId() {
+    return externalProductId;
+  }
+
+  public void setExternalProductId(String externalProductId) {
+    this.externalProductId = externalProductId;
+  }
+
+  public String getExternalPriceId() {
+    return externalPriceId;
+  }
+
+  public void setExternalPriceId(String externalPriceId) {
+    this.externalPriceId = externalPriceId;
   }
 
   public Boolean getActive() {

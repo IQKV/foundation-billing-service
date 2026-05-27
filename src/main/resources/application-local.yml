@@ -36,3 +36,21 @@ iqkv:
     contexts: demo
   mail:
     port: ${MAIL_PORT:1025}
+  billing:
+    stripe:
+      schema:
+        products:
+          - planCode: "basic-monthly"
+            displayName: "Basic Monthly (Local)"
+            billingPeriod: "MONTHLY"
+            priceMinor: 500
+            currency: "USD"
+            scope: "TENANT"
+            active: true
+          - planCode: "pro-monthly"
+            displayName: "Pro Monthly (Local)"
+            billingPeriod: "MONTHLY"
+            priceMinor: 1500
+            currency: "USD"
+            scope: "TENANT"
+            active: true

@@ -116,6 +116,20 @@ iqkv:
     # Used when tenant.created event has no ownerEmail (bootstrap events have no owner)
     # Fallback chain: (1) ownerEmail from event → (2) this value → (3) null (Stripe allows no email)
     default-contact-email: ${DEFAULT_BILLING_EMAIL:}  # Fallback email for single-tenant mode (optional)
+    stripe:
+      schema:
+        # Array of products to seed into the plan catalog and synchronize with Stripe.
+        # Products defined here are considered the "source of truth".
+        products: []
+        # Example:
+        # products:
+        #   - planCode: "basic-monthly"
+        #     displayName: "Basic Monthly"
+        #     billingPeriod: "MONTHLY"
+        #     priceMinor: 1000
+        #     currency: "USD"
+        #     scope: "TENANT"
+        #     active: true
   auth:
     jwt:
       public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public.pem}
