@@ -4,7 +4,7 @@ services:
     image: postgres:17-alpine
     container_name: foundation-billing-postgres-dev
     environment:
-      POSTGRES_DB: billing
+      POSTGRES_DB: billingservice
       POSTGRES_USER: svc_billing_dba
       POSTGRES_PASSWORD: svc_billing_dba
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
@@ -82,7 +82,7 @@ services:
       # Database Configuration
       DB_HOST: postgres-billing
       DB_PORT: 5432
-      DB_NAME: billing
+      DB_NAME: billingservice
       DB_USERNAME: svc_billing_dba
       DB_PASSWORD: svc_billing_dba
 
@@ -145,7 +145,7 @@ services:
       # Database Configuration
       DB_HOST: postgres-billing
       DB_PORT: 5432
-      DB_NAME: iam
+      DB_NAME: iamservice
       DB_USERNAME: svc_iam_dba
       DB_PASSWORD: svc_iam_dba
 

@@ -68,7 +68,7 @@ iqkv:
   db:
     host: ${DB_HOST:localhost}
     port: ${DB_PORT:5432}
-    name: ${DB_NAME:billing}
+    name: ${DB_NAME:billingservice}
     username: ${DB_USERNAME:svc_billing_dba}
     password: ${DB_PASSWORD:svc_billing_dba}
   rabbitmq:
