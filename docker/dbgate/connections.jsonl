@@ -1,0 +1,3 @@
+{"_id":"postgres-billing","engine":"postgres@dbgate-plugin-postgres","server":"postgres-billing","port":5432,"user":"svc_billing_dba","password":"svc_billing_dba","database":"billing","displayName":"PostgreSQL - Billing Service"}
+{"_id":"postgres-iam","engine":"postgres@dbgate-plugin-postgres","server":"postgres-billing","port":5432,"user":"svc_iam_dba","password":"svc_iam_dba","database":"iam","displayName":"PostgreSQL - IAM Service (Local)"}
+{"_id":"rabbitmq-management","engine":"rabbitmq@dbgate-plugin-rabbitmq","server":"rabbitmq-billing","port":15672,"user":"svc_billing_rmq","password":"svc_billing_rmq","displayName":"RabbitMQ - Billing Service"}

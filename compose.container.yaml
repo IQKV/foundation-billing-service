@@ -17,6 +17,12 @@ services:
       file: compose.base.yaml
       service: mailhog
 
+  # DbGate - Database Administration Tool
+  dbgate:
+    extends:
+      file: compose.base.yaml
+      service: dbgate
+
   # IAM Service for Billing
   iam-service:
     extends:
@@ -46,6 +52,8 @@ volumes:
     name: iqkv_billing_postgres_data_dev
   rabbitmq_billing_data:
     name: iqkv_billing_rabbitmq_data_dev
+  dbgate_billing_data:
+    name: iqkv_billing_dbgate_data_dev
   billing_logs:
     name: iqkv_billing_logs_dev
   billing_tmp:

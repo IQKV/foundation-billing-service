@@ -186,6 +186,33 @@ services:
       - billing-service-network
     restart: unless-stopped
 
+  # DbGate - Database Administration Tool
+  dbgate:
+    image: dbgate/dbgate:5.3.3
+    container_name: foundation-billing-dbgate-dev
+    environment:
+      WEB_ROOT: /
+      LOGINS: "1"
+    ports:
+      - "3100:3000" # DbGate Web UI (port 3100 to avoid conflict with Grafana)
+    volumes:
+      - ./docker/dbgate/connections.jsonl:/root/.dbgate/connections.jsonl:ro
+      - dbgate_billing_data:/root/.dbgate
+    networks:
+      - billing-service-network
+    depends_on:
+      postgres-billing:
+        condition: service_healthy
+      rabbitmq-billing:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
   # SonarQube for code quality analysis
   sonar:
     image: sonarqube:25.3.0.104237-community
@@ -241,6 +268,9 @@ volumes:
     driver: local
   rabbitmq_billing_data:
     name: iqkv_billing_rabbitmq_data_dev
+    driver: local
+  dbgate_billing_data:
+    name: iqkv_billing_dbgate_data_dev
     driver: local
   billing_logs:
     name: iqkv_billing_logs_dev
