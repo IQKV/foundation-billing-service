@@ -144,4 +144,121 @@ class BillingSettingsDtosTest {
     assertThat(toString).contains("billing@example.com");
     assertThat(toString).contains("Test Company");
   }
+
+  @Test
+  @DisplayName("Should create PortalSessionResponse")
+  void shouldCreatePortalSessionResponse() {
+    // Arrange & Act
+    final var response = new BillingSettingsDtos.PortalSessionResponse(
+        "https://billing.stripe.com/session_123"
+    );
+
+    // Assert
+    assertThat(response.url()).isEqualTo("https://billing.stripe.com/session_123");
+  }
+
+  @Test
+  @DisplayName("Should create AdminBillingSettingsResponse with all fields")
+  void shouldCreateAdminBillingSettingsResponse() {
+    // Arrange
+    final UUID id = UUID.randomUUID();
+    final UUID ownerId = UUID.randomUUID();
+    final Instant createdAt = Instant.now();
+    final Instant updatedAt = Instant.now();
+
+    // Act
+    final var response = new BillingSettingsDtos.AdminBillingSettingsResponse(
+        id, "tenant-123", "cus_ext123", "admin@example.com", "Admin Company",
+        "{\"street\": \"456 Admin St\"}", "ADM789", "EIN", "EUR", ownerId,
+        createdAt, updatedAt
+    );
+
+    // Assert
+    assertThat(response.id()).isEqualTo(id);
+    assertThat(response.tenantKey()).isEqualTo("tenant-123");
+    assertThat(response.externalCustomerId()).isEqualTo("cus_ext123");
+    assertThat(response.billingEmail()).isEqualTo("admin@example.com");
+    assertThat(response.profileOwnerId()).isEqualTo(ownerId);
+  }
+
+  @Test
+  @DisplayName("Should create AdminCreateBillingSettingsRequest")
+  void shouldCreateAdminCreateBillingSettingsRequest() {
+    // Arrange
+    final UUID ownerId = UUID.randomUUID();
+
+    // Act
+    final var request = new BillingSettingsDtos.AdminCreateBillingSettingsRequest(
+        "cus_new123", "create@example.com", "New Company",
+        "{\"address\": \"789 Create St\"}", "CRT999", "SSN", "GBP", ownerId
+    );
+
+    // Assert
+    assertThat(request.externalCustomerId()).isEqualTo("cus_new123");
+    assertThat(request.billingEmail()).isEqualTo("create@example.com");
+    assertThat(request.companyName()).isEqualTo("New Company");
+    assertThat(request.taxId()).isEqualTo("CRT999");
+    assertThat(request.profileOwnerId()).isEqualTo(ownerId);
+  }
+
+  @Test
+  @DisplayName("Should create AdminReplaceBillingSettingsRequest")
+  void shouldCreateAdminReplaceBillingSettingsRequest() {
+    // Arrange
+    final UUID ownerId = UUID.randomUUID();
+
+    // Act
+    final var request = new BillingSettingsDtos.AdminReplaceBillingSettingsRequest(
+        "cus_replace123", "replace@example.com", "Replace Company",
+        null, "RPL555", "VAT", "CHF", ownerId
+    );
+
+    // Assert
+    assertThat(request.externalCustomerId()).isEqualTo("cus_replace123");
+    assertThat(request.billingEmail()).isEqualTo("replace@example.com");
+    assertThat(request.currency()).isEqualTo("CHF");
+    assertThat(request.billingAddress()).isNull();
+  }
+
+  @Test
+  @DisplayName("Should create AdminPatchBillingSettingsRequest with all null fields")
+  void shouldCreateAdminPatchBillingSettingsRequestWithNullFields() {
+    // Arrange & Act
+    final var request = new BillingSettingsDtos.AdminPatchBillingSettingsRequest(
+        null, null, null, null, null, null, null, null
+    );
+
+    // Assert
+    assertThat(request.externalCustomerId()).isNull();
+    assertThat(request.billingEmail()).isNull();
+    assertThat(request.companyName()).isNull();
+    assertThat(request.profileOwnerId()).isNull();
+  }
+
+  @Test
+  @DisplayName("Should create AdminPatchBillingSettingsRequest with selected fields")
+  void shouldCreateAdminPatchBillingSettingsRequestWithSelectedFields() {
+    // Arrange & Act
+    final var request = new BillingSettingsDtos.AdminPatchBillingSettingsRequest(
+        "cus_patch123", "patch@example.com", null, null, null, null, "JPY", null
+    );
+
+    // Assert
+    assertThat(request.externalCustomerId()).isEqualTo("cus_patch123");
+    assertThat(request.billingEmail()).isEqualTo("patch@example.com");
+    assertThat(request.currency()).isEqualTo("JPY");
+    assertThat(request.companyName()).isNull();
+  }
+
+  @Test
+  @DisplayName("Should support record equality for PortalSessionResponse")
+  void shouldSupportRecordEqualityForPortalSessionResponse() {
+    // Arrange
+    final var response1 = new BillingSettingsDtos.PortalSessionResponse("https://portal.example.com");
+    final var response2 = new BillingSettingsDtos.PortalSessionResponse("https://portal.example.com");
+
+    // Assert
+    assertThat(response1).isEqualTo(response2);
+    assertThat(response1.hashCode()).isEqualTo(response2.hashCode());
+  }
 }

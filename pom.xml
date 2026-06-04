@@ -258,7 +258,20 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <configuration>
                     <excludes>
+                        <!-- Application bootstrap -->
                         <exclude>**/*Application.class</exclude>
+                        <!-- Spring configuration classes -->
+                        <exclude>**/infrastructure/config/**</exclude>
+                        <!-- MyBatis mapper interfaces (no executable bytecode) -->
+                        <exclude>**/infrastructure/persistence/**</exclude>
+                        <!-- REST controllers (tested via integration tests) -->
+                        <exclude>**/*RestResource.class</exclude>
+                        <!-- RabbitMQ consumers (require broker) -->
+                        <exclude>**/*Consumer.class</exclude>
+                        <!-- Stripe gateway adapter (requires live Stripe SDK) -->
+                        <exclude>**/gateway/adapter/**</exclude>
+                        <!-- Security filter (tested via integration tests) -->
+                        <exclude>**/security/**</exclude>
                     </excludes>
                 </configuration>
                 <executions>

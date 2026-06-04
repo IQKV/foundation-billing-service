@@ -124,4 +124,244 @@ class SubscriptionDtosTest {
     assertThat(toString).contains("sub_abc");
     assertThat(toString).contains("active");
   }
+
+  @Test
+  @DisplayName("Should create CreateCheckoutSessionRequest with all fields")
+  void shouldCreateCheckoutSessionRequest() {
+    // Arrange & Act
+    final var request = new SubscriptionDtos.CreateCheckoutSessionRequest(
+        "price_123", "https://example.com/success", "https://example.com/cancel",
+        14, 2L, true
+    );
+
+    // Assert
+    assertThat(request.priceId()).isEqualTo("price_123");
+    assertThat(request.successUrl()).isEqualTo("https://example.com/success");
+    assertThat(request.cancelUrl()).isEqualTo("https://example.com/cancel");
+    assertThat(request.trialPeriodDays()).isEqualTo(14);
+    assertThat(request.quantity()).isEqualTo(2L);
+    assertThat(request.allowPromotionCodes()).isTrue();
+  }
+
+  @Test
+  @DisplayName("Should create CheckoutSessionResponse")
+  void shouldCreateCheckoutSessionResponse() {
+    // Arrange & Act
+    final var response = new SubscriptionDtos.CheckoutSessionResponse("https://checkout.stripe.com/session_123");
+
+    // Assert
+    assertThat(response.checkoutUrl()).isEqualTo("https://checkout.stripe.com/session_123");
+  }
+
+  @Test
+  @DisplayName("Should create UpdateSubscriptionRequest")
+  void shouldCreateUpdateSubscriptionRequest() {
+    // Arrange & Act
+    final var request = new SubscriptionDtos.UpdateSubscriptionRequest(
+        "price_456", 5L, "always_invoice"
+    );
+
+    // Assert
+    assertThat(request.priceId()).isEqualTo("price_456");
+    assertThat(request.quantity()).isEqualTo(5L);
+    assertThat(request.prorationBehavior()).isEqualTo("always_invoice");
+  }
+
+  @Test
+  @DisplayName("Should create CreateRefundRequest")
+  void shouldCreateRefundRequest() {
+    // Arrange & Act
+    final var request = new SubscriptionDtos.CreateRefundRequest(
+        "ch_123", 1000L, "requested_by_customer"
+    );
+
+    // Assert
+    assertThat(request.paymentId()).isEqualTo("ch_123");
+    assertThat(request.amount()).isEqualTo(1000L);
+    assertThat(request.reason()).isEqualTo("requested_by_customer");
+  }
+
+  @Test
+  @DisplayName("Should create RefundResponse")
+  void shouldCreateRefundResponse() {
+    // Arrange & Act
+    final var response = new SubscriptionDtos.RefundResponse("re_123");
+
+    // Assert
+    assertThat(response.refundId()).isEqualTo("re_123");
+  }
+
+  @Test
+  @DisplayName("Should create AdminRefundResponse with all fields")
+  void shouldCreateAdminRefundResponse() {
+    // Arrange
+    final UUID id = UUID.randomUUID();
+    final Instant occurredAt = Instant.now();
+    final java.time.LocalDateTime createdAt = java.time.LocalDateTime.now();
+    final java.time.LocalDateTime updatedAt = java.time.LocalDateTime.now();
+
+    // Act
+    final var response = new SubscriptionDtos.AdminRefundResponse(
+        id, "tenant-123", "re_ext123", "ch_ext456", "cus_ext789",
+        1500L, "usd", "succeeded", occurredAt, createdAt, updatedAt
+    );
+
+    // Assert
+    assertThat(response.id()).isEqualTo(id);
+    assertThat(response.tenantKey()).isEqualTo("tenant-123");
+    assertThat(response.externalRefundId()).isEqualTo("re_ext123");
+    assertThat(response.externalPaymentId()).isEqualTo("ch_ext456");
+    assertThat(response.externalCustomerId()).isEqualTo("cus_ext789");
+    assertThat(response.amount()).isEqualTo(1500L);
+    assertThat(response.currency()).isEqualTo("usd");
+    assertThat(response.status()).isEqualTo("succeeded");
+  }
+
+  @Test
+  @DisplayName("Should create PagedRefundResponse")
+  void shouldCreatePagedRefundResponse() {
+    // Arrange
+    final var refund1 = new SubscriptionDtos.AdminRefundResponse(
+        UUID.randomUUID(), "tenant-123", "re_1", "ch_1", "cus_1",
+        1000L, "usd", "succeeded", Instant.now(),
+        java.time.LocalDateTime.now(), java.time.LocalDateTime.now()
+    );
+    final var content = java.util.List.of(refund1);
+
+    // Act
+    final var response = new SubscriptionDtos.PagedRefundResponse(content, 0, 20, 1L, 1);
+
+    // Assert
+    assertThat(response.content()).hasSize(1);
+    assertThat(response.page()).isEqualTo(0);
+    assertThat(response.size()).isEqualTo(20);
+    assertThat(response.totalElements()).isEqualTo(1L);
+    assertThat(response.totalPages()).isEqualTo(1);
+  }
+
+  @Test
+  @DisplayName("Should create RefundListQuery with defaults")
+  void shouldCreateRefundListQueryWithDefaults() {
+    // Arrange & Act
+    final var query = new SubscriptionDtos.RefundListQuery(null, null, null, null, null);
+
+    // Assert
+    assertThat(query.page()).isEqualTo(0);
+    assertThat(query.size()).isEqualTo(20);
+    assertThat(query.sortBy()).isEqualTo("occurredAt");
+    assertThat(query.sortDir()).isEqualTo("desc");
+    assertThat(query.tenantKey()).isNull();
+  }
+
+  @Test
+  @DisplayName("Should create RefundListQuery with custom values")
+  void shouldCreateRefundListQueryWithCustomValues() {
+    // Arrange & Act
+    final var query = new SubscriptionDtos.RefundListQuery(2, 50, "amount", "asc", "tenant-456");
+
+    // Assert
+    assertThat(query.page()).isEqualTo(2);
+    assertThat(query.size()).isEqualTo(50);
+    assertThat(query.sortBy()).isEqualTo("amount");
+    assertThat(query.sortDir()).isEqualTo("asc");
+    assertThat(query.tenantKey()).isEqualTo("tenant-456");
+  }
+
+  @Test
+  @DisplayName("Should create AdminSubscriptionResponse")
+  void shouldCreateAdminSubscriptionResponse() {
+    // Arrange
+    final UUID id = UUID.randomUUID();
+    final Instant now = Instant.now();
+    final java.time.LocalDateTime created = java.time.LocalDateTime.now();
+
+    // Act
+    final var response = new SubscriptionDtos.AdminSubscriptionResponse(
+        id, "tenant-123", "sub_ext123", "active", "price_123", 2L,
+        null, null, now, now.plusSeconds(2592000), false, null,
+        "TENANT", "tenant-123", created, created
+    );
+
+    // Assert
+    assertThat(response.id()).isEqualTo(id);
+    assertThat(response.subjectType()).isEqualTo("TENANT");
+    assertThat(response.subjectKey()).isEqualTo("tenant-123");
+  }
+
+  @Test
+  @DisplayName("Should create AdminUpdateSubscriptionRequest")
+  void shouldCreateAdminUpdateSubscriptionRequest() {
+    // Arrange & Act
+    final var request = new SubscriptionDtos.AdminUpdateSubscriptionRequest(
+        "paused", 3L, "price_new", null, null, null, true
+    );
+
+    // Assert
+    assertThat(request.status()).isEqualTo("paused");
+    assertThat(request.quantity()).isEqualTo(3L);
+    assertThat(request.planId()).isEqualTo("price_new");
+    assertThat(request.cancelAtPeriodEnd()).isTrue();
+  }
+
+  @Test
+  @DisplayName("Should create SubscriptionCountResponse")
+  void shouldCreateSubscriptionCountResponse() {
+    // Arrange & Act
+    final var response = new SubscriptionDtos.SubscriptionCountResponse(42L);
+
+    // Assert
+    assertThat(response.total()).isEqualTo(42L);
+  }
+
+  @Test
+  @DisplayName("Should create PagedSubscriptionResponse")
+  void shouldCreatePagedSubscriptionResponse() {
+    // Arrange
+    final var subscription = new SubscriptionDtos.AdminSubscriptionResponse(
+        UUID.randomUUID(), "tenant-123", "sub_1", "active", "price_1", 1L,
+        null, null, Instant.now(), Instant.now(), false, null,
+        "TENANT", "tenant-123", java.time.LocalDateTime.now(), java.time.LocalDateTime.now()
+    );
+    final var content = java.util.List.of(subscription);
+
+    // Act
+    final var response = new SubscriptionDtos.PagedSubscriptionResponse(content, 0, 20, 1L, 1);
+
+    // Assert
+    assertThat(response.content()).hasSize(1);
+    assertThat(response.totalElements()).isEqualTo(1L);
+  }
+
+  @Test
+  @DisplayName("Should create SubscriptionListQuery with defaults")
+  void shouldCreateSubscriptionListQueryWithDefaults() {
+    // Arrange & Act
+    final var query = new SubscriptionDtos.SubscriptionListQuery(
+        null, null, null, null, null, null, null
+    );
+
+    // Assert
+    assertThat(query.page()).isEqualTo(0);
+    assertThat(query.size()).isEqualTo(20);
+    assertThat(query.sortBy()).isEqualTo("createdAt");
+    assertThat(query.sortDir()).isEqualTo("desc");
+  }
+
+  @Test
+  @DisplayName("Should create SubscriptionListQuery with custom values")
+  void shouldCreateSubscriptionListQueryWithCustomValues() {
+    // Arrange & Act
+    final var query = new SubscriptionDtos.SubscriptionListQuery(
+        1, 50, "status", "asc", "search-term", "active", "tenant-789"
+    );
+
+    // Assert
+    assertThat(query.page()).isEqualTo(1);
+    assertThat(query.size()).isEqualTo(50);
+    assertThat(query.sortBy()).isEqualTo("status");
+    assertThat(query.sortDir()).isEqualTo("asc");
+    assertThat(query.search()).isEqualTo("search-term");
+    assertThat(query.status()).isEqualTo("active");
+    assertThat(query.tenantKey()).isEqualTo("tenant-789");
+  }
 }
