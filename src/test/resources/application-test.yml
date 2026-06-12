@@ -23,3 +23,4 @@ iqkv:
   stripe:
     secret-key: sk_test_placeholder
     webhook-secret: whsec_placeholder
+    portal-return-url: http://localhost:3000/billing
