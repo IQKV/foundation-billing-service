@@ -67,7 +67,8 @@ public class SubscriptionAdminRestResource {
   }
 
   @GetMapping("/count")
-  @Operation(summary = "Count subscriptions", description = "Returns the total number of subscription records across all tenants.")
+  @Operation(summary = "Count subscriptions",
+             description = "Returns the total number of subscription records, optionally filtered by status.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Total subscription count returned",
                    content = @Content(schema = @io.swagger.v3.oas.annotations.media.Schema(
@@ -75,8 +76,10 @@ public class SubscriptionAdminRestResource {
       @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
       @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_ADMIN required", content = @Content)
   })
-  public ResponseEntity<SubscriptionDtos.SubscriptionCountResponse> countSubscriptions() {
-    return ResponseEntity.ok(subscriptionService.countSubscriptions());
+  public ResponseEntity<SubscriptionDtos.SubscriptionCountResponse> countSubscriptions(
+      @Parameter(description = "Optional status filter: active | canceled | past_due | trialing | unpaid | paused")
+      @org.springframework.web.bind.annotation.RequestParam(required = false) final String status) {
+    return ResponseEntity.ok(subscriptionService.countSubscriptions(status));
   }
 
   @GetMapping("/{id}")

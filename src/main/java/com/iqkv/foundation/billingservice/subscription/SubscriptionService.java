@@ -194,13 +194,15 @@ public class SubscriptionService {
   // ─── Platform admin ────────────────────────────────────────────────────────
 
   /**
-   * Returns the total number of subscription records across all tenants.
+   * Returns the total number of subscription records, optionally filtered by status.
    *
-   * @return total subscription count
+   * @param status optional status filter (e.g. "active", "past_due")
+   * @return subscription count
    */
   @org.springframework.transaction.annotation.Transactional(readOnly = true)
-  public SubscriptionDtos.SubscriptionCountResponse countSubscriptions() {
-    return new SubscriptionDtos.SubscriptionCountResponse(subscriptionMapper.countAll(null, null, null));
+  public SubscriptionDtos.SubscriptionCountResponse countSubscriptions(final String status) {
+    final String safeStatus = (status != null && !status.isBlank()) ? status.strip() : null;
+    return new SubscriptionDtos.SubscriptionCountResponse(subscriptionMapper.countAll(null, safeStatus, null));
   }
 
   /**
