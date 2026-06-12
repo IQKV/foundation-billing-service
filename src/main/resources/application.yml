@@ -121,7 +121,6 @@ iqkv:
         # Map of products to seed into the plan catalog and synchronize with Stripe.
         # Products defined here are considered the "source of truth".
         # Maps allow merging configurations from different profiles.
-        products: {}
         # Example:
         # products:
         #   basic-monthly:

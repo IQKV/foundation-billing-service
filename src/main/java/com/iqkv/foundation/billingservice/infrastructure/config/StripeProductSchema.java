@@ -20,14 +20,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-import org.springframework.boot.context.properties.bind.ConstructorBinding;
-
 /**
  * Configuration for a single product in the Stripe catalog.
- *
- * <p>{@link ConstructorBinding} on the canonical constructor tells Spring Boot's {@code Binder}
- * to use constructor-based binding when resolving this record as a map-value type
- * inside {@link BillingConfigurationProperties}.
  */
 public record StripeProductSchema(
     @NotBlank String planCode,
@@ -39,7 +33,4 @@ public record StripeProductSchema(
     @NotBlank String scope,
     Boolean active
 ) {
-  @ConstructorBinding
-  public StripeProductSchema {
-  }
 }
