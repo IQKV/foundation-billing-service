@@ -25,11 +25,10 @@ import org.springframework.boot.context.properties.bind.ConstructorBinding;
 /**
  * Configuration for a single product in the Stripe catalog.
  *
- * <p>{@link ConstructorBinding} is required so that Spring Boot's {@code Binder}
- * uses the canonical constructor when resolving this record as a map-value type
+ * <p>{@link ConstructorBinding} on the canonical constructor tells Spring Boot's {@code Binder}
+ * to use constructor-based binding when resolving this record as a map-value type
  * inside {@link BillingConfigurationProperties}.
  */
-@ConstructorBinding
 public record StripeProductSchema(
     @NotBlank String planCode,
     @NotBlank String displayName,
@@ -40,4 +39,7 @@ public record StripeProductSchema(
     @NotBlank String scope,
     Boolean active
 ) {
+  @ConstructorBinding
+  public StripeProductSchema {
+  }
 }
