@@ -23,6 +23,7 @@ import com.iqkv.foundation.billingservice.infrastructure.security.JwtClaimNames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -39,6 +40,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
  * REST resource for tenant billing settings.
@@ -87,6 +89,35 @@ public class BillingSettingsRestResource {
     }
     final var settings = billingSettingsService.getByTenantKey(tenantKey);
     return ResponseEntity.ok(BillingSettingsDtoMapper.toResponse(settings));
+  }
+
+  @PostMapping("/{tenantKey}")
+  @PreAuthorize("hasAuthority('TENANT_OWNER')")
+  @Operation(
+      summary = "Create billing settings",
+      description = "Creates billing settings for the tenant. Billing email and currency are required. "
+                    + "Returns 409 if settings already exist. Requires TENANT_OWNER authority. "
+                    + "The authenticated tenant must match the tenantKey path variable.")
+  @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+  @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "201", description = "Billing settings created"),
+      @ApiResponse(responseCode = "400", description = "Validation error", content = @Content),
+      @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),
+      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER or tenant mismatch", content = @Content),
+      @ApiResponse(responseCode = "409", description = "Billing settings already exist for this tenant", content = @Content)
+  })
+  public ResponseEntity<BillingSettingsDtos.BillingSettingsResponse> createSettings(
+      @Parameter(description = "8-char alphanumeric tenantKey")
+      @PathVariable @Pattern(regexp = "[a-z0-9]{8}", message = "tenantKey must be 8 lowercase alphanumeric characters") final String tenantKey,
+      @Valid @RequestBody final BillingSettingsDtos.CreateBillingSettingsRequest request,
+      @AuthenticationPrincipal final Jwt jwt) {
+    final String authenticatedTenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
+    final var created = billingSettingsService.createForTenant(tenantKey, authenticatedTenantKey, request);
+    return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest().build().toUri())
+        .body(BillingSettingsDtoMapper.toResponse(created));
   }
 
   @PatchMapping("/{tenantKey}")

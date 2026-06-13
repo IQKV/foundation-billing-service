@@ -132,6 +132,40 @@ public class BillingSettingsService {
   }
 
   /**
+   * Creates billing settings initiated by the tenant owner themselves.
+   * Does not set {@code externalCustomerId} — that is provisioned by the platform operator.
+   *
+   * @throws TenantContextMismatchException if the authenticated tenant does not match the path
+   * @throws DuplicateResourceException     if settings already exist for {@code tenantKey}
+   */
+  public BillingSettings createForTenant(final String tenantKey,
+                                         final String authenticatedTenantKey,
+                                         final BillingSettingsDtos.CreateBillingSettingsRequest request) {
+    if (!tenantKey.equals(authenticatedTenantKey)) {
+      throw new TenantContextMismatchException(
+          "Authenticated tenant '" + authenticatedTenantKey + "' does not match requested tenant '" + tenantKey + "'");
+    }
+    if (billingSettingsMapper.existsByTenantKey(tenantKey)) {
+      throw new DuplicateResourceException("Billing settings already exist for tenantKey=" + tenantKey);
+    }
+    final var now = LocalDateTime.now();
+    final var settings = new BillingSettings();
+    settings.setId(UUID.randomUUID());
+    settings.setTenantKey(tenantKey);
+    settings.setBillingEmail(request.billingEmail());
+    settings.setCompanyName(request.companyName());
+    settings.setBillingAddress(request.billingAddress());
+    settings.setTaxId(request.taxId());
+    settings.setTaxIdType(request.taxIdType());
+    settings.setCurrency(request.currency());
+    settings.setCreatedAt(now);
+    settings.setUpdatedAt(now);
+    billingSettingsMapper.insert(settings);
+    maybePublishBillingUpdated(tenantKey, settings);
+    return settings;
+  }
+
+  /**
    * Creates billing settings for a tenant (platform operator). One row per tenant.
    *
    * @throws DuplicateResourceException if settings already exist for {@code tenantKey}

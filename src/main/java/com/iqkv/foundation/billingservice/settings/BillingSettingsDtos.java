@@ -34,6 +34,30 @@ public final class BillingSettingsDtos {
   }
 
   /**
+   * POST request body for tenant self-service billing settings creation.
+   * Does not expose {@code externalCustomerId} — that is managed by the platform operator.
+   */
+  public record CreateBillingSettingsRequest(
+      @NotBlank @Email
+      String billingEmail,
+
+      @Size(max = 255)
+      String companyName,
+
+      String billingAddress,  // JSONB — free-form address object
+
+      @Size(max = 50)
+      String taxId,
+
+      @Size(max = 50)
+      String taxIdType,
+
+      @NotBlank @Pattern(regexp = "[A-Z]{3}", message = "must be a 3-letter ISO 4217 currency code")
+      String currency
+  ) {
+  }
+
+  /**
    * PATCH request body — all fields are optional; only non-null values are applied.
    */
   public record UpdateBillingSettingsRequest(
