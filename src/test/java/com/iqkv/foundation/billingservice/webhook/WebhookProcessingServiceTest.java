@@ -37,6 +37,7 @@ import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper;
@@ -75,6 +76,9 @@ class WebhookProcessingServiceTest {
   private UserBillingSettingsMapper userBillingSettingsMapper;
 
   @Mock
+  private PlanMapper planMapper;
+
+  @Mock
   private MessagingService messagingService;
 
   @Mock
@@ -98,6 +102,7 @@ class WebhookProcessingServiceTest {
         refundMapper,
         billingSettingsMapper,
         userBillingSettingsMapper,
+        planMapper,
         messagingService,
         notificationProps,
         subjectResolver,
@@ -176,7 +181,7 @@ class WebhookProcessingServiceTest {
     ));
     verify(messagingService).publishSubscriptionCreated(
         eq(tenantKey), eq(externalSubscriptionId),
-        eq(SubjectType.TENANT.name()), eq(tenantKey)
+        eq(SubjectType.TENANT.name()), eq(tenantKey), eq("price_basic")
     );
     verify(webhookLogMapper).updateStatus(eq("evt_sub_created"), eq("PROCESSED"), eq(null), any());
   }

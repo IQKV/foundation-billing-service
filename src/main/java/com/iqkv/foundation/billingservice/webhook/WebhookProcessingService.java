@@ -30,6 +30,7 @@ import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingServ
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEvent;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEventType;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper;
@@ -74,6 +75,7 @@ public class WebhookProcessingService {
   private final RefundMapper refundMapper;
   private final BillingSettingsMapper billingSettingsMapper;
   private final UserBillingSettingsMapper userBillingSettingsMapper;
+  private final PlanMapper planMapper;
   private final MessagingService messagingService;
   private final NotificationConfigurationProperties notificationProps;
   private final SubscriptionSubjectResolver subjectResolver;
@@ -93,6 +95,7 @@ public class WebhookProcessingService {
                                   final RefundMapper refundMapper,
                                   final BillingSettingsMapper billingSettingsMapper,
                                   final UserBillingSettingsMapper userBillingSettingsMapper,
+                                  final PlanMapper planMapper,
                                   final MessagingService messagingService,
                                   final NotificationConfigurationProperties notificationProps,
                                   final SubscriptionSubjectResolver subjectResolver,
@@ -103,6 +106,7 @@ public class WebhookProcessingService {
     this.refundMapper = refundMapper;
     this.billingSettingsMapper = billingSettingsMapper;
     this.userBillingSettingsMapper = userBillingSettingsMapper;
+    this.planMapper = planMapper;
     this.messagingService = messagingService;
     this.notificationProps = notificationProps;
     this.subjectResolver = subjectResolver;
@@ -206,7 +210,8 @@ public class WebhookProcessingService {
         tenantKey,
         subscription.getExternalSubscriptionId(),
         subject.type().name(),
-        subject.key()
+        subject.key(),
+        resolvePlanCode(subscription.getPlanId())
     );
     log.info("Published subscription.created for tenant={}, subscription={}",
         tenantKey, subscription.getExternalSubscriptionId());
@@ -226,6 +231,18 @@ public class WebhookProcessingService {
 
     final String tenantKey = subscription.getTenantKey();
     if (tenantKey != null && !tenantKey.isBlank()) {
+      final var subjectContext = resolveSubjectFromSubscription(subscription.getExternalSubscriptionId(), tenantKey);
+
+      messagingService.publishSubscriptionUpdated(
+          tenantKey,
+          subscription.getExternalSubscriptionId(),
+          subjectContext.type().name(),
+          subjectContext.key(),
+          resolvePlanCode(subscription.getPlanId())
+      );
+      log.info("Published subscription.updated for tenant={}, subscription={}, planCode={}",
+          tenantKey, subscription.getExternalSubscriptionId(), resolvePlanCode(subscription.getPlanId()));
+
       billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
         final String email = resolveEmail(settings);
         if (email != null) {
@@ -611,5 +628,20 @@ public class WebhookProcessingService {
 
   private String nullToEmpty(final String value) {
     return value != null ? value : "";
+  }
+
+  /**
+   * Resolves the human-readable {@code planCode} from the plan catalog for the given plan ID.
+   * Tries {@code external_price_id} first (Stripe price ID), then falls back to exact
+   * {@code plan_code} match. Returns the raw {@code planId} if no catalog entry is found.
+   */
+  private String resolvePlanCode(final String planId) {
+    if (planId == null || planId.isBlank()) {
+      return null;
+    }
+    return planMapper.findByExternalPriceId(planId)
+        .or(() -> planMapper.findByPlanCode(planId))
+        .map(plan -> plan.getPlanCode())
+        .orElse(planId);
   }
 }

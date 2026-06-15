@@ -44,27 +44,49 @@ public class MessagingService {
         externalSubscriptionId,
         SubscriptionEvent.EventType.SUBSCRIPTION_CREATED,
         Instant.now(),
-        "TENANT",   // default: callers without subject context use tenant scope
-        tenantKey
+        "TENANT",
+        tenantKey,
+        null
     );
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CREATED, event);
   }
 
   /**
-   * Publishes a subscription.created event with explicit subject scope.
+   * Publishes a subscription.created event with explicit subject scope and plan code.
    * Prefer this overload when the subject type and key are known (e.g. from the Subscription entity).
    */
   public void publishSubscriptionCreated(final String tenantKey, final String externalSubscriptionId,
-                                         final String subjectType, final String subjectKey) {
+                                         final String subjectType, final String subjectKey,
+                                         final String planCode) {
     final var event = new SubscriptionEvent(
         tenantKey,
         externalSubscriptionId,
         SubscriptionEvent.EventType.SUBSCRIPTION_CREATED,
         Instant.now(),
         subjectType,
-        subjectKey
+        subjectKey,
+        planCode
     );
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CREATED, event);
+  }
+
+  /**
+   * Publishes a subscription.updated event with explicit subject scope and plan code.
+   * Published when a subscription's plan or status changes.
+   */
+  public void publishSubscriptionUpdated(final String tenantKey, final String externalSubscriptionId,
+                                         final String subjectType, final String subjectKey,
+                                         final String planCode) {
+    final var event = new SubscriptionEvent(
+        tenantKey,
+        externalSubscriptionId,
+        SubscriptionEvent.EventType.SUBSCRIPTION_UPDATED,
+        Instant.now(),
+        subjectType,
+        subjectKey,
+        planCode
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_UPDATED, event);
   }
 
   public void publishSubscriptionCancelled(final String tenantKey, final String externalSubscriptionId) {
@@ -73,8 +95,9 @@ public class MessagingService {
         externalSubscriptionId,
         SubscriptionEvent.EventType.SUBSCRIPTION_CANCELLED,
         Instant.now(),
-        "TENANT",   // default: callers without subject context use tenant scope
-        tenantKey
+        "TENANT",
+        tenantKey,
+        null
     );
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CANCELLED, event);
   }
@@ -91,7 +114,8 @@ public class MessagingService {
         SubscriptionEvent.EventType.SUBSCRIPTION_CANCELLED,
         Instant.now(),
         subjectType,
-        subjectKey
+        subjectKey,
+        null
     );
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CANCELLED, event);
   }

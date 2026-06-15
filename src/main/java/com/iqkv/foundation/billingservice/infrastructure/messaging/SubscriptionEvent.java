@@ -9,11 +9,16 @@ import java.time.Instant;
  * {@code TENANT}/{@code tenantKey} in multi-tenant mode, or {@code USER}/{@code userId}
  * in single-tenant mode. Downstream consumers should use these fields to evaluate
  * entitlements consistently regardless of rollout mode.
+ *
+ * <p>{@code planCode} carries the human-readable plan code (e.g. {@code "pro-monthly"})
+ * so that IAM can cache it on the tenant and stamp it into JWT tokens without needing
+ * knowledge of the billing plan catalog.
  */
 public class SubscriptionEvent {
 
   public enum EventType {
     SUBSCRIPTION_CREATED,
+    SUBSCRIPTION_UPDATED,
     SUBSCRIPTION_CANCELLED
   }
 
@@ -23,6 +28,7 @@ public class SubscriptionEvent {
   private Instant occurredAt;
   private String subjectType;   // TENANT | USER
   private String subjectKey;    // tenantKey or userId depending on subjectType
+  private String planCode;      // human-readable plan code (e.g. "pro-monthly"); nullable
 
   /**
    * No-args constructor for deserialization.
@@ -39,16 +45,19 @@ public class SubscriptionEvent {
    * @param occurredAt             the timestamp when the event occurred
    * @param subjectType            the subject type (TENANT or USER)
    * @param subjectKey             the subject key (tenantKey or userId)
+   * @param planCode               the human-readable plan code; may be null
    */
   public SubscriptionEvent(final String tenantKey, final String externalSubscriptionId,
                            final EventType eventType, final Instant occurredAt,
-                           final String subjectType, final String subjectKey) {
+                           final String subjectType, final String subjectKey,
+                           final String planCode) {
     this.tenantKey = tenantKey;
     this.externalSubscriptionId = externalSubscriptionId;
     this.eventType = eventType;
     this.occurredAt = occurredAt;
     this.subjectType = subjectType;
     this.subjectKey = subjectKey;
+    this.planCode = planCode;
   }
 
   public String getTenantKey() {
@@ -97,5 +106,13 @@ public class SubscriptionEvent {
 
   public void setSubjectKey(final String subjectKey) {
     this.subjectKey = subjectKey;
+  }
+
+  public String getPlanCode() {
+    return planCode;
+  }
+
+  public void setPlanCode(final String planCode) {
+    this.planCode = planCode;
   }
 }

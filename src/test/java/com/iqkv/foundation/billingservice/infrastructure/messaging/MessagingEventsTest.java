@@ -40,7 +40,7 @@ class MessagingEventsTest {
     final var event = new SubscriptionEvent(
         "tenant-123", "sub_ext456",
         SubscriptionEvent.EventType.SUBSCRIPTION_CREATED, now,
-        "TENANT", "tenant-123"
+        "TENANT", "tenant-123", null
     );
 
     // Assert
@@ -80,6 +80,7 @@ class MessagingEventsTest {
   void shouldHaveAllSubscriptionEventTypes() {
     assertThat(SubscriptionEvent.EventType.values()).containsExactlyInAnyOrder(
         SubscriptionEvent.EventType.SUBSCRIPTION_CREATED,
+        SubscriptionEvent.EventType.SUBSCRIPTION_UPDATED,
         SubscriptionEvent.EventType.SUBSCRIPTION_CANCELLED
     );
   }

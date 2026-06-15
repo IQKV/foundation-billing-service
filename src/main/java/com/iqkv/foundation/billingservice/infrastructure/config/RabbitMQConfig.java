@@ -55,6 +55,7 @@ public class RabbitMQConfig {
   public static final String ROUTING_USER_REMOVED = "user.removed";
   public static final String ROUTING_USER_DELETED = "user.deleted";
   public static final String ROUTING_SUBSCRIPTION_CREATED = "subscription.created";
+  public static final String ROUTING_SUBSCRIPTION_UPDATED = "subscription.updated";
   public static final String ROUTING_SUBSCRIPTION_CANCELLED = "subscription.cancelled";
   public static final String ROUTING_INVOICE_PAID = "invoice.paid";
   public static final String ROUTING_INVOICE_CREATED = "invoice.created";
