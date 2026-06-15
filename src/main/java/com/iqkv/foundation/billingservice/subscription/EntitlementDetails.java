@@ -18,20 +18,22 @@ package com.iqkv.foundation.billingservice.subscription;
 
 import java.time.Instant;
 
+import com.iqkv.foundation.billingservice.plan.PlanFeatures;
+
 /**
  * Represents the entitlement details derived from an active subscription.
  *
  * @param subject          the subscription subject (type + key)
- * @param planId           the payment-gateway plan/price reference
+ * @param planCode         the human-readable plan code (e.g. {@code "pro-monthly"})
  * @param status           the subscription status (active, trialing, past_due, etc.)
  * @param currentPeriodEnd when the current billing period ends
- * @param featureSet       JSON string of features granted by the plan (may be null)
+ * @param features         the typed feature set for the active plan; never {@code null}
  */
 public record EntitlementDetails(
     SubscriptionSubject subject,
-    String planId,
+    String planCode,
     String status,
     Instant currentPeriodEnd,
-    String featureSet
+    PlanFeatures features
 ) {
 }

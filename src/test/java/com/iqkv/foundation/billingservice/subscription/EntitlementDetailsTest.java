@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 
+import com.iqkv.foundation.billingservice.plan.PlanFeatures;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -29,50 +30,47 @@ class EntitlementDetailsTest {
   @Test
   @DisplayName("Should create EntitlementDetails with all fields")
   void shouldCreateEntitlementDetailsWithAllFields() {
-    // Arrange
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
-    final String planId = "price_123";
+    final String planCode = "pro-monthly";
     final String status = "active";
     final Instant periodEnd = Instant.now().plusSeconds(2592000);
-    final String featureSet = "{\"feature1\": true, \"feature2\": false}";
+    final PlanFeatures features = new PlanFeatures(true, 50, 0);
 
-    // Act
-    final var details = new EntitlementDetails(subject, planId, status, periodEnd, featureSet);
+    final var details = new EntitlementDetails(subject, planCode, status, periodEnd, features);
 
-    // Assert
     assertThat(details.subject()).isEqualTo(subject);
-    assertThat(details.planId()).isEqualTo(planId);
+    assertThat(details.planCode()).isEqualTo(planCode);
     assertThat(details.status()).isEqualTo(status);
     assertThat(details.currentPeriodEnd()).isEqualTo(periodEnd);
-    assertThat(details.featureSet()).isEqualTo(featureSet);
+    assertThat(details.features()).isEqualTo(features);
+    assertThat(details.features().prioritySupport()).isTrue();
+    assertThat(details.features().maxUsers()).isEqualTo(50);
   }
 
   @Test
-  @DisplayName("Should create EntitlementDetails with null featureSet")
-  void shouldCreateEntitlementDetailsWithNullFeatureSet() {
-    // Arrange
+  @DisplayName("Should use NONE features as fallback")
+  void shouldUseNoneFeaturesAsFallback() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.USER, "user-456");
     final Instant periodEnd = Instant.now().plusSeconds(2592000);
 
-    // Act
-    final var details = new EntitlementDetails(subject, "price_legacy", "trialing", periodEnd, null);
+    final var details = new EntitlementDetails(subject, "basic-monthly", "trialing", periodEnd, PlanFeatures.NONE);
 
-    // Assert
     assertThat(details.subject().type()).isEqualTo(SubjectType.USER);
     assertThat(details.subject().key()).isEqualTo("user-456");
-    assertThat(details.featureSet()).isNull();
+    assertThat(details.features()).isEqualTo(PlanFeatures.NONE);
+    assertThat(details.features().prioritySupport()).isFalse();
+    assertThat(details.features().maxUsers()).isEqualTo(1);
   }
 
   @Test
   @DisplayName("Should support record equality")
   void shouldSupportRecordEquality() {
-    // Arrange
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Instant periodEnd = Instant.now();
-    final var details1 = new EntitlementDetails(subject, "price_123", "active", periodEnd, null);
-    final var details2 = new EntitlementDetails(subject, "price_123", "active", periodEnd, null);
+    final PlanFeatures features = new PlanFeatures(false, 5, 3);
+    final var details1 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, features);
+    final var details2 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, features);
 
-    // Assert
     assertThat(details1).isEqualTo(details2);
     assertThat(details1.hashCode()).isEqualTo(details2.hashCode());
   }
@@ -80,34 +78,29 @@ class EntitlementDetailsTest {
   @Test
   @DisplayName("Should have meaningful toString")
   void shouldHaveMeaningfulToString() {
-    // Arrange
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final var details = new EntitlementDetails(
-        subject, "price_123", "active", Instant.now(), "{\"feature1\": true}"
+        subject, "pro-monthly", "active", Instant.now(), PlanFeatures.NONE
     );
 
-    // Act
     final String toString = details.toString();
 
-    // Assert
     assertThat(toString).contains("EntitlementDetails");
-    assertThat(toString).contains("price_123");
+    assertThat(toString).contains("pro-monthly");
     assertThat(toString).contains("active");
   }
 
   @Test
-  @DisplayName("Should create EntitlementDetails for different statuses")
+  @DisplayName("Should create EntitlementDetails for different subscription statuses")
   void shouldCreateEntitlementDetailsForDifferentStatuses() {
-    // Arrange
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Instant periodEnd = Instant.now();
+    final PlanFeatures features = PlanFeatures.NONE;
 
-    // Act
-    final var activeDetails = new EntitlementDetails(subject, "price_123", "active", periodEnd, null);
-    final var trialingDetails = new EntitlementDetails(subject, "price_123", "trialing", periodEnd, null);
-    final var pastDueDetails = new EntitlementDetails(subject, "price_123", "past_due", periodEnd, null);
+    final var activeDetails = new EntitlementDetails(subject, "pro-monthly", "active", periodEnd, features);
+    final var trialingDetails = new EntitlementDetails(subject, "pro-monthly", "trialing", periodEnd, features);
+    final var pastDueDetails = new EntitlementDetails(subject, "pro-monthly", "past_due", periodEnd, features);
 
-    // Assert
     assertThat(activeDetails.status()).isEqualTo("active");
     assertThat(trialingDetails.status()).isEqualTo("trialing");
     assertThat(pastDueDetails.status()).isEqualTo("past_due");

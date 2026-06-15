@@ -21,6 +21,7 @@ import java.util.Collection;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.plan.Plan;
+import com.iqkv.foundation.billingservice.plan.PlanFeatures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -28,6 +29,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Seeds the plan catalog and synchronizes it with the payment gateway on startup.
@@ -35,6 +37,11 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>Iterates over products defined in {@code iqkv.billing.stripe.schema.products},
  * ensuring they exist in the local database (source of truth) and are synchronized
  * with the active payment gateway (Stripe).
+ *
+ * <p>The typed {@link PlanFeatures} from each product schema is serialized to JSON
+ * and stored in the {@code feature_set} column for observability. It is never read
+ * back from the DB for access decisions — the in-memory {@code PlanFeatureRegistry}
+ * is the authoritative source at runtime.
  */
 @Component
 @Order(10) // Run after Liquibase migrations
@@ -45,13 +52,16 @@ public class BillingSeedRunner implements ApplicationRunner {
   private final BillingConfigurationProperties billingProps;
   private final PaymentGatewayPort paymentGatewayPort;
   private final PlanMapper planMapper;
+  private final JsonMapper jsonMapper;
 
   public BillingSeedRunner(final BillingConfigurationProperties billingProps,
                            final PaymentGatewayPort paymentGatewayPort,
-                           final PlanMapper planMapper) {
+                           final PlanMapper planMapper,
+                           final JsonMapper jsonMapper) {
     this.billingProps = billingProps;
     this.paymentGatewayPort = paymentGatewayPort;
     this.planMapper = planMapper;
+    this.jsonMapper = jsonMapper;
   }
 
   @Override
@@ -83,11 +93,13 @@ public class BillingSeedRunner implements ApplicationRunner {
           return newPlan;
         });
 
+    final PlanFeatures features = schema.features() != null ? schema.features() : PlanFeatures.NONE;
+
     plan.setDisplayName(schema.displayName());
     plan.setBillingPeriod(schema.billingPeriod());
     plan.setPriceMinor(schema.priceMinor());
     plan.setCurrency(schema.currency());
-    plan.setFeatureSet(schema.featureSet());
+    plan.setFeatureSet(serializeFeatures(features, schema.planCode()));
     plan.setScope(schema.scope());
     plan.setActive(schema.active() != null ? schema.active() : Boolean.TRUE);
 
@@ -104,5 +116,14 @@ public class BillingSeedRunner implements ApplicationRunner {
     // Persist external IDs returned by Stripe
     planMapper.update(plan);
     log.info("Successfully seeded and synchronized plan: {}", plan.getPlanCode());
+  }
+
+  private String serializeFeatures(final PlanFeatures features, final String planCode) {
+    try {
+      return jsonMapper.writeValueAsString(features);
+    } catch (final Exception e) {
+      log.warn("Failed to serialize PlanFeatures for plan {}, storing null: {}", planCode, e.getMessage());
+      return null;
+    }
   }
 }

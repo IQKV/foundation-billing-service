@@ -20,7 +20,8 @@ import java.util.Optional;
 
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
-import com.iqkv.foundation.billingservice.plan.Plan;
+import com.iqkv.foundation.billingservice.plan.PlanFeatureRegistry;
+import com.iqkv.foundation.billingservice.plan.PlanFeatures;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,13 @@ import org.springframework.stereotype.Component;
  * Default {@link EntitlementEvaluator} implementation.
  *
  * <p>Queries the local subscription cache by {@code (subject_type, subject_key)}.
- * If an active subscription is found, enriches it with plan feature data from the plan catalog.
- * If no plan catalog entry is found for the subscription's {@code planId}, the feature set is null.
+ * If an active subscription is found, resolves the human-readable {@code planCode}
+ * from the plan catalog and looks up the typed {@link PlanFeatures} from the
+ * in-memory {@link PlanFeatureRegistry}.
+ *
+ * <p>The {@code planId} on a subscription holds the payment gateway's price reference
+ * (e.g. a Stripe price ID like {@code price_1Abc...}). Plan lookup therefore tries
+ * {@code external_price_id} first, then falls back to an exact {@code plan_code} match.
  */
 @Component
 public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
@@ -40,13 +46,16 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
 
   private final SubscriptionMapper subscriptionMapper;
   private final PlanMapper planMapper;
+  private final PlanFeatureRegistry planFeatureRegistry;
   private final MeterRegistry meterRegistry;
 
   public DefaultEntitlementEvaluator(final SubscriptionMapper subscriptionMapper,
                                      final PlanMapper planMapper,
+                                     final PlanFeatureRegistry planFeatureRegistry,
                                      final MeterRegistry meterRegistry) {
     this.subscriptionMapper = subscriptionMapper;
     this.planMapper = planMapper;
+    this.planFeatureRegistry = planFeatureRegistry;
     this.meterRegistry = meterRegistry;
   }
 
@@ -62,60 +71,42 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
     }
 
     final Subscription subscription = activeSubscription.get();
-    final String featureSet = resolveFeatureSet(subscription.getPlanId());
     final String planCode = resolvePlanCode(subscription.getPlanId());
+    final PlanFeatures features = planFeatureRegistry.forPlan(planCode);
 
-    meterRegistry.counter("billing_entitlements_check_total", "result", "allowed", "plan_code", nullToEmpty(planCode)).increment();
+    meterRegistry.counter("billing_entitlements_check_total",
+        "result", "allowed",
+        "plan_code", planCode != null ? planCode : "").increment();
 
     return Optional.of(new EntitlementDetails(
         subject,
-        subscription.getPlanId(),
+        planCode,
         subscription.getStatus(),
         subscription.getCurrentPeriodEnd(),
-        featureSet
+        features
     ));
-  }
-
-  private String nullToEmpty(String str) {
-    return str == null ? "" : str;
   }
 
   /**
    * Resolves the human-readable {@code planCode} from the plan catalog for the given plan ID.
-   * Uses the same lookup chain as {@link #resolveFeatureSet}: external price ID first, then plan code.
-   * Returns the raw {@code planId} as fallback so callers always have a non-null value.
+   *
+   * <p>Tries {@code external_price_id} first (Stripe price ID), then falls back to an exact
+   * {@code plan_code} match for direct assignments and non-Stripe gateways.
+   * Returns the raw {@code planId} as a last-resort fallback so callers always have a value.
    */
   private String resolvePlanCode(final String planId) {
-    if (planId == null || planId.isBlank()) {
-      return "";
-    }
-    return planMapper.findByExternalPriceId(planId)
-        .or(() -> planMapper.findByPlanCode(planId))
-        .map(Plan::getPlanCode)
-        .orElse(planId);
-  }
-
-  /**
-   * Resolves the feature set JSON from the plan catalog for the given plan ID.
-   *
-   * <p>The {@code planId} stored on a subscription is the payment gateway's price/plan reference
-   * (e.g. a Stripe price ID like {@code price_1Abc...}). The lookup therefore first tries to match
-   * by {@code external_price_id}, then falls back to an exact {@code plan_code} match (which covers
-   * direct assignments and non-Stripe gateways). Returns {@code null} if no match is found.
-   */
-  private String resolveFeatureSet(final String planId) {
     if (planId == null || planId.isBlank()) {
       return null;
     }
     return planMapper.findByExternalPriceId(planId)
         .or(() -> planMapper.findByPlanCode(planId))
         .map(plan -> {
-          log.debug("Resolved feature set for planId={} planCode={}", planId, plan.getPlanCode());
-          return plan.getFeatureSet();
+          log.debug("Resolved planCode={} for planId={}", plan.getPlanCode(), planId);
+          return plan.getPlanCode();
         })
         .orElseGet(() -> {
-          log.debug("Plan not found in catalog for planId={}, feature set will be null", planId);
-          return null;
+          log.debug("Plan not found in catalog for planId={}", planId);
+          return planId;
         });
   }
 }

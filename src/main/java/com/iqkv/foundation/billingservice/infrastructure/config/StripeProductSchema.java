@@ -20,8 +20,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+import com.iqkv.foundation.billingservice.plan.PlanFeatures;
+
 /**
- * Configuration for a single product in the Stripe catalog.
+ * Configuration for a single product in the Stripe catalog schema.
+ *
+ * <p>Bound from {@code iqkv.billing.stripe.schema.products.<key>} in YAML.
+ * {@code features} is optional — {@link PlanFeatures#NONE} is used when absent.
  */
 public record StripeProductSchema(
     @NotBlank String planCode,
@@ -29,7 +34,7 @@ public record StripeProductSchema(
     @NotBlank String billingPeriod,
     @NotNull @Positive Integer priceMinor,
     @NotBlank String currency,
-    String featureSet,
+    PlanFeatures features,
     @NotBlank String scope,
     Boolean active
 ) {

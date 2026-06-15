@@ -53,6 +53,10 @@ iqkv:
             currency: "USD"
             scope: "TENANT"
             active: true
+            features:
+              prioritySupport: false
+              maxUsers: 5
+              maxProjects: 3
           pro-monthly:
             planCode: "pro-monthly"
             displayName: "Pro Monthly"
@@ -61,3 +65,7 @@ iqkv:
             currency: "USD"
             scope: "TENANT"
             active: true
+            features:
+              prioritySupport: true
+              maxUsers: 50
+              maxProjects: 0
