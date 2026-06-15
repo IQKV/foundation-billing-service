@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
+import com.iqkv.foundation.billingservice.plan.Plan;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +63,9 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
 
     final Subscription subscription = activeSubscription.get();
     final String featureSet = resolveFeatureSet(subscription.getPlanId());
+    final String planCode = resolvePlanCode(subscription.getPlanId());
 
-    meterRegistry.counter("billing_entitlements_check_total", "result", "allowed", "plan_id", nullToEmpty(subscription.getPlanId())).increment();
+    meterRegistry.counter("billing_entitlements_check_total", "result", "allowed", "plan_code", nullToEmpty(planCode)).increment();
 
     return Optional.of(new EntitlementDetails(
         subject,
@@ -79,16 +81,36 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
   }
 
   /**
+   * Resolves the human-readable {@code planCode} from the plan catalog for the given plan ID.
+   * Uses the same lookup chain as {@link #resolveFeatureSet}: external price ID first, then plan code.
+   * Returns the raw {@code planId} as fallback so callers always have a non-null value.
+   */
+  private String resolvePlanCode(final String planId) {
+    if (planId == null || planId.isBlank()) {
+      return "";
+    }
+    return planMapper.findByExternalPriceId(planId)
+        .or(() -> planMapper.findByPlanCode(planId))
+        .map(Plan::getPlanCode)
+        .orElse(planId);
+  }
+
+  /**
    * Resolves the feature set JSON from the plan catalog for the given plan ID.
-   * Returns null if the plan is not found in the catalog (e.g. legacy or external plan).
+   *
+   * <p>The {@code planId} stored on a subscription is the payment gateway's price/plan reference
+   * (e.g. a Stripe price ID like {@code price_1Abc...}). The lookup therefore first tries to match
+   * by {@code external_price_id}, then falls back to an exact {@code plan_code} match (which covers
+   * direct assignments and non-Stripe gateways). Returns {@code null} if no match is found.
    */
   private String resolveFeatureSet(final String planId) {
     if (planId == null || planId.isBlank()) {
       return null;
     }
-    return planMapper.findByPlanCode(planId)
+    return planMapper.findByExternalPriceId(planId)
+        .or(() -> planMapper.findByPlanCode(planId))
         .map(plan -> {
-          log.debug("Resolved feature set for planCode={}", planId);
+          log.debug("Resolved feature set for planId={} planCode={}", planId, plan.getPlanCode());
           return plan.getFeatureSet();
         })
         .orElseGet(() -> {

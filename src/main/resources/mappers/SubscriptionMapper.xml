@@ -99,7 +99,8 @@
         FROM subscriptions
         WHERE subject_type = #{subjectType}
         AND subject_key = #{subjectKey}
-        AND status = 'ACTIVE'
+        AND LOWER(status) IN ('active', 'trialing', 'past_due')
+        ORDER BY current_period_end DESC
         LIMIT 1
     </select>
 

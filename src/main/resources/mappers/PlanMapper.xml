@@ -34,6 +34,13 @@
         WHERE plan_code = #{planCode}
     </select>
 
+    <select id="findByExternalPriceId" resultMap="planResultMap">
+        SELECT id, plan_code, display_name, billing_period, price_minor, currency,
+        feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at
+        FROM plan_catalog
+        WHERE external_price_id = #{externalPriceId}
+    </select>
+
     <select id="findAllActive" resultMap="planResultMap">
         SELECT id, plan_code, display_name, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at

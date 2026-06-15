@@ -37,6 +37,12 @@ public interface PlanMapper {
   Optional<Plan> findByPlanCode(String planCode);
 
   /**
+   * Returns the plan whose {@code external_price_id} matches the given value, or empty if not found.
+   * Used to resolve a Stripe price ID back to the internal plan catalog entry.
+   */
+  Optional<Plan> findByExternalPriceId(String externalPriceId);
+
+  /**
    * Returns all active plans ({@code active = true}), ordered by {@code plan_code ASC}.
    */
   List<Plan> findAllActive();
