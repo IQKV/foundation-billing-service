@@ -8,7 +8,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 
 - **Automatic customer provisioning** — listens for `tenant.created` and `tenant.provisioned` events on RabbitMQ and creates a payment gateway customer per tenant; the `external_customer_id` is stored in `billing_settings`
 - **Multi-gateway strategy** — `PaymentGatewayPort` interface (Strategy pattern + Hexagonal Architecture) decouples business logic from gateway SDKs; Stripe is the active implementation, additional gateways are reserved
-- **Plan catalog** — platfom admin-managed plan definitions scoped to `MULTI_TENANT` or `SINGLE_TENANT` mode; `PlanEligibilityPolicy` validates scope against active rollout mode
+- **Plan catalog** — platform admin-managed plan definitions with typed `PlanFeatures` (scoped to `MULTI_TENANT` or `SINGLE_TENANT` mode); plan features (`prioritySupport`, `maxUsers`, `maxProjects`) are defined in YAML, serialized to DB on startup, and served via an internal endpoint for gateway and downstream service caching; `PlanEligibilityPolicy` validates scope against active rollout mode
 - **Billing settings** — each tenant has a 1:1 `billing_settings` record that is the single source of truth for payment gateway customer metadata; decoupled from IAM users by design
 - **Billing email** — a separate `billing_email` field allows finance teams to receive invoices without a system account
 - **Tax ID / VAT/GST** — stored in `billing_settings` for compliant B2B invoices
@@ -99,9 +99,25 @@ Base path: `/api/v1/billing`
 | `GET`    | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive)             |
 | `GET`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                            |
 | `POST`   | `/admin/plans`            | JWT `PLATFORM_ADMIN` | Create a plan                                   |
-| `PUT`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan                                  |
+| `PUT`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan (full update)                    |
 | `PATCH`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Partially update a plan                         |
 | `DELETE` | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Deactivate a plan (soft-delete, `active=false`) |
+
+### Entitlements — `/api/v1/billing/entitlements`
+
+| Method | Path               | Auth                                        | Description                                                              |
+| ------ | ------------------ | ------------------------------------------- | ------------------------------------------------------------------------ |
+| `GET`  | `/entitlements/me` | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Active plan, subscription status, and typed features for current subject |
+
+Returns `404` when no active subscription exists. Resolves subject by rollout mode.
+
+### Plan Catalog (internal) — `/api/v1/billing/internal/plans`
+
+| Method | Path              | Auth                   | Description                                                            |
+| ------ | ----------------- | ---------------------- | ---------------------------------------------------------------------- |
+| `GET`  | `/internal/plans` | JWT `PLATFORM_SERVICE` | Full plan feature catalog — used by gateway/service `PlanCatalogCache` |
+
+Not exposed via a public gateway route. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
 
 ### Webhooks — `/api/v1/billing/webhooks`
 
@@ -308,7 +324,7 @@ Please read our [Contributing Guidelines](.github/CONTRIBUTING.md) and [Code of 
 - **Platform rollout mode**: Controlled via `ROLLOUT_MODE` (`MULTI_TENANT` | `SINGLE_TENANT`); must be identical across IAM, Billing, and Gateway; `SubscriptionSubjectResolver` selects `TENANT` or `USER` subject scope based on active mode; service fails readiness on invalid/missing mode
 - **Single-tenant mode**: `UserBillingSettingsServiceImpl` handles per-user billing settings; `SingleTenantSubscriptionSubjectResolver` scopes subscriptions to `subject_type=USER`; `BillingContactResolver` uses `DEFAULT_BILLING_EMAIL` fallback when `ownerEmail` is absent
 - **Payment gateway abstraction**: Strategy pattern via `PaymentGatewayPort` — `createCustomer()` and `verifyAndParseWebhookEvent()` are the two gateway operations; `StripeGatewayAdapter` is the sole Stripe SDK consumer; `WebhookProcessingService` operates entirely on gateway-agnostic `GatewayWebhookEvent` sealed types; active gateway selected via `PAYMENT_GATEWAY_TYPE` env var
-- **Plan catalog**: Admin-managed only (`plan_catalog` table, `PLATFORM_ADMIN` authority required); no end-user plan CRUD; `PlanEligibilityPolicy` validates plan scope against active rollout mode; deactivation is a soft-delete
+- **Plan catalog**: Admin-managed only (`plan_catalog` table, `PLATFORM_ADMIN` authority required); no end-user plan CRUD; plan features (`prioritySupport`, `maxUsers`, `maxProjects`) are defined in YAML and bound to the typed `PlanFeatures` record; `BillingSeedRunner` serializes features to the `feature_set` column on startup; `PlanFeatureRegistry` holds an in-memory `planCode → PlanFeatures` map used for entitlement evaluation and the internal plans endpoint; `PlanEligibilityPolicy` validates plan scope against active rollout mode; deactivation is a soft-delete
 - **Observability**: Micrometer + Prometheus; structured JSON logging with Logstash encoder; health probes for Kubernetes
 - **GitHub Integration**: Issue templates, labels, Dependabot, and CI workflows
 - **Quality Tools**: Checkstyle, JaCoCo (90% gate), ArchUnit, commit convention enforcement

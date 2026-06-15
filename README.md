@@ -24,6 +24,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 - **Webhook processing** — payment gateway webhooks are ingested and processed idempotently; duplicate delivery is safe
 - **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, `invoice.created`, `invoice.finalized`, `invoice.updated`, `payment.failed`, and `refund.created` to the platform event bus
 - **Multi-gateway strategy** — `PaymentGatewayPort` interface decouples business logic from gateway SDKs; Stripe is the active implementation
+- **Plan catalog** — platform admin-managed plan definitions with typed `PlanFeatures` (`prioritySupport`, `maxUsers`, `maxProjects`) defined in YAML; `PlanFeatureRegistry` serves an in-memory feature map for entitlement evaluation and the internal plans endpoint
 - **Observability** — instrumented with Micrometer for Prometheus metrics; includes a custom Grafana dashboard for business KPIs (revenue, subscriptions, webhook health)
 
 ## Quick Links
@@ -99,14 +100,30 @@ Base path: `/api/v1/billing`
 
 ### Plan Catalog (platform admin)
 
-| Method   | Path                 | Auth                 | Description                            |
-| -------- | -------------------- | -------------------- | -------------------------------------- |
-| `GET`    | `/admin/plans`       | JWT `PLATFORM_ADMIN` | List all plans (paginated, filterable) |
-| `GET`    | `/admin/plans/count` | JWT `PLATFORM_ADMIN` | Total plans count                      |
-| `GET`    | `/admin/plans/{id}`  | JWT `PLATFORM_ADMIN` | Get plan by ID                         |
-| `POST`   | `/admin/plans`       | JWT `PLATFORM_ADMIN` | Create new plan                        |
-| `PATCH`  | `/admin/plans/{id}`  | JWT `PLATFORM_ADMIN` | Update plan details                    |
-| `DELETE` | `/admin/plans/{id}`  | JWT `PLATFORM_ADMIN` | Delete plan                            |
+| Method   | Path                      | Auth                 | Description                                     |
+| -------- | ------------------------- | -------------------- | ----------------------------------------------- |
+| `GET`    | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive)             |
+| `GET`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                            |
+| `POST`   | `/admin/plans`            | JWT `PLATFORM_ADMIN` | Create a plan                                   |
+| `PUT`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan (full update)                    |
+| `PATCH`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Partially update a plan                         |
+| `DELETE` | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Deactivate a plan (soft-delete, `active=false`) |
+
+### Entitlements
+
+| Method | Path               | Auth                           | Description                                                              |
+| ------ | ------------------ | ------------------------------ | ------------------------------------------------------------------------ |
+| `GET`  | `/entitlements/me` | JWT `TENANT_OWNER` or `MEMBER` | Active plan, subscription status, and typed features for current subject |
+
+Returns `404` when no active subscription exists. Resolves subject by rollout mode (tenant in multi-tenant, user in single-tenant).
+
+### Plan Catalog (internal service-to-service)
+
+| Method | Path              | Auth                   | Description                                                            |
+| ------ | ----------------- | ---------------------- | ---------------------------------------------------------------------- |
+| `GET`  | `/internal/plans` | JWT `PLATFORM_SERVICE` | Full plan feature catalog — used by gateway/service `PlanCatalogCache` |
+
+Not exposed via a public gateway route. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
 
 ## Events & Messaging
 
@@ -277,11 +294,14 @@ src/main/java/com/iqkv/foundation/billingservice/
 │   ├── event/          # Gateway-agnostic webhook event models
 │   ├── command/        # Gateway-agnostic command models
 │   └── adapter/stripe/ # Stripe implementation of PaymentGatewayPort
-├── settings/           # Billing settings — customer metadata, tax IDs, billing email
-├── webhook/            # Webhook ingestion and idempotent gateway-agnostic processing
-├── subscription/       # Subscription lifecycle — event publishing on status changes
-├── infrastructure/     # Spring config, security, MyBatis, RabbitMQ setup
-└── shared/             # Common exceptions, utilities, value objects
+├── plan/               # Plan catalog — CRUD, typed PlanFeatures, PlanFeatureRegistry, eligibility policy
+├── subscription/       # Subscription cache, subject resolution, entitlement evaluation, entitlements endpoint
+├── settings/           # Tenant billing settings (contact email, tax ID, external customer ID)
+├── userbilling/        # Per-user billing settings (single-tenant mode)
+├── webhook/            # Webhook ingestion, idempotent gateway-agnostic processing, event log
+├── tenancy/            # Tenant context extraction from X-Tenant-ID header
+├── shared/             # Common exceptions, utilities
+└── infrastructure/     # Spring config, security, MyBatis, RabbitMQ setup
 ```
 
 ## License

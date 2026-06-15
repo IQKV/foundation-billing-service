@@ -109,20 +109,38 @@ The `{tenantKey}` is validated against the authenticated tenant's JWT `tenant_id
 | `GET`  | `/plans`            | JWT (any authenticated) | List all active plans |
 | `GET`  | `/plans/{planCode}` | JWT (any authenticated) | Get plan by planCode  |
 
----
-
 ### Plan Catalog (platform admin)
 
-| Method   | Path                      | Auth                 | Description                         |
-| -------- | ------------------------- | -------------------- | ----------------------------------- |
-| `GET`    | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive) |
-| `GET`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                |
-| `POST`   | `/admin/plans`            | JWT `PLATFORM_ADMIN` | Create a new plan                   |
-| `PUT`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan (full update)        |
-| `PATCH`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Partially update a plan             |
-| `DELETE` | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Deactivate a plan (soft-delete)     |
+| Method   | Path                      | Auth                 | Description                                     |
+| -------- | ------------------------- | -------------------- | ----------------------------------------------- |
+| `GET`    | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive)             |
+| `GET`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                            |
+| `POST`   | `/admin/plans`            | JWT `PLATFORM_ADMIN` | Create a plan                                   |
+| `PUT`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan (full update)                    |
+| `PATCH`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Partially update a plan                         |
+| `DELETE` | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Deactivate a plan (soft-delete, `active=false`) |
 
 `DELETE` performs a soft-delete by setting `active = false`. The row is retained for historical reference.
+
+---
+
+### Entitlements
+
+| Method | Path               | Auth                           | Description                                                              |
+| ------ | ------------------ | ------------------------------ | ------------------------------------------------------------------------ |
+| `GET`  | `/entitlements/me` | JWT `TENANT_OWNER` or `MEMBER` | Active plan, subscription status, and typed features for current subject |
+
+Returns `404` when no active subscription exists. Resolves subject by rollout mode (tenant in multi-tenant, user in single-tenant).
+
+---
+
+### Plan Catalog (internal service-to-service)
+
+| Method | Path              | Auth                   | Description                                              |
+| ------ | ----------------- | ---------------------- | -------------------------------------------------------- |
+| `GET`  | `/internal/plans` | JWT `PLATFORM_SERVICE` | Full plan feature catalog for gateway and service caches |
+
+Not exposed via a public gateway route. Used by the gateway and downstream services to populate their local `PlanCatalogCache` at startup and on periodic refresh. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
 
 ---
 
