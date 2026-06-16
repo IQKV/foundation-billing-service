@@ -130,12 +130,12 @@ class SubscriptionDtosTest {
   void shouldCreateCheckoutSessionRequest() {
     // Arrange & Act
     final var request = new SubscriptionDtos.CreateCheckoutSessionRequest(
-        "price_123", "https://example.com/success", "https://example.com/cancel",
+        "plan-free", "https://example.com/success", "https://example.com/cancel",
         14, 2L, true
     );
 
     // Assert
-    assertThat(request.priceId()).isEqualTo("price_123");
+    assertThat(request.planCode()).isEqualTo("plan-free");
     assertThat(request.successUrl()).isEqualTo("https://example.com/success");
     assertThat(request.cancelUrl()).isEqualTo("https://example.com/cancel");
     assertThat(request.trialPeriodDays()).isEqualTo(14);
@@ -158,11 +158,11 @@ class SubscriptionDtosTest {
   void shouldCreateUpdateSubscriptionRequest() {
     // Arrange & Act
     final var request = new SubscriptionDtos.UpdateSubscriptionRequest(
-        "price_456", 5L, "always_invoice"
+        "plan-pro", 5L, "always_invoice"
     );
 
     // Assert
-    assertThat(request.priceId()).isEqualTo("price_456");
+    assertThat(request.planCode()).isEqualTo("plan-pro");
     assertThat(request.quantity()).isEqualTo(5L);
     assertThat(request.prorationBehavior()).isEqualTo("always_invoice");
   }

@@ -30,6 +30,7 @@ import java.util.UUID;
 import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.settings.BillingSettings;
@@ -63,6 +64,9 @@ class SubscriptionServiceTest {
   @Mock
   private BillingSettingsMapper billingSettingsMapper;
 
+  @Mock
+  private PlanMapper planMapper;
+
   private MeterRegistry meterRegistry;
 
   private SubscriptionService subscriptionService;
@@ -76,6 +80,7 @@ class SubscriptionServiceTest {
         subjectResolver,
         paymentGatewayPort,
         billingSettingsMapper,
+        planMapper,
         meterRegistry
     );
   }
@@ -204,7 +209,7 @@ class SubscriptionServiceTest {
     final String externalSubId = "sub_abc";
     final var subscription = createSubscription(tenantKey, "active");
     subscription.setExternalSubscriptionId(externalSubId);
-    final var request = new SubscriptionDtos.UpdateSubscriptionRequest("price_456", 2L, "always_invoice");
+    final var request = new SubscriptionDtos.UpdateSubscriptionRequest("plan-pro", 2L, "always_invoice");
 
     when(subscriptionMapper.findByExternalSubscriptionId(externalSubId)).thenReturn(Optional.of(subscription));
 
@@ -224,7 +229,7 @@ class SubscriptionServiceTest {
     final String externalSubId = "sub_abc";
     final var subscription = createSubscription("other-tenant", "active");
     subscription.setExternalSubscriptionId(externalSubId);
-    final var request = new SubscriptionDtos.UpdateSubscriptionRequest("price_456", 2L, "always_invoice");
+    final var request = new SubscriptionDtos.UpdateSubscriptionRequest("plan-pro", 2L, "always_invoice");
 
     when(subscriptionMapper.findByExternalSubscriptionId(externalSubId)).thenReturn(Optional.of(subscription));
 
