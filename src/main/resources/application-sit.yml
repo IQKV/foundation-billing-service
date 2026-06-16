@@ -30,3 +30,31 @@ iqkv:
   mail:
     host: ${MAIL_HOST:mailhog}
     port: ${MAIL_PORT:1025}
+  billing:
+    stripe:
+      schema:
+        products:
+          basic-monthly:
+            planCode: "basic-monthly"
+            displayName: "Basic Monthly (SIT)"
+            billingPeriod: "MONTHLY"
+            priceMinor: 500
+            currency: "USD"
+            scope: "TENANT"
+            active: true
+            features:
+              prioritySupport: false
+              maxUsers: 5
+              maxProjects: 3
+          pro-monthly:
+            planCode: "pro-monthly"
+            displayName: "Pro Monthly (SIT)"
+            billingPeriod: "MONTHLY"
+            priceMinor: 1500
+            currency: "USD"
+            scope: "TENANT"
+            active: true
+            features:
+              prioritySupport: true
+              maxUsers: 50
+              maxProjects: 0
