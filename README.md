@@ -24,7 +24,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 - **Webhook processing** — payment gateway webhooks are ingested and processed idempotently; duplicate delivery is safe
 - **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, `invoice.created`, `invoice.finalized`, `invoice.updated`, `payment.failed`, and `refund.created` to the platform event bus
 - **Multi-gateway strategy** — `PaymentGatewayPort` interface decouples business logic from gateway SDKs; Stripe is the active implementation
-- **Plan catalog** — platform admin-managed plan definitions with typed `PlanFeatures` (`prioritySupport`, `maxUsers`, `maxProjects`) defined in YAML; `PlanFeatureRegistry` serves an in-memory feature map for entitlement evaluation and the internal plans endpoint
+- **Plan catalog** — platform admin-managed plan definitions with typed `PlanFeatures` (`prioritySupport`, `maxUsers`, `maxProjects`) defined in YAML configuration; `PlanFeatureRegistry` serves an in-memory feature map loaded at startup for zero-latency entitlement evaluation and the internal plans endpoint; features are the single source of truth for platform-wide access control
 - **Observability** — instrumented with Micrometer for Prometheus metrics; includes a custom Grafana dashboard for business KPIs (revenue, subscriptions, webhook health)
 
 ## Quick Links
@@ -115,15 +115,29 @@ Base path: `/api/v1/billing`
 | ------ | ------------------ | ------------------------------ | ------------------------------------------------------------------------ |
 | `GET`  | `/entitlements/me` | JWT `TENANT_OWNER` or `MEMBER` | Active plan, subscription status, and typed features for current subject |
 
-Returns `404` when no active subscription exists. Resolves subject by rollout mode (tenant in multi-tenant, user in single-tenant).
+**Entitlement evaluation is tightly coupled with plan features** — the response includes the complete `PlanFeatures` record for the tenant's active plan, enabling fine-grained access control decisions in client applications. Returns `404` when no active subscription exists. Resolves subject by rollout mode (tenant in multi-tenant, user in single-tenant).
+
+**Example Response:**
+```json
+{
+  "planCode": "pro-monthly",
+  "status": "active",
+  "currentPeriodEnd": "2026-07-15T00:00:00Z",
+  "features": {
+    "prioritySupport": true,
+    "maxUsers": 50,
+    "maxProjects": 0
+  }
+}
+```
 
 ### Plan Catalog (internal service-to-service)
 
-| Method | Path              | Auth                   | Description                                                            |
-| ------ | ----------------- | ---------------------- | ---------------------------------------------------------------------- |
-| `GET`  | `/internal/plans` | JWT `PLATFORM_SERVICE` | Full plan feature catalog — used by gateway/service `PlanCatalogCache` |
+| Method | Path              | Auth | Description                                                            |
+| ------ | ----------------- | ---- | ---------------------------------------------------------------------- |
+| `GET`  | `/internal/plans` | None | Full plan feature catalog — used by gateway/service `PlanCatalogCache` |
 
-Not exposed via a public gateway route. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
+**Public within internal network** — no authentication required since the response contains only non-sensitive plan feature data (same as any public pricing page). Not exposed via a public gateway route. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
 
 ## Events & Messaging
 
