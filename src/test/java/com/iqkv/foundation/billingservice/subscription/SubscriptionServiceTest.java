@@ -211,13 +211,19 @@ class SubscriptionServiceTest {
     subscription.setExternalSubscriptionId(externalSubId);
     final var request = new SubscriptionDtos.UpdateSubscriptionRequest("plan-pro", 2L, "always_invoice");
 
+    final com.iqkv.foundation.billingservice.plan.Plan plan = new com.iqkv.foundation.billingservice.plan.Plan();
+    plan.setPlanCode("plan-pro");
+    plan.setExternalPriceId("price_456");
+
     when(subscriptionMapper.findByExternalSubscriptionId(externalSubId)).thenReturn(Optional.of(subscription));
+    when(planMapper.findByPlanCode("plan-pro")).thenReturn(Optional.of(plan));
 
     // Act
     subscriptionService.updateSubscription(tenantKey, externalSubId, request);
 
     // Assert
     verify(subscriptionMapper).findByExternalSubscriptionId(externalSubId);
+    verify(planMapper).findByPlanCode("plan-pro");
     verify(paymentGatewayPort).updateSubscription(any(UpdateSubscriptionCommand.class));
   }
 
@@ -231,7 +237,12 @@ class SubscriptionServiceTest {
     subscription.setExternalSubscriptionId(externalSubId);
     final var request = new SubscriptionDtos.UpdateSubscriptionRequest("plan-pro", 2L, "always_invoice");
 
+    final com.iqkv.foundation.billingservice.plan.Plan plan = new com.iqkv.foundation.billingservice.plan.Plan();
+    plan.setPlanCode("plan-pro");
+    plan.setExternalPriceId("price_456");
+
     when(subscriptionMapper.findByExternalSubscriptionId(externalSubId)).thenReturn(Optional.of(subscription));
+    when(planMapper.findByPlanCode("plan-pro")).thenReturn(Optional.of(plan));
 
     // Act & Assert
     assertThatThrownBy(() -> subscriptionService.updateSubscription(tenantKey, externalSubId, request))
