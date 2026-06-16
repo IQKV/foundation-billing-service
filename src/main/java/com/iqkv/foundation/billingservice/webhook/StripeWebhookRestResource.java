@@ -42,6 +42,19 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Always returns HTTP 200 after the idempotency check to prevent Stripe from
  * retrying on business logic failures.
+ *
+ * <p><b>Required Stripe webhook events:</b>
+ * <ul>
+ *   <li>{@code customer.subscription.created}</li>
+ *   <li>{@code customer.subscription.updated}</li>
+ *   <li>{@code customer.subscription.deleted}</li>
+ *   <li>{@code invoice.created}</li>
+ *   <li>{@code invoice.finalized}</li>
+ *   <li>{@code invoice.updated}</li>
+ *   <li>{@code invoice.payment_succeeded}</li>
+ *   <li>{@code invoice.payment_failed}</li>
+ *   <li>{@code charge.refunded}</li>
+ * </ul>
  */
 @RestController
 @RequestMapping("/api/v1/billing/webhooks")
