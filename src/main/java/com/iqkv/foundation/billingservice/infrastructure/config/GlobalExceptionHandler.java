@@ -38,9 +38,15 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -165,6 +171,60 @@ public class GlobalExceptionHandler {
     final ProblemDetail pd = problem("about:blank", "Service Unavailable", 503,
         ex.getMessage(), request);
     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(pd);
+  }
+
+  @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+  public ResponseEntity<ProblemDetail> handleMethodNotSupported(final HttpRequestMethodNotSupportedException ex,
+                                                                final HttpServletRequest request) {
+    log.warn("Method not supported: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Method Not Allowed", 405,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(pd);
+  }
+
+  @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+  public ResponseEntity<ProblemDetail> handleMediaTypeNotSupported(final HttpMediaTypeNotSupportedException ex,
+                                                                   final HttpServletRequest request) {
+    log.warn("Media type not supported: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Unsupported Media Type", 415,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(pd);
+  }
+
+  @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+  public ResponseEntity<ProblemDetail> handleMediaTypeNotAcceptable(final HttpMediaTypeNotAcceptableException ex,
+                                                                    final HttpServletRequest request) {
+    log.warn("Media type not acceptable: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Not Acceptable", 406,
+        ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(pd);
+  }
+
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ResponseEntity<ProblemDetail> handleMissingParameter(final MissingServletRequestParameterException ex,
+                                                              final HttpServletRequest request) {
+    log.warn("Missing parameter: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Bad Request", 400,
+        ex.getMessage(), request);
+    return ResponseEntity.badRequest().body(pd);
+  }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ProblemDetail> handleTypeMismatch(final MethodArgumentTypeMismatchException ex,
+                                                          final HttpServletRequest request) {
+    log.warn("Type mismatch: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Bad Request", 400,
+        ex.getMessage(), request);
+    return ResponseEntity.badRequest().body(pd);
+  }
+
+  @ExceptionHandler(NoHandlerFoundException.class)
+  public ResponseEntity<ProblemDetail> handleNoHandlerFound(final NoHandlerFoundException ex,
+                                                            final HttpServletRequest request) {
+    log.warn("No handler found: {}", ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Not Found", 404,
+        "No resource found at " + request.getRequestURI(), request);
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(pd);
   }
 
   @ExceptionHandler(Exception.class)
