@@ -24,8 +24,10 @@ import com.iqkv.foundation.billingservice.gateway.command.CreateRefundCommand;
 import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
+import com.iqkv.foundation.billingservice.plan.Plan;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -48,6 +50,7 @@ public class SubscriptionService {
   private final SubscriptionSubjectResolver subjectResolver;
   private final PaymentGatewayPort paymentGatewayPort;
   private final BillingSettingsMapper billingSettingsMapper;
+  private final PlanMapper planMapper;
   private final MeterRegistry meterRegistry;
 
   public SubscriptionService(final SubscriptionMapper subscriptionMapper,
@@ -55,12 +58,14 @@ public class SubscriptionService {
                              final SubscriptionSubjectResolver subjectResolver,
                              final PaymentGatewayPort paymentGatewayPort,
                              final BillingSettingsMapper billingSettingsMapper,
+                             final PlanMapper planMapper,
                              final MeterRegistry meterRegistry) {
     this.subscriptionMapper = subscriptionMapper;
     this.refundMapper = refundMapper;
     this.subjectResolver = subjectResolver;
     this.paymentGatewayPort = paymentGatewayPort;
     this.billingSettingsMapper = billingSettingsMapper;
+    this.planMapper = planMapper;
     this.meterRegistry = meterRegistry;
   }
 
@@ -123,9 +128,16 @@ public class SubscriptionService {
       throw new IllegalStateException("External customer ID not found for tenant: " + tenantKey);
     }
 
+    final Plan plan = planMapper.findByPlanCode(request.planCode())
+        .orElseThrow(() -> new ResourceNotFoundException("Plan not found for planCode: " + request.planCode()));
+
+    if (plan.getExternalPriceId() == null) {
+      throw new IllegalStateException("Plan " + request.planCode() + " has no externalPriceId (not synced with payment gateway yet)");
+    }
+
     final var command = new CreateCheckoutSessionCommand(
         settings.getExternalCustomerId(),
-        request.priceId(),
+        plan.getExternalPriceId(),
         request.successUrl(),
         request.cancelUrl(),
         request.trialPeriodDays(),
@@ -135,7 +147,7 @@ public class SubscriptionService {
     );
 
     final String url = paymentGatewayPort.createCheckoutSession(command);
-    meterRegistry.counter("billing_checkout_sessions_total", "plan_id", request.priceId()).increment();
+    meterRegistry.counter("billing_checkout_sessions_total", "plan_id", request.planCode()).increment();
     return new SubscriptionDtos.CheckoutSessionResponse(url);
   }
 
@@ -153,16 +165,26 @@ public class SubscriptionService {
       throw new TenantContextMismatchException("Subscription " + externalSubscriptionId + " does not belong to tenant " + tenantKey);
     }
 
+    String priceId = null;
+    if (request.planCode() != null) {
+      final Plan plan = planMapper.findByPlanCode(request.planCode())
+          .orElseThrow(() -> new ResourceNotFoundException("Plan not found for planCode: " + request.planCode()));
+      if (plan.getExternalPriceId() == null) {
+        throw new IllegalStateException("Plan " + request.planCode() + " has no externalPriceId (not synced with payment gateway yet)");
+      }
+      priceId = plan.getExternalPriceId();
+    }
+
     final var command = new UpdateSubscriptionCommand(
         externalSubscriptionId,
-        request.priceId(),
+        priceId,
         request.quantity(),
         request.prorationBehavior(),
         java.util.Map.of()
     );
 
     paymentGatewayPort.updateSubscription(command);
-    meterRegistry.counter("billing_subscription_updates_total", "plan_id", request.priceId()).increment();
+    meterRegistry.counter("billing_subscription_updates_total", "plan_id", request.planCode()).increment();
   }
 
   /**

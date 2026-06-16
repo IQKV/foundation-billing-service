@@ -54,7 +54,7 @@ public final class SubscriptionDtos {
    * Request body for creating a checkout session.
    */
   public record CreateCheckoutSessionRequest(
-      String priceId,
+      String planCode,
       String successUrl,
       String cancelUrl,
       Integer trialPeriodDays,
@@ -73,7 +73,7 @@ public final class SubscriptionDtos {
    * Request body for updating a subscription.
    */
   public record UpdateSubscriptionRequest(
-      String priceId,
+      String planCode,
       Long quantity,
       String prorationBehavior
   ) {
