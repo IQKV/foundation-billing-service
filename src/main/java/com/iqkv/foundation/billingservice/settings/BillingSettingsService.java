@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
@@ -133,7 +134,7 @@ public class BillingSettingsService {
 
   /**
    * Creates billing settings initiated by the tenant owner themselves.
-   * Does not set {@code externalCustomerId} — that is provisioned by the platform operator.
+   * Also creates a corresponding Stripe customer if one doesn't exist yet.
    *
    * @throws TenantContextMismatchException if the authenticated tenant does not match the path
    * @throws DuplicateResourceException     if settings already exist for {@code tenantKey}
@@ -148,10 +149,18 @@ public class BillingSettingsService {
     if (billingSettingsMapper.existsByTenantKey(tenantKey)) {
       throw new DuplicateResourceException("Billing settings already exist for tenantKey=" + tenantKey);
     }
+
+    final String externalCustomerId = paymentGatewayPort.createCustomer(
+        new CreateCustomerCommand(
+            request.companyName() != null ? request.companyName() : tenantKey,
+            request.billingEmail(),
+            Map.of("tenantKey", tenantKey)));
+
     final var now = LocalDateTime.now();
     final var settings = new BillingSettings();
     settings.setId(UUID.randomUUID());
     settings.setTenantKey(tenantKey);
+    settings.setExternalCustomerId(externalCustomerId);
     settings.setBillingEmail(request.billingEmail());
     settings.setCompanyName(request.companyName());
     settings.setBillingAddress(request.billingAddress());
