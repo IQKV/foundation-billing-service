@@ -18,7 +18,7 @@ YAML Config → PlanFeatureRegistry → /internal/plans → Gateway/Services →
 ```
 
 1. **Plan Definition**: Features defined in `application-prd.yml` as typed `PlanFeatures` records
-2. **In-Memory Registry**: `PlanFeatureRegistry` loads features at startup for zero-latency lookups  
+2. **In-Memory Registry**: `PlanFeatureRegistry` loads features at startup for zero-latency lookups
 3. **Internal API**: `/internal/plans` serves feature catalog to gateway and downstream services
 4. **Distributed Caching**: Each service maintains local `PlanCatalogCache` with 10-minute refresh
 5. **Enforcement**: Gateway enforces boolean features; services enforce quotas at write operations
@@ -31,7 +31,7 @@ YAML Config → PlanFeatureRegistry → /internal/plans → Gateway/Services →
 
 ### Integration Points
 
-- **`GET /entitlements/me`**: Client applications get current plan features  
+- **`GET /entitlements/me`**: Client applications get current plan features
 - **`GET /internal/plans`**: Gateway and services refresh their feature cache
 - **JWT `plan_code` claim**: Propagated by gateway as `X-Plan-Code` header
 
@@ -163,22 +163,24 @@ The `{tenantKey}` is validated against the authenticated tenant's JWT `tenant_id
 **Entitlement evaluation is tightly coupled with plan features** — this endpoint serves as the primary integration point between billing and platform access control. The response includes the complete `PlanFeatures` record for the tenant's active plan, enabling fine-grained access control decisions in client applications.
 
 **Response Example:**
+
 ```json
 {
-  "planCode": "pro-monthly",
-  "status": "active",
-  "currentPeriodEnd": "2026-07-15T00:00:00Z", 
-  "features": {
-    "prioritySupport": true,
-    "maxUsers": 50,
-    "maxProjects": 0
-  }
+    "planCode": "pro-monthly",
+    "status": "active",
+    "currentPeriodEnd": "2026-07-15T00:00:00Z",
+    "features": {
+        "prioritySupport": true,
+        "maxUsers": 50,
+        "maxProjects": 0
+    }
 }
 ```
 
 **Feature Types:**
+
 - **`prioritySupport`** (boolean): Access to priority support channels
-- **`maxUsers`** (integer): Maximum users allowed (0 = unlimited)  
+- **`maxUsers`** (integer): Maximum users allowed (0 = unlimited)
 - **`maxProjects`** (integer): Maximum projects allowed (0 = unlimited)
 
 Returns `404` when no active subscription exists. Resolves subject by rollout mode (tenant in multi-tenant, user in single-tenant).
@@ -194,24 +196,25 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 **Public within internal network** — no authentication required since the response contains only non-sensitive plan feature data (same as any public pricing page). Used by the gateway and downstream services to populate their local `PlanCatalogCache` at startup and on periodic refresh. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
 
 **Response Example:**
+
 ```json
 [
-  {
-    "planCode": "basic-monthly",
-    "features": {
-      "prioritySupport": false,
-      "maxUsers": 5,
-      "maxProjects": 3
+    {
+        "planCode": "basic-monthly",
+        "features": {
+            "prioritySupport": false,
+            "maxUsers": 5,
+            "maxProjects": 3
+        }
+    },
+    {
+        "planCode": "pro-monthly",
+        "features": {
+            "prioritySupport": true,
+            "maxUsers": 50,
+            "maxProjects": 0
+        }
     }
-  },
-  {
-    "planCode": "pro-monthly",
-    "features": {
-      "prioritySupport": true,
-      "maxUsers": 50,
-      "maxProjects": 0
-    }
-  }
 ]
 ```
 
@@ -219,7 +222,7 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 This endpoint is the foundation of the platform's **plan-based feature access control system**:
 
 1. **Gateway Integration**: Gateway `PlanCatalogCache` refreshes from this endpoint every 10 minutes
-2. **Downstream Services**: Each service maintains its own `PlanCatalogCache` for quota enforcement  
+2. **Downstream Services**: Each service maintains its own `PlanCatalogCache` for quota enforcement
 3. **Zero Hot-Path Calls**: All feature checks use in-memory cache, no network requests during user operations
 4. **Fail-Safe Security**: Services deny access when cache is empty or plan is unknown
 

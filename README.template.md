@@ -112,16 +112,17 @@ Base path: `/api/v1/billing`
 **Entitlement evaluation is tightly coupled with plan features** — this endpoint serves as the primary integration point between billing and platform access control. The response includes complete `PlanFeatures` data enabling downstream services to make fine-grained authorization decisions.
 
 **Response Structure:**
+
 ```json
 {
-  "planCode": "pro-monthly",
-  "status": "active", 
-  "currentPeriodEnd": "2026-07-15T00:00:00Z",
-  "features": {
-    "prioritySupport": true,
-    "maxUsers": 50,
-    "maxProjects": 0
-  }
+    "planCode": "pro-monthly",
+    "status": "active",
+    "currentPeriodEnd": "2026-07-15T00:00:00Z",
+    "features": {
+        "prioritySupport": true,
+        "maxUsers": 50,
+        "maxProjects": 0
+    }
 }
 ```
 
@@ -136,24 +137,25 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 **Public within internal network** — no authentication required since the response contains only non-sensitive plan feature data (same as any public pricing page). Not exposed via a public gateway route. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
 
 **Response Structure:**
+
 ```json
 [
-  {
-    "planCode": "basic-monthly",
-    "features": {
-      "prioritySupport": false,
-      "maxUsers": 5,
-      "maxProjects": 3
+    {
+        "planCode": "basic-monthly",
+        "features": {
+            "prioritySupport": false,
+            "maxUsers": 5,
+            "maxProjects": 3
+        }
+    },
+    {
+        "planCode": "pro-monthly",
+        "features": {
+            "prioritySupport": true,
+            "maxUsers": 50,
+            "maxProjects": 0
+        }
     }
-  },
-  {
-    "planCode": "pro-monthly", 
-    "features": {
-      "prioritySupport": true,
-      "maxUsers": 50,
-      "maxProjects": 0
-    }
-  }
 ]
 ```
 

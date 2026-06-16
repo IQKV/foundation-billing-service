@@ -118,16 +118,17 @@ Base path: `/api/v1/billing`
 **Entitlement evaluation is tightly coupled with plan features** — the response includes the complete `PlanFeatures` record for the tenant's active plan, enabling fine-grained access control decisions in client applications. Returns `404` when no active subscription exists. Resolves subject by rollout mode (tenant in multi-tenant, user in single-tenant).
 
 **Example Response:**
+
 ```json
 {
-  "planCode": "pro-monthly",
-  "status": "active",
-  "currentPeriodEnd": "2026-07-15T00:00:00Z",
-  "features": {
-    "prioritySupport": true,
-    "maxUsers": 50,
-    "maxProjects": 0
-  }
+    "planCode": "pro-monthly",
+    "status": "active",
+    "currentPeriodEnd": "2026-07-15T00:00:00Z",
+    "features": {
+        "prioritySupport": true,
+        "maxUsers": 50,
+        "maxProjects": 0
+    }
 }
 ```
 
