@@ -76,6 +76,7 @@ public class SecurityConfig {
             .requestMatchers("/swagger-ui/**").permitAll()
             .requestMatchers("/swagger-ui.html").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/v1/billing/webhooks/stripe").permitAll()
+            .requestMatchers("/api/v1/billing/internal/plans").permitAll()
             .requestMatchers("/api/v1/billing/admin/**").hasAuthority("PLATFORM_ADMIN")
             .anyRequest().authenticated()
         )

@@ -16,15 +16,14 @@
 
 package com.iqkv.foundation.billingservice.plan;
 
+import java.util.Comparator;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,14 +34,14 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Used by the gateway and downstream services to populate their local
  * {@code PlanCatalogCache} at startup and on periodic refresh. Not exposed
  * via a public gateway route — accessible only within the internal network.
+ * No authentication required: the response contains no sensitive data
+ * (plan codes and feature flags that are already publicly visible on the pricing page).
  *
  * <p>Backed entirely by the in-memory {@link PlanFeatureRegistry} — no DB reads.
  */
 @RestController
 @RequestMapping("/api/v1/billing/internal/plans")
-@Tag(name = "Plan Catalog Internal", description = "Internal service-to-service plan feature catalog — requires PLATFORM_SERVICE authority")
-@SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasAuthority('PLATFORM_SERVICE')")
+@Tag(name = "Plan Catalog Internal", description = "Internal service-to-service plan feature catalog — public within internal network")
 public class PlanInternalRestResource {
 
   /**
@@ -65,16 +64,14 @@ public class PlanInternalRestResource {
       summary = "List plan feature catalog",
       description = "Returns the full plan feature catalog as a list of planCode → features entries. "
                     + "Intended for service-to-service use by the gateway and downstream services. "
-                    + "Requires PLATFORM_SERVICE authority.")
+                    + "No authentication required — response contains only non-sensitive plan feature data.")
   @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Plan catalog returned"),
-      @ApiResponse(responseCode = "401", description = "Unauthorized"),
-      @ApiResponse(responseCode = "403", description = "Access denied — PLATFORM_SERVICE required")
+      @ApiResponse(responseCode = "200", description = "Plan catalog returned")
   })
   public ResponseEntity<List<PlanCatalogEntry>> listPlanCatalog() {
     final List<PlanCatalogEntry> entries = planFeatureRegistry.all().entrySet().stream()
         .map(e -> new PlanCatalogEntry(e.getKey(), e.getValue()))
-        .sorted(java.util.Comparator.comparing(PlanCatalogEntry::planCode))
+        .sorted(Comparator.comparing(PlanCatalogEntry::planCode))
         .toList();
     return ResponseEntity.ok(entries);
   }
