@@ -39,6 +39,34 @@ iqkv:
   stripe:
     secret-key: ${STRIPE_SECRET_KEY}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+  billing:
+    stripe:
+      schema:
+        products:
+          basic-monthly:
+            planCode: "basic-monthly"
+            displayName: "Basic Monthly (UAT)"
+            billingPeriod: "MONTHLY"
+            priceMinor: 1000
+            currency: "USD"
+            scope: "TENANT"
+            active: true
+            features:
+              prioritySupport: false
+              maxUsers: 5
+              maxProjects: 3
+          pro-monthly:
+            planCode: "pro-monthly"
+            displayName: "Pro Monthly (UAT)"
+            billingPeriod: "MONTHLY"
+            priceMinor: 3000
+            currency: "USD"
+            scope: "TENANT"
+            active: true
+            features:
+              prioritySupport: true
+              maxUsers: 50
+              maxProjects: 0
   auth:
     jwt:
       public-key-path: ${JWT_PUBLIC_KEY_PATH}
