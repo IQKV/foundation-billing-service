@@ -7,13 +7,20 @@
 
     <!--
         Demo billing seed — context: demo.
-
+        
+        !!! IMPORTANT: This seed is for LEARNING/RESEARCH PURPOSES ONLY!
+        
         Matches foundation-iam-service demo tenant and user UUIDs:
           tenant_key demo0001
           TENANT_OWNER 00000000-0000-0000-0101-000000000032  tenant.owner@demo.iqkv.com
           MEMBER       00000000-0000-0000-0101-000000000002  alice.johnson@demo.iqkv.com
 
-        Stripe-style IDs are synthetic placeholders for the local subscription cache (no real Stripe objects).
+        WARNING: Stripe-related IDs (external_customer_id, etc.) are SYNTHETIC PLACEHOLDERS!
+          - They do NOT correspond to real objects in your Stripe account
+          - Using this seed with real Stripe integration will break the flow
+          - If you want to test with real Stripe, either:
+            1. Create real test customers in Stripe and replace these values, OR
+            2. Don't use this seed at all — let tenant.created event create customers automatically!
     -->
 
     <!-- Plan catalog is now seeded from YAML configuration via BillingSeedRunner -->
