@@ -16,43 +16,7 @@
         Stripe-style IDs are synthetic placeholders for the local subscription cache (no real Stripe objects).
     -->
 
-    <changeSet id="20260513120000-demo-plan-catalog" author="iqkv" context="demo">
-        <insert tableName="plan_catalog" schemaName="public">
-            <column name="id" value="00000000-0000-0000-0b01-000000000001"/>
-            <column name="plan_code" value="DEMO_PRO_TENANT"/>
-            <column name="display_name" value="Demo Pro (Tenant)"/>
-            <column name="billing_period" value="MONTHLY"/>
-            <column name="price_minor" valueNumeric="2900"/>
-            <column name="currency" value="USD"/>
-            <column name="feature_set" value="[&quot;api&quot;,&quot;sso&quot;]"/>
-            <column name="scope" value="TENANT"/>
-            <column name="active" valueBoolean="true"/>
-            <column name="created_at" valueDate="2026-05-13T12:00:00"/>
-            <column name="updated_at" valueDate="2026-05-13T12:00:00"/>
-        </insert>
-        <insert tableName="plan_catalog" schemaName="public">
-            <column name="id" value="00000000-0000-0000-0b01-000000000002"/>
-            <column name="plan_code" value="DEMO_TEAM_TENANT"/>
-            <column name="display_name" value="Demo Team (Tenant)"/>
-            <column name="billing_period" value="MONTHLY"/>
-            <column name="price_minor" valueNumeric="9900"/>
-            <column name="currency" value="USD"/>
-            <column name="feature_set" value="[&quot;api&quot;,&quot;sso&quot;,&quot;audit&quot;]"/>
-            <column name="scope" value="TENANT"/>
-            <column name="active" valueBoolean="true"/>
-            <column name="created_at" valueDate="2026-05-13T12:00:00"/>
-            <column name="updated_at" valueDate="2026-05-13T12:00:00"/>
-        </insert>
-        <rollback>
-            <delete tableName="plan_catalog" schemaName="public">
-                <where>id IN (
-                    '00000000-0000-0000-0b01-000000000001',
-                    '00000000-0000-0000-0b01-000000000002'
-                    )
-                </where>
-            </delete>
-        </rollback>
-    </changeSet>
+    <!-- Plan catalog is now seeded from YAML configuration via BillingSeedRunner -->
 
     <changeSet id="20260513120000-demo-billing-settings" author="iqkv" context="demo">
         <insert tableName="billing_settings" schemaName="public">
