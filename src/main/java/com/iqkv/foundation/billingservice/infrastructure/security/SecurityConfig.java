@@ -77,6 +77,7 @@ public class SecurityConfig {
             .requestMatchers("/api/v1/billing/webhooks/stripe").permitAll()
             .requestMatchers("/api/v1/billing/webhooks/stripe/").permitAll()
             .requestMatchers("/api/v1/billing/internal/plans").permitAll()
+            .requestMatchers("/api/v1/billing/internal/plans/public").permitAll()
             .requestMatchers("/api/v1/billing/admin/**").hasAuthority("PLATFORM_ADMIN")
             .anyRequest().authenticated()
         )

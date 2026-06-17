@@ -19,6 +19,7 @@ package com.iqkv.foundation.billingservice.plan;
 import java.util.Comparator;
 import java.util.List;
 
+import com.iqkv.foundation.billingservice.infrastructure.config.BillingConfigurationProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -29,19 +30,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Internal service-to-service endpoint exposing the plan feature catalog.
+ * Internal service-to-service endpoint exposing the plan feature catalog, and public endpoint for pricing pages.
  *
  * <p>Used by the gateway and downstream services to populate their local
- * {@code PlanCatalogCache} at startup and on periodic refresh. Not exposed
- * via a public gateway route — accessible only within the internal network.
+ * {@code PlanCatalogCache} at startup and on periodic refresh. Also used by public pricing pages.
  * No authentication required: the response contains no sensitive data
- * (plan codes and feature flags that are already publicly visible on the pricing page).
- *
- * <p>Backed entirely by the in-memory {@link PlanFeatureRegistry} — no DB reads.
+ * (plan codes, names, descriptions, prices, and feature flags that are already publicly visible on the pricing page).
  */
 @RestController
 @RequestMapping("/api/v1/billing/internal/plans")
-@Tag(name = "Plan Catalog Internal", description = "Internal service-to-service plan feature catalog — public within internal network")
+@Tag(name = "Plan Catalog Internal", description = "Internal service-to-service plan catalog + public pricing page data — no auth required")
 public class PlanInternalRestResource {
 
   /**
@@ -53,10 +51,41 @@ public class PlanInternalRestResource {
   public record PlanCatalogEntry(String planCode, PlanFeatures features) {
   }
 
-  private final PlanFeatureRegistry planFeatureRegistry;
+  /**
+   * Response payload for a single plan with full details for pricing pages.
+   *
+   * @param planCode      unique plan identifier
+   * @param displayName   human-readable plan name
+   * @param description   plan description for checkout and pricing pages
+   * @param billingPeriod billing frequency (MONTHLY or ANNUAL)
+   * @param priceMinor    price in minor currency units (e.g. cents for USD)
+   * @param currency      ISO 4217 currency code
+   * @param features      plan features
+   * @param scope         plan scope (TENANT or USER)
+   * @param active        whether the plan is visible
+   */
+  public record PublicPlanEntry(
+      String planCode,
+      String displayName,
+      String description,
+      String billingPeriod,
+      Integer priceMinor,
+      String currency,
+      PlanFeatures features,
+      String scope,
+      Boolean active
+  ) {
+  }
 
-  public PlanInternalRestResource(final PlanFeatureRegistry planFeatureRegistry) {
+  private final PlanFeatureRegistry planFeatureRegistry;
+  private final BillingConfigurationProperties billingProps;
+
+  public PlanInternalRestResource(
+      final PlanFeatureRegistry planFeatureRegistry,
+      final BillingConfigurationProperties billingProps
+  ) {
     this.planFeatureRegistry = planFeatureRegistry;
+    this.billingProps = billingProps;
   }
 
   @GetMapping
@@ -72,6 +101,33 @@ public class PlanInternalRestResource {
     final List<PlanCatalogEntry> entries = planFeatureRegistry.all().entrySet().stream()
         .map(e -> new PlanCatalogEntry(e.getKey(), e.getValue()))
         .sorted(Comparator.comparing(PlanCatalogEntry::planCode))
+        .toList();
+    return ResponseEntity.ok(entries);
+  }
+
+  @GetMapping("/public")
+  @Operation(
+      summary = "List plans for pricing page",
+      description = "Returns all active plans with full details (names, descriptions, prices, features) for public pricing pages. "
+                    + "No authentication required — response contains only non-sensitive, public plan data.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Public plan list returned")
+  })
+  public ResponseEntity<List<PublicPlanEntry>> listPublicPlans() {
+    final List<PublicPlanEntry> entries = billingProps.stripe().schema().products().values().stream()
+        .filter(schema -> schema.active() == null || schema.active())
+        .map(schema -> new PublicPlanEntry(
+            schema.planCode(),
+            schema.displayName(),
+            schema.description(),
+            schema.billingPeriod(),
+            schema.priceMinor(),
+            schema.currency(),
+            schema.features() != null ? schema.features() : PlanFeatures.NONE,
+            schema.scope(),
+            schema.active() != null ? schema.active() : Boolean.TRUE
+        ))
+        .sorted(Comparator.comparing(PublicPlanEntry::planCode))
         .toList();
     return ResponseEntity.ok(entries);
   }
