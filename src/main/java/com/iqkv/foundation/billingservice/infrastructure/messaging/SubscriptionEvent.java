@@ -1,6 +1,25 @@
+/*
+ * Copyright 2026 IQKV Foundation Team.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.iqkv.foundation.billingservice.infrastructure.messaging;
 
 import java.time.Instant;
+
+import com.iqkv.foundation.audit.model.event.AuditActor;
+import com.iqkv.foundation.audit.model.event.AuditableEvent;
 
 /**
  * Represents subscription lifecycle events published by the Billing service.
@@ -14,7 +33,7 @@ import java.time.Instant;
  * so that IAM can cache it on the tenant and stamp it into JWT tokens without needing
  * knowledge of the billing plan catalog.
  */
-public class SubscriptionEvent {
+public class SubscriptionEvent implements AuditableEvent {
 
   public enum EventType {
     SUBSCRIPTION_CREATED,
@@ -29,11 +48,22 @@ public class SubscriptionEvent {
   private String subjectType;   // TENANT | USER
   private String subjectKey;    // tenantKey or userId depending on subjectType
   private String planCode;      // human-readable plan code (e.g. "pro-monthly"); nullable
+  private AuditActor actor;
 
   /**
    * No-args constructor for deserialization.
    */
   public SubscriptionEvent() {
+  }
+
+  @Override
+  public AuditActor getActor() {
+    return actor;
+  }
+
+  @Override
+  public void setActor(final AuditActor actor) {
+    this.actor = actor;
   }
 
   /**

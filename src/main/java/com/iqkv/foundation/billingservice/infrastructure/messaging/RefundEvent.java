@@ -18,10 +18,13 @@ package com.iqkv.foundation.billingservice.infrastructure.messaging;
 
 import java.time.Instant;
 
+import com.iqkv.foundation.audit.model.event.AuditActor;
+import com.iqkv.foundation.audit.model.event.AuditableEvent;
+
 /**
  * Represents refund events published by the Billing service.
  */
-public class RefundEvent {
+public class RefundEvent implements AuditableEvent {
 
   public enum EventType {
     REFUND_CREATED
@@ -38,8 +41,19 @@ public class RefundEvent {
   private Instant occurredAt;
   private String subjectType;
   private String subjectKey;
+  private AuditActor actor;
 
   public RefundEvent() {
+  }
+
+  @Override
+  public AuditActor getActor() {
+    return actor;
+  }
+
+  @Override
+  public void setActor(final AuditActor actor) {
+    this.actor = actor;
   }
 
   public RefundEvent(final String tenantKey, final String externalRefundId,
