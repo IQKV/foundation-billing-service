@@ -18,6 +18,7 @@ package com.iqkv.foundation.billingservice.gateway.adapter.stripe;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.iqkv.foundation.billingservice.gateway.GatewayType;
@@ -362,7 +363,7 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
           needsUpdate = true;
         }
 
-        if (!Boolean.valueOf(product.getActive()).equals(Boolean.valueOf(plan.getActive()))) {
+        if (!Objects.equals(product.getActive(), plan.getActive())) {
           productUpdateBuilder.setActive(plan.getActive());
           needsUpdate = true;
         }
