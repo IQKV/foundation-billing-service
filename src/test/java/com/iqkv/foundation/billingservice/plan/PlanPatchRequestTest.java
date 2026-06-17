@@ -30,6 +30,7 @@ class PlanPatchRequestTest {
     // Arrange & Act
     final var request = new PlanPatchRequest(
         "Updated Plan Name",
+        "Updated Plan Description",
         "ANNUAL",
         4999,
         "EUR",
@@ -42,6 +43,7 @@ class PlanPatchRequestTest {
 
     // Assert
     assertThat(request.displayName()).isEqualTo("Updated Plan Name");
+    assertThat(request.description()).isEqualTo("Updated Plan Description");
     assertThat(request.billingPeriod()).isEqualTo("ANNUAL");
     assertThat(request.priceMinor()).isEqualTo(4999);
     assertThat(request.currency()).isEqualTo("EUR");
@@ -57,11 +59,12 @@ class PlanPatchRequestTest {
   void shouldCreatePlanPatchRequestWithAllNullFields() {
     // Arrange & Act
     final var request = new PlanPatchRequest(
-        null, null, null, null, null, null, null, null, null
+        null, null, null, null, null, null, null, null, null, null
     );
 
     // Assert
     assertThat(request.displayName()).isNull();
+    assertThat(request.description()).isNull();
     assertThat(request.billingPeriod()).isNull();
     assertThat(request.priceMinor()).isNull();
     assertThat(request.currency()).isNull();
@@ -77,7 +80,7 @@ class PlanPatchRequestTest {
   void shouldCreatePlanPatchRequestWithOnlyDisplayName() {
     // Arrange & Act
     final var request = new PlanPatchRequest(
-        "Only Name Updated", null, null, null, null, null, null, null, null
+        "Only Name Updated", null, null, null, null, null, null, null, null, null
     );
 
     // Assert
@@ -91,7 +94,7 @@ class PlanPatchRequestTest {
   void shouldCreatePlanPatchRequestWithOnlyPriceChange() {
     // Arrange & Act
     final var request = new PlanPatchRequest(
-        null, null, 3999, "USD", null, null, null, null, null
+        null, null, null, 3999, "USD", null, null, null, null, null
     );
 
     // Assert
@@ -105,7 +108,7 @@ class PlanPatchRequestTest {
   void shouldCreatePlanPatchRequestToToggleActiveStatus() {
     // Arrange & Act
     final var request = new PlanPatchRequest(
-        null, null, null, null, null, null, null, null, true
+        null, null, null, null, null, null, null, null, null, true
     );
 
     // Assert
@@ -117,10 +120,10 @@ class PlanPatchRequestTest {
   void shouldSupportRecordEquality() {
     // Arrange
     final var request1 = new PlanPatchRequest(
-        "Plan Name", "MONTHLY", 1999, "USD", null, "TENANT", null, null, true
+        "Plan Name", null, "MONTHLY", 1999, "USD", null, "TENANT", null, null, true
     );
     final var request2 = new PlanPatchRequest(
-        "Plan Name", "MONTHLY", 1999, "USD", null, "TENANT", null, null, true
+        "Plan Name", null, "MONTHLY", 1999, "USD", null, "TENANT", null, null, true
     );
 
     // Assert
@@ -133,7 +136,7 @@ class PlanPatchRequestTest {
   void shouldHaveMeaningfulToString() {
     // Arrange
     final var request = new PlanPatchRequest(
-        "Test Plan", "ANNUAL", 5999, "GBP", null, "USER", null, null, false
+        "Test Plan", "Test Description", "ANNUAL", 5999, "GBP", null, "USER", null, null, false
     );
 
     // Act
@@ -142,6 +145,7 @@ class PlanPatchRequestTest {
     // Assert
     assertThat(toString).contains("PlanPatchRequest");
     assertThat(toString).contains("Test Plan");
+    assertThat(toString).contains("Test Description");
     assertThat(toString).contains("ANNUAL");
     assertThat(toString).contains("5999");
     assertThat(toString).contains("GBP");
@@ -152,7 +156,7 @@ class PlanPatchRequestTest {
   void shouldCreatePlanPatchRequestForScopeChange() {
     // Arrange & Act
     final var request = new PlanPatchRequest(
-        null, null, null, null, null, "USER", null, null, null
+        null, null, null, null, null, null, "USER", null, null, null
     );
 
     // Assert
@@ -164,7 +168,7 @@ class PlanPatchRequestTest {
   void shouldCreatePlanPatchRequestForExternalIdsUpdate() {
     // Arrange & Act
     final var request = new PlanPatchRequest(
-        null, null, null, null, null, null, "prod_new_123", "price_new_456", null
+        null, null, null, null, null, null, null, "prod_new_123", "price_new_456", null
     );
 
     // Assert

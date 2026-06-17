@@ -106,6 +106,7 @@ class DomainEntitiesTest {
     // Act
     final var plan = new Plan(
         id, "pro-monthly", "Professional Monthly",
+        "Professional plan description",
         "MONTHLY", 2999, "USD",
         "{\"feature\":true}", "TENANT",
         "prod_ext123", "price_ext456", true, now, now
@@ -115,6 +116,7 @@ class DomainEntitiesTest {
     assertThat(plan.getId()).isEqualTo(id);
     assertThat(plan.getPlanCode()).isEqualTo("pro-monthly");
     assertThat(plan.getDisplayName()).isEqualTo("Professional Monthly");
+    assertThat(plan.getDescription()).isEqualTo("Professional plan description");
     assertThat(plan.getBillingPeriod()).isEqualTo("MONTHLY");
     assertThat(plan.getPriceMinor()).isEqualTo(2999);
     assertThat(plan.getCurrency()).isEqualTo("USD");

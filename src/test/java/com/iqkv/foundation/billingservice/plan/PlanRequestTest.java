@@ -31,6 +31,7 @@ class PlanRequestTest {
     final var request = new PlanRequest(
         "pro-monthly",
         "Professional Monthly",
+        "Professional plan with priority support",
         "MONTHLY",
         2999,
         "USD",
@@ -44,6 +45,7 @@ class PlanRequestTest {
     // Assert
     assertThat(request.planCode()).isEqualTo("pro-monthly");
     assertThat(request.displayName()).isEqualTo("Professional Monthly");
+    assertThat(request.description()).isEqualTo("Professional plan with priority support");
     assertThat(request.billingPeriod()).isEqualTo("MONTHLY");
     assertThat(request.priceMinor()).isEqualTo(2999);
     assertThat(request.currency()).isEqualTo("USD");
@@ -61,6 +63,7 @@ class PlanRequestTest {
     final var request = new PlanRequest(
         "basic-monthly",
         "Basic Monthly",
+        null,
         "MONTHLY",
         999,
         "USD",
@@ -83,6 +86,7 @@ class PlanRequestTest {
     final var request = new PlanRequest(
         "enterprise-annual",
         "Enterprise Annual",
+        "Enterprise plan with unlimited features",
         "ANNUAL",
         29999,
         "EUR",
@@ -104,10 +108,10 @@ class PlanRequestTest {
   void shouldSupportRecordEquality() {
     // Arrange
     final var request1 = new PlanRequest(
-        "pro-monthly", "Professional", "MONTHLY", 2999, "USD", null, "TENANT", null, null, true
+        "pro-monthly", "Professional", null, "MONTHLY", 2999, "USD", null, "TENANT", null, null, true
     );
     final var request2 = new PlanRequest(
-        "pro-monthly", "Professional", "MONTHLY", 2999, "USD", null, "TENANT", null, null, true
+        "pro-monthly", "Professional", null, "MONTHLY", 2999, "USD", null, "TENANT", null, null, true
     );
 
     // Assert
@@ -120,7 +124,7 @@ class PlanRequestTest {
   void shouldHaveMeaningfulToString() {
     // Arrange
     final var request = new PlanRequest(
-        "pro-monthly", "Professional", "MONTHLY", 2999, "USD", null, "TENANT", null, null, true
+        "pro-monthly", "Professional", "Test Description", "MONTHLY", 2999, "USD", null, "TENANT", null, null, true
     );
 
     // Act
@@ -130,6 +134,7 @@ class PlanRequestTest {
     assertThat(toString).contains("PlanRequest");
     assertThat(toString).contains("pro-monthly");
     assertThat(toString).contains("Professional");
+    assertThat(toString).contains("Test Description");
     assertThat(toString).contains("MONTHLY");
     assertThat(toString).contains("2999");
   }
@@ -139,7 +144,7 @@ class PlanRequestTest {
   void shouldCreateInactivePlan() {
     // Arrange & Act
     final var request = new PlanRequest(
-        "legacy-plan", "Legacy Plan", "MONTHLY", 1999, "USD", null, "TENANT", null, null, false
+        "legacy-plan", "Legacy Plan", null, "MONTHLY", 1999, "USD", null, "TENANT", null, null, false
     );
 
     // Assert
