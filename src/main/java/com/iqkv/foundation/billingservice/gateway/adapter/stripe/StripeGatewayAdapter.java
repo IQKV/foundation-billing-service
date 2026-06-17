@@ -322,17 +322,55 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
   public String syncProduct(final Plan plan) {
     try {
       String productId = plan.getExternalProductId();
+      Product product = null;
+
       if (productId == null || productId.isBlank()) {
-        final ProductCreateParams productParams = ProductCreateParams.builder()
+        // Create new product
+        final ProductCreateParams.Builder productParamsBuilder = ProductCreateParams.builder()
             .setName(plan.getDisplayName())
             .setActive(plan.getActive())
             .putMetadata("plan_code", plan.getPlanCode())
-            .putMetadata("managed_by", "foundation-billing-service")
-            .build();
-        final Product product = Product.create(productParams);
+            .putMetadata("managed_by", "foundation-billing-service");
+
+        if (plan.getDescription() != null && !plan.getDescription().isBlank()) {
+          productParamsBuilder.setDescription(plan.getDescription());
+        }
+
+        product = Product.create(productParamsBuilder.build());
         productId = product.getId();
         plan.setExternalProductId(productId);
         log.debug("Created Stripe product {} for plan {}", productId, plan.getPlanCode());
+      } else {
+        // Retrieve and update existing product if needed
+        product = Product.retrieve(productId);
+        boolean needsUpdate = false;
+        final com.stripe.param.ProductUpdateParams.Builder productUpdateBuilder =
+            com.stripe.param.ProductUpdateParams.builder();
+
+        if (!product.getName().equals(plan.getDisplayName())) {
+          productUpdateBuilder.setName(plan.getDisplayName());
+          needsUpdate = true;
+        }
+
+        if ((plan.getDescription() != null && !plan.getDescription().isBlank()) &&
+            !plan.getDescription().equals(product.getDescription())) {
+          productUpdateBuilder.setDescription(plan.getDescription());
+          needsUpdate = true;
+        } else if (product.getDescription() != null &&
+                   (plan.getDescription() == null || plan.getDescription().isBlank())) {
+          productUpdateBuilder.setDescription("");
+          needsUpdate = true;
+        }
+
+        if (product.getActive() != plan.getActive()) {
+          productUpdateBuilder.setActive(plan.getActive());
+          needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+          product = product.update(productUpdateBuilder.build());
+          log.debug("Updated Stripe product {} for plan {}", productId, plan.getPlanCode());
+        }
       }
 
       String priceId = plan.getExternalPriceId();
