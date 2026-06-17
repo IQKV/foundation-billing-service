@@ -47,12 +47,38 @@ iqkv:
               prioritySupport: false
               maxUsers: 5
               maxProjects: 3
+          basic-yearly:
+            planCode: "basic-yearly"
+            displayName: "Basic Yearly (SIT)"
+            description: "A basic plan for small teams with limited support, billed yearly at a 20% discount!"
+            billingPeriod: "ANNUAL"
+            priceMinor: 4800  # $48/year (instead of $60)
+            currency: "USD"
+            scope: "TENANT"
+            active: true
+            features:
+              prioritySupport: false
+              maxUsers: 5
+              maxProjects: 3
           pro-monthly:
             planCode: "pro-monthly"
             displayName: "Pro Monthly (SIT)"
             description: "A pro plan for larger teams with priority support."
             billingPeriod: "MONTHLY"
             priceMinor: 1500
+            currency: "USD"
+            scope: "TENANT"
+            active: true
+            features:
+              prioritySupport: true
+              maxUsers: 50
+              maxProjects: 0
+          pro-yearly:
+            planCode: "pro-yearly"
+            displayName: "Pro Yearly (SIT)"
+            description: "A pro plan for larger teams with priority support, billed yearly at a 20% discount!"
+            billingPeriod: "ANNUAL"
+            priceMinor: 14400  # $144/year (instead of $180)
             currency: "USD"
             scope: "TENANT"
             active: true
