@@ -79,6 +79,9 @@ public class PlanCatalogService {
     if (request.displayName() != null) {
       plan.setDisplayName(request.displayName());
     }
+    if (request.description() != null) {
+      plan.setDescription(request.description());
+    }
     if (request.billingPeriod() != null) {
       plan.setBillingPeriod(request.billingPeriod());
     }
@@ -122,6 +125,7 @@ public class PlanCatalogService {
     final Plan plan = new Plan();
     plan.setPlanCode(request.planCode());
     plan.setDisplayName(request.displayName());
+    plan.setDescription(request.description());
     plan.setBillingPeriod(request.billingPeriod());
     plan.setPriceMinor(request.priceMinor());
     plan.setCurrency(request.currency() != null ? request.currency() : "USD");

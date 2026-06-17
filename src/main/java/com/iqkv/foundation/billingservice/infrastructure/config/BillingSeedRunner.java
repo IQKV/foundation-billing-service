@@ -96,6 +96,7 @@ public class BillingSeedRunner implements ApplicationRunner {
     final PlanFeatures features = schema.features() != null ? schema.features() : PlanFeatures.NONE;
 
     plan.setDisplayName(schema.displayName());
+    plan.setDescription(schema.description());
     plan.setBillingPeriod(schema.billingPeriod());
     plan.setPriceMinor(schema.priceMinor());
     plan.setCurrency(schema.currency());

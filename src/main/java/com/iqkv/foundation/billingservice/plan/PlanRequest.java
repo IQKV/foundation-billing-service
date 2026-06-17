@@ -38,6 +38,7 @@ import jakarta.validation.constraints.Positive;
 public record PlanRequest(
     @NotBlank String planCode,
     @NotBlank String displayName,
+    String description,
     @NotBlank String billingPeriod,
     @NotNull @Positive Integer priceMinor,
     @NotBlank String currency,

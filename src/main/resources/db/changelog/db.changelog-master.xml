@@ -13,6 +13,7 @@
     <include file="db/changelog/changes/20260425120002-create-user-billing-settings.xml"/>
     <include file="db/changelog/changes/20260519120000-add-refunds-and-subscription-fields.xml"/>
     <include file="db/changelog/changes/20260527120000-add-plan-external-ids.xml"/>
+    <include file="db/changelog/changes/20260617120000-add-plan-description.xml"/>
 
     <!-- Demo data (Liquibase context: demo); enable with iqkv.liquibase.contexts=demo -->
     <include file="db/changelog/demo/master.xml"/>

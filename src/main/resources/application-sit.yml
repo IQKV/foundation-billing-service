@@ -37,6 +37,7 @@ iqkv:
           basic-monthly:
             planCode: "basic-monthly"
             displayName: "Basic Monthly (SIT)"
+            description: "A basic plan for small teams with limited support."
             billingPeriod: "MONTHLY"
             priceMinor: 500
             currency: "USD"
@@ -49,6 +50,7 @@ iqkv:
           pro-monthly:
             planCode: "pro-monthly"
             displayName: "Pro Monthly (SIT)"
+            description: "A pro plan for larger teams with priority support."
             billingPeriod: "MONTHLY"
             priceMinor: 1500
             currency: "USD"

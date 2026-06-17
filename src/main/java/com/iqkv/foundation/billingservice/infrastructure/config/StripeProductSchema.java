@@ -31,6 +31,7 @@ import com.iqkv.foundation.billingservice.plan.PlanFeatures;
 public record StripeProductSchema(
     @NotBlank String planCode,
     @NotBlank String displayName,
+    String description,
     @NotBlank String billingPeriod,
     @NotNull @Positive Integer priceMinor,
     @NotBlank String currency,

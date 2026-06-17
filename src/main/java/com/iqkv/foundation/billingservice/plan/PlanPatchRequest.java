@@ -27,6 +27,8 @@ public record PlanPatchRequest(
     @Size(max = 255)
     String displayName,
 
+    String description,
+
     @Pattern(regexp = "MONTHLY|ANNUAL", message = "must be MONTHLY or ANNUAL")
     String billingPeriod,
 

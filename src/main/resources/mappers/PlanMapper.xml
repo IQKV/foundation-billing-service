@@ -8,6 +8,7 @@
         <id property="id" column="id"/>
         <result property="planCode" column="plan_code"/>
         <result property="displayName" column="display_name"/>
+        <result property="description" column="description"/>
         <result property="billingPeriod" column="billing_period"/>
         <result property="priceMinor" column="price_minor"/>
         <result property="currency" column="currency"/>
@@ -21,28 +22,28 @@
     </resultMap>
 
     <select id="findById" resultMap="planResultMap">
-        SELECT id, plan_code, display_name, billing_period, price_minor, currency,
+        SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at
         FROM plan_catalog
         WHERE id = #{id}::uuid
     </select>
 
     <select id="findByPlanCode" resultMap="planResultMap">
-        SELECT id, plan_code, display_name, billing_period, price_minor, currency,
+        SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at
         FROM plan_catalog
         WHERE plan_code = #{planCode}
     </select>
 
     <select id="findByExternalPriceId" resultMap="planResultMap">
-        SELECT id, plan_code, display_name, billing_period, price_minor, currency,
+        SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at
         FROM plan_catalog
         WHERE external_price_id = #{externalPriceId}
     </select>
 
     <select id="findAllActive" resultMap="planResultMap">
-        SELECT id, plan_code, display_name, billing_period, price_minor, currency,
+        SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at
         FROM plan_catalog
         WHERE active = true
@@ -50,7 +51,7 @@
     </select>
 
     <select id="findAll" resultMap="planResultMap">
-        SELECT id, plan_code, display_name, billing_period, price_minor, currency,
+        SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at
         FROM plan_catalog
         ORDER BY plan_code ASC
@@ -58,11 +59,11 @@
 
     <insert id="insert" parameterType="com.iqkv.foundation.billingservice.plan.Plan">
         INSERT INTO plan_catalog
-        (id, plan_code, display_name, billing_period, price_minor, currency,
+        (id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at)
         VALUES
         (COALESCE(#{id}::uuid, gen_random_uuid()),
-        #{planCode}, #{displayName}, #{billingPeriod}, #{priceMinor},
+        #{planCode}, #{displayName}, #{description}, #{billingPeriod}, #{priceMinor},
         COALESCE(#{currency}, 'USD'),
         #{featureSet},
         #{scope},
@@ -76,6 +77,7 @@
     <update id="update" parameterType="com.iqkv.foundation.billingservice.plan.Plan">
         UPDATE plan_catalog
         SET display_name = #{displayName},
+        description = #{description},
         billing_period = #{billingPeriod},
         price_minor = #{priceMinor},
         currency = #{currency},

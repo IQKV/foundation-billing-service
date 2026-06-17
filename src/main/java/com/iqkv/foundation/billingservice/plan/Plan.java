@@ -33,6 +33,7 @@ public class Plan {
   private UUID id;
   private String planCode;        // unique identifier for the plan (e.g. "pro-monthly")
   private String displayName;
+  private String description;     // plan description for checkout, portal, quotes
   private String billingPeriod;   // MONTHLY | ANNUAL
   private Integer priceMinor;     // price in cents (or smallest currency unit)
   private String currency;        // default "USD"
@@ -50,6 +51,7 @@ public class Plan {
   public Plan(final UUID id,
               final String planCode,
               final String displayName,
+              final String description,
               final String billingPeriod,
               final Integer priceMinor,
               final String currency,
@@ -63,6 +65,7 @@ public class Plan {
     this.id = id;
     this.planCode = planCode;
     this.displayName = displayName;
+    this.description = description;
     this.billingPeriod = billingPeriod;
     this.priceMinor = priceMinor;
     this.currency = currency;
@@ -97,6 +100,14 @@ public class Plan {
 
   public void setDisplayName(String displayName) {
     this.displayName = displayName;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   public String getBillingPeriod() {
