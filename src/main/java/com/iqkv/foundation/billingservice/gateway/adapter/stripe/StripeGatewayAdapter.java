@@ -362,7 +362,7 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
           needsUpdate = true;
         }
 
-        if (product.getActive() != plan.getActive()) {
+        if (!Boolean.valueOf(product.getActive()).equals(Boolean.valueOf(plan.getActive()))) {
           productUpdateBuilder.setActive(plan.getActive());
           needsUpdate = true;
         }
