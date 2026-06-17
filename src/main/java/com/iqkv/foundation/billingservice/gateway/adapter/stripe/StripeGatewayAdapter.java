@@ -352,12 +352,12 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
           needsUpdate = true;
         }
 
-        if ((plan.getDescription() != null && !plan.getDescription().isBlank()) &&
-            !plan.getDescription().equals(product.getDescription())) {
+        if ((plan.getDescription() != null && !plan.getDescription().isBlank())
+            && !plan.getDescription().equals(product.getDescription())) {
           productUpdateBuilder.setDescription(plan.getDescription());
           needsUpdate = true;
-        } else if (product.getDescription() != null &&
-                   (plan.getDescription() == null || plan.getDescription().isBlank())) {
+        } else if (product.getDescription() != null
+                   && (plan.getDescription() == null || plan.getDescription().isBlank())) {
           productUpdateBuilder.setDescription("");
           needsUpdate = true;
         }
