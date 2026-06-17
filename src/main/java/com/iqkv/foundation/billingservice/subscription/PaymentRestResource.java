@@ -56,17 +56,17 @@ public class PaymentRestResource {
   }
 
   @PostMapping("/{tenantKey}/refund")
-  @PreAuthorize("hasAuthority('TENANT_OWNER')")
+  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'ADMIN')")
   @Operation(
       summary = "Create refund",
-      description = "Creates a refund for a payment. Requires TENANT_OWNER authority. "
+      description = "Creates a refund for a payment. Requires TENANT_OWNER or ADMIN authority. "
                     + "The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
              description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Refund created"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
-      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER or tenant mismatch")
+      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER or ADMIN or tenant mismatch")
   })
   public ResponseEntity<SubscriptionDtos.RefundResponse> createRefund(
       @PathVariable final String tenantKey,
@@ -77,17 +77,17 @@ public class PaymentRestResource {
   }
 
   @GetMapping("/{tenantKey}/refunds")
-  @PreAuthorize("hasAuthority('TENANT_OWNER')")
+  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'ADMIN')")
   @Operation(
       summary = "List refunds",
       description = "Returns all refunds for the given tenant ordered by occurred_at DESC. "
-                    + "Requires TENANT_OWNER authority. The authenticated tenant must match the tenantKey path variable.")
+                    + "Requires TENANT_OWNER or ADMIN authority. The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
              description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Refund list returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
-      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER or tenant mismatch")
+      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER or ADMIN or tenant mismatch")
   })
   public ResponseEntity<List<SubscriptionDtos.AdminRefundResponse>> listRefunds(
       @PathVariable final String tenantKey,

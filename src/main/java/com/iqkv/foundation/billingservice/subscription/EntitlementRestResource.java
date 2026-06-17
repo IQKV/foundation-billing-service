@@ -75,7 +75,7 @@ public class EntitlementRestResource {
   }
 
   @GetMapping("/me")
-  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'MEMBER')")
+  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'ADMIN', 'MEMBER')")
   @Operation(
       summary = "Get current subject entitlements",
       description = "Returns the active plan code, subscription status, period end, and typed feature set "
