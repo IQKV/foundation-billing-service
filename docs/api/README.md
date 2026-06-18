@@ -25,9 +25,11 @@ YAML Config → PlanFeatureRegistry → /internal/plans → Gateway/Services →
 
 ### Feature Types
 
-- **`prioritySupport`** (boolean): Access to priority support channels
-- **`maxUsers`** (integer): Maximum users per tenant (0 = unlimited)
-- **`maxProjects`** (integer): Maximum projects per tenant (0 = unlimited)
+`PlanFeatures` uses a split design:
+
+- **`maxUsers`** (integer): Maximum users per tenant — typed quota field (0 = unlimited)
+- **`maxProjects`** (integer): Maximum projects per tenant — typed quota field (0 = unlimited)
+- **`features`** (map): Open `Map<String, PlanFeature>` keyed by feature code (e.g. `priority_support`). Each entry carries `code`, `title`, `value`, and `description`. Adding a new feature requires only a YAML change — no code recompilation.
 
 ### Integration Points
 
@@ -171,18 +173,25 @@ The `{tenantKey}` is validated against the authenticated tenant's JWT `tenant_id
     "status": "active",
     "currentPeriodEnd": "2026-07-15T00:00:00Z",
     "features": {
-        "prioritySupport": true,
         "maxUsers": 50,
-        "maxProjects": 0
+        "maxProjects": 0,
+        "features": {
+            "priority_support": {
+                "code": "priority_support",
+                "title": "Priority Support",
+                "value": "true",
+                "description": "Access to priority support channel"
+            }
+        }
     }
 }
 ```
 
-**Feature Types:**
+**Feature Fields:**
 
-- **`prioritySupport`** (boolean): Access to priority support channels
 - **`maxUsers`** (integer): Maximum users allowed (0 = unlimited)
 - **`maxProjects`** (integer): Maximum projects allowed (0 = unlimited)
+- **`features`** (map): Display/boolean features keyed by code — check `value == "true"` for boolean flags
 
 Returns `404` when no active subscription exists. Resolves subject by rollout mode (tenant in multi-tenant, user in single-tenant).
 
@@ -207,17 +216,24 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
     {
         "planCode": "basic-monthly",
         "features": {
-            "prioritySupport": false,
             "maxUsers": 5,
-            "maxProjects": 3
+            "maxProjects": 3,
+            "features": {}
         }
     },
     {
         "planCode": "pro-monthly",
         "features": {
-            "prioritySupport": true,
             "maxUsers": 50,
-            "maxProjects": 0
+            "maxProjects": 0,
+            "features": {
+                "priority_support": {
+                    "code": "priority_support",
+                    "title": "Priority Support",
+                    "value": "true",
+                    "description": "Access to priority support channel"
+                }
+            }
         }
     }
 ]
