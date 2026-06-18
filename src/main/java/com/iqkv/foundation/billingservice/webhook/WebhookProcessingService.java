@@ -221,6 +221,19 @@ public class WebhookProcessingService {
 
   private void handleSubscriptionUpdated(final GatewaySubscriptionEvent event) {
     final var subscription = toSubscription(event);
+
+    // Resolve subject context BEFORE upsert.
+    // Read the persisted subjectType/subjectKey from the existing record (set during CREATED).
+    // This is the authoritative source of truth — avoids re-running subject resolution logic
+    // which would require userId in metadata (not guaranteed on update events from Stripe).
+    // Falls back to the resolver (fresh resolution from tenantKey + metadata userId) only when
+    // no record exists yet (e.g. first update arrives before created, unlikely but safe).
+    final String tenantKey = subscription.getTenantKey();
+    final SubscriptionSubject subject = resolveSubjectPreservingExisting(
+        subscription.getExternalSubscriptionId(), tenantKey, event.metadata());
+
+    subscription.setSubjectType(subject.type().name());
+    subscription.setSubjectKey(subject.key());
     subscriptionMapper.upsert(subscription);
 
     meterRegistry.counter("billing_subscriptions_total",
@@ -229,19 +242,17 @@ public class WebhookProcessingService {
         "status", nullToEmpty(subscription.getStatus())
     ).increment();
 
-    final String tenantKey = subscription.getTenantKey();
     if (tenantKey != null && !tenantKey.isBlank()) {
-      final var subjectContext = resolveSubjectFromSubscription(subscription.getExternalSubscriptionId(), tenantKey);
-
       messagingService.publishSubscriptionUpdated(
           tenantKey,
           subscription.getExternalSubscriptionId(),
-          subjectContext.type().name(),
-          subjectContext.key(),
+          subject.type().name(),
+          subject.key(),
           resolvePlanCode(subscription.getPlanId())
       );
-      log.info("Published subscription.updated for tenant={}, subscription={}, planCode={}",
-          tenantKey, subscription.getExternalSubscriptionId(), resolvePlanCode(subscription.getPlanId()));
+      log.info("Published subscription.updated for tenant={}, subscription={}, subjectType={}, planCode={}",
+          tenantKey, subscription.getExternalSubscriptionId(),
+          subject.type(), resolvePlanCode(subscription.getPlanId()));
 
       billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
         final String email = resolveEmail(settings);
@@ -269,15 +280,23 @@ public class WebhookProcessingService {
     final var subscription = toSubscription(event);
     subscription.setStatus("canceled");
     subscription.setCanceledAt(event.canceledAt() != null ? event.canceledAt() : Instant.now());
+
+    // Resolve subject BEFORE upsert — same reasoning as handleSubscriptionUpdated.
+    // The tenantKey comes from metadata; userId may be absent on delete events from Stripe.
+    final String tenantKey = event.metadata().get("tenantKey");
+    final SubscriptionSubject subject = resolveSubjectPreservingExisting(
+        subscription.getExternalSubscriptionId(), tenantKey, event.metadata());
+
+    subscription.setSubjectType(subject.type().name());
+    subscription.setSubjectKey(subject.key());
     subscriptionMapper.upsert(subscription);
 
     meterRegistry.counter("billing_subscriptions_total",
         "action", "deleted",
         "plan_id", nullToEmpty(subscription.getPlanId()),
-        "subject_type", subscription.getSubjectType() != null ? subscription.getSubjectType() : SubjectType.TENANT.name()
+        "subject_type", subject.type().name()
     ).increment();
 
-    final String tenantKey = event.metadata().get("tenantKey");
     if (tenantKey == null || tenantKey.isBlank()) {
       log.error("Cannot publish subscription.cancelled — tenantKey absent from metadata. "
                 + "externalSubscriptionId={}", subscription.getExternalSubscriptionId());
@@ -287,11 +306,11 @@ public class WebhookProcessingService {
     messagingService.publishSubscriptionCancelled(
         tenantKey,
         subscription.getExternalSubscriptionId(),
-        subscription.getSubjectType() != null ? subscription.getSubjectType() : SubjectType.TENANT.name(),
-        subscription.getSubjectKey() != null ? subscription.getSubjectKey() : tenantKey
+        subject.type().name(),
+        subject.key()
     );
-    log.info("Published subscription.cancelled for tenant={}, subscription={}",
-        tenantKey, subscription.getExternalSubscriptionId());
+    log.info("Published subscription.cancelled for tenant={}, subscription={}, subjectType={}",
+        tenantKey, subscription.getExternalSubscriptionId(), subject.type());
 
     billingSettingsMapper.findByTenantKey(tenantKey).ifPresent(settings -> {
       final String email = resolveEmail(settings);
@@ -588,6 +607,7 @@ public class WebhookProcessingService {
   /**
    * Resolves subject context from a cached subscription record.
    * Falls back to {@code TENANT / tenantKey} when no subscription is found.
+   * Used by invoice/payment handlers that read an already-persisted record.
    */
   private SubscriptionSubject resolveSubjectFromSubscription(final String externalSubscriptionId,
                                                              final String tenantKey) {
@@ -603,6 +623,46 @@ public class WebhookProcessingService {
       }
     }
     return new SubscriptionSubject(SubjectType.TENANT, tenantKey);
+  }
+
+  /**
+   * Resolves subject context for update and delete handlers, where subject assignment
+   * must be preserved from the original creation event.
+   *
+   * <p>Priority chain:
+   * <ol>
+   *   <li>Existing DB record — {@code subjectType}/{@code subjectKey} already persisted
+   *       during {@code SUBSCRIPTION_CREATED}. This is the authoritative source and avoids
+   *       re-running mode-specific logic on events that may lack {@code userId} in metadata.</li>
+   *   <li>Fresh resolver call — used as fallback when no DB record exists yet (e.g. update
+   *       arrives before created due to out-of-order delivery). Requires {@code userId} in
+   *       metadata for {@code SINGLE_TENANT} mode; falls back to {@code TENANT} otherwise.</li>
+   * </ol>
+   *
+   * @param externalSubscriptionId Stripe / gateway subscription ID
+   * @param tenantKey              tenant key from webhook metadata
+   * @param metadata               full webhook metadata map (may contain {@code userId})
+   * @return the resolved {@link SubscriptionSubject}, never {@code null}
+   */
+  private SubscriptionSubject resolveSubjectPreservingExisting(final String externalSubscriptionId,
+                                                               final String tenantKey,
+                                                               final Map<String, String> metadata) {
+    // Priority 1: read persisted subject from DB
+    if (externalSubscriptionId != null) {
+      final var existing = subscriptionMapper.findByExternalSubscriptionId(externalSubscriptionId);
+      if (existing.isPresent()) {
+        final var record = existing.get();
+        if (record.getSubjectType() != null && record.getSubjectKey() != null) {
+          return new SubscriptionSubject(SubjectType.valueOf(record.getSubjectType()), record.getSubjectKey());
+        }
+      }
+    }
+
+    // Priority 2: fresh resolution (out-of-order delivery fallback)
+    log.debug("No existing subject context found for subscription={}, resolving fresh (out-of-order delivery?)",
+        externalSubscriptionId);
+    final UUID userId = resolveUserId(metadata);
+    return subjectResolver.resolveSubject(tenantKey, userId);
   }
 
   private UUID resolveUserId(final Map<String, String> metadata) {
