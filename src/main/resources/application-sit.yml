@@ -1,6 +1,7 @@
 # ===================================================================
 # Spring Boot configuration for the "sit" profile (K8s / SIT namespace).
 # Overrides base: points to in-cluster service names, enables Liquibase with demo data.
+# Plan catalog is config-driven — BillingSeedRunner seeds plan_catalog and syncs with Stripe on startup.
 # ===================================================================
 
 spring:
@@ -44,9 +45,13 @@ iqkv:
             scope: "TENANT"
             active: true
             features:
-              prioritySupport: false
               maxUsers: 5
               maxProjects: 3
+              features:
+                - code: "priority_support"
+                  title: "Priority Support"
+                  value: "false"
+                  description: "Access to priority support channel"
           basic-yearly:
             planCode: "basic-yearly"
             displayName: "Basic Yearly (SIT)"
@@ -57,9 +62,13 @@ iqkv:
             scope: "TENANT"
             active: true
             features:
-              prioritySupport: false
               maxUsers: 5
               maxProjects: 3
+              features:
+                - code: "priority_support"
+                  title: "Priority Support"
+                  value: "false"
+                  description: "Access to priority support channel"
           pro-monthly:
             planCode: "pro-monthly"
             displayName: "Pro Monthly (SIT)"
@@ -70,9 +79,13 @@ iqkv:
             scope: "TENANT"
             active: true
             features:
-              prioritySupport: true
               maxUsers: 50
               maxProjects: 0
+              features:
+                - code: "priority_support"
+                  title: "Priority Support"
+                  value: "true"
+                  description: "Access to priority support channel"
           pro-yearly:
             planCode: "pro-yearly"
             displayName: "Pro Yearly (SIT)"
@@ -83,6 +96,10 @@ iqkv:
             scope: "TENANT"
             active: true
             features:
-              prioritySupport: true
               maxUsers: 50
               maxProjects: 0
+              features:
+                - code: "priority_support"
+                  title: "Priority Support"
+                  value: "true"
+                  description: "Access to priority support channel"

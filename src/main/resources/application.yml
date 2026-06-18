@@ -118,19 +118,49 @@ iqkv:
     default-contact-email: ${DEFAULT_BILLING_EMAIL:}  # Fallback email for single-tenant mode (optional)
     stripe:
       schema:
-        # Map of products to seed into the plan catalog and synchronize with Stripe.
-        # Products defined here are considered the "source of truth".
-        # Maps allow merging configurations from different profiles.
+        # Config-driven plan catalog — the single source of truth for plan definitions.
+        # BillingSeedRunner reads this map at startup, upserts rows into plan_catalog,
+        # and synchronizes products/prices with the Stripe API.
+        # PlanFeatureRegistry loads the features block into memory for zero-latency
+        # entitlement evaluation and the /internal/plans endpoint consumed by IAM and Gateway.
+        #
+        # Fields per product:
+        #   planCode      — unique identifier used in JWT plan_code claim and API responses
+        #   displayName   — human-readable name shown in UI and pricing pages
+        #   description   — optional; shown on checkout and public pricing pages
+        #   billingPeriod — MONTHLY | ANNUAL
+        #   priceMinor    — price in smallest currency unit (e.g. cents for USD)
+        #   currency      — ISO 4217 code (e.g. USD)
+        #   scope         — TENANT (multi-tenant) | USER (single-tenant B2C)
+        #   active        — false hides the plan from pricing pages and blocks new subscriptions
+        #   features:
+        #     maxUsers        — max members per tenant/user (0 = unlimited); enforced at signup
+        #     maxProjects     — max projects (0 = unlimited); enforced at project creation
+        #     features        — open list of named feature entries; extensible without recompilation
+        #       - code:        machine-readable key (e.g. "priority_support", "custom_domain")
+        #         title:       human-readable label shown on pricing pages
+        #         value:       "true"/"false" for boolean flags; a number string for limits
+        #         description: optional tooltip / subtitle on pricing pages
+        #
         # Example:
         # products:
         #   basic-monthly:
         #     planCode: "basic-monthly"
         #     displayName: "Basic Monthly"
+        #     description: "Entry-level plan for small teams."
         #     billingPeriod: "MONTHLY"
         #     priceMinor: 1000
         #     currency: "USD"
         #     scope: "TENANT"
         #     active: true
+        #     features:
+        #       maxUsers: 5
+        #       maxProjects: 3
+        #       features:
+        #         - code: "priority_support"
+        #           title: "Priority Support"
+        #           value: "false"
+        #           description: "Access to priority support channel"
   auth:
     jwt:
       public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public.pem}

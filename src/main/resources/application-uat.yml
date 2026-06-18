@@ -2,6 +2,7 @@
 # Spring Boot configuration for the "uat" profile (staging).
 # Overrides base: points to in-cluster service names, enables Liquibase with demo data,
 # all secrets via env vars (no defaults).
+# Plan catalog is config-driven — BillingSeedRunner seeds plan_catalog and syncs with Stripe on startup.
 # ===================================================================
 
 spring:
@@ -52,9 +53,13 @@ iqkv:
             scope: "TENANT"
             active: true
             features:
-              prioritySupport: false
               maxUsers: 5
               maxProjects: 3
+              features:
+                - code: "priority_support"
+                  title: "Priority Support"
+                  value: "false"
+                  description: "Access to priority support channel"
           pro-monthly:
             planCode: "pro-monthly"
             displayName: "Pro Monthly (UAT)"
@@ -64,9 +69,13 @@ iqkv:
             scope: "TENANT"
             active: true
             features:
-              prioritySupport: true
               maxUsers: 50
               maxProjects: 0
+              features:
+                - code: "priority_support"
+                  title: "Priority Support"
+                  value: "true"
+                  description: "Access to priority support channel"
   auth:
     jwt:
       public-key-path: ${JWT_PUBLIC_KEY_PATH}

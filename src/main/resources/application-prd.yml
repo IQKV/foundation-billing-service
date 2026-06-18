@@ -2,6 +2,7 @@
 # Spring Boot configuration for the "prd" profile.
 # Overrides base: all secrets via env vars (no defaults), hardens
 # actuator/swagger, disables suffix pattern matching.
+# Plan catalog is config-driven — BillingSeedRunner seeds plan_catalog and syncs with Stripe on startup.
 # ===================================================================
 
 spring:
@@ -54,9 +55,13 @@ iqkv:
             scope: "TENANT"
             active: true
             features:
-              prioritySupport: false
               maxUsers: 5
               maxProjects: 3
+              features:
+                - code: "priority_support"
+                  title: "Priority Support"
+                  value: "false"
+                  description: "Access to priority support channel"
           pro-monthly:
             planCode: "pro-monthly"
             displayName: "Pro Monthly"
@@ -66,6 +71,10 @@ iqkv:
             scope: "TENANT"
             active: true
             features:
-              prioritySupport: true
               maxUsers: 50
               maxProjects: 0
+              features:
+                - code: "priority_support"
+                  title: "Priority Support"
+                  value: "true"
+                  description: "Access to priority support channel"
