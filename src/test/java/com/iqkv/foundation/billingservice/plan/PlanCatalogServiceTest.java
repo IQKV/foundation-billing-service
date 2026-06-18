@@ -56,42 +56,6 @@ class PlanCatalogServiceTest {
   }
 
   @Test
-  @DisplayName("Should create plan when plan code is new")
-  void shouldCreatePlan() {
-    final var request = new PlanRequest("new-plan", "New", null, "MONTHLY", 100, "USD", null, "TENANT", null, null, true);
-    when(planMapper.findByPlanCode("new-plan")).thenReturn(Optional.empty()).thenReturn(Optional.of(samplePlan("new-plan", true)));
-
-    final Plan created = planCatalogService.createPlan(request);
-
-    assertThat(created.getPlanCode()).isEqualTo("new-plan");
-    verify(planMapper).insert(any(Plan.class));
-  }
-
-  @Test
-  @DisplayName("Should throw when creating duplicate plan code")
-  void shouldThrowOnDuplicateCreate() {
-    final var request = new PlanRequest("dup", "D", null, "MONTHLY", 1, "USD", null, "TENANT", null, null, true);
-    when(planMapper.findByPlanCode("dup")).thenReturn(Optional.of(samplePlan("dup", true)));
-
-    assertThatThrownBy(() -> planCatalogService.createPlan(request))
-        .isInstanceOf(DuplicateResourceException.class);
-  }
-
-  @Test
-  @DisplayName("Should patch only provided fields")
-  void shouldPatchPlan() {
-    final Plan existing = samplePlan("p1", true);
-    when(planMapper.findByPlanCode("p1")).thenReturn(Optional.of(existing)).thenReturn(Optional.of(existing));
-
-    final var patch = new PlanPatchRequest(null, null, null, 5000, null, null, null, null, null, false);
-    planCatalogService.patchPlan("p1", patch);
-
-    assertThat(existing.getPriceMinor()).isEqualTo(5000);
-    assertThat(existing.getActive()).isFalse();
-    verify(planMapper).update(existing);
-  }
-
-  @Test
   @DisplayName("Should deactivate plan")
   void shouldDeactivate() {
     final Plan existing = samplePlan("p1", true);

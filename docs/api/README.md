@@ -42,6 +42,7 @@ YAML Config → PlanFeatureRegistry → /internal/plans → Gateway/Services →
 | Method  | Path                           | Auth               | Description                               |
 | ------- | ------------------------------ | ------------------ | ----------------------------------------- |
 | `GET`   | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` | Get billing settings for a tenant         |
+| `POST`  | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` | Create billing settings for a tenant      |
 | `PATCH` | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` | Update billing settings (syncs to Stripe) |
 | `POST`  | `/settings/{tenantKey}/portal` | JWT `TENANT_OWNER` | Create a Stripe Customer Portal session   |
 
@@ -109,13 +110,16 @@ The `{tenantKey}` is validated against the authenticated tenant's JWT `tenant_id
 
 ### Subscriptions (platform admin)
 
-| Method   | Path                         | Auth                 | Description                                |
-| -------- | ---------------------------- | -------------------- | ------------------------------------------ |
-| `GET`    | `/admin/subscriptions`       | JWT `PLATFORM_ADMIN` | List subscriptions (paginated, filterable) |
-| `GET`    | `/admin/subscriptions/count` | JWT `PLATFORM_ADMIN` | Count all subscriptions                    |
-| `GET`    | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Get subscription by ID                     |
-| `PATCH`  | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Partially update subscription              |
-| `DELETE` | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Delete subscription                        |
+| Method   | Path                                   | Auth                 | Description                                 |
+| -------- | -------------------------------------- | -------------------- | ------------------------------------------- |
+| `GET`    | `/admin/subscriptions`                 | JWT `PLATFORM_ADMIN` | List subscriptions (paginated, filterable)  |
+| `GET`    | `/admin/subscriptions/count`           | JWT `PLATFORM_ADMIN` | Count all subscriptions                     |
+| `GET`    | `/admin/subscriptions/{id}`            | JWT `PLATFORM_ADMIN` | Get subscription by ID                      |
+| `PATCH`  | `/admin/subscriptions/{id}`            | JWT `PLATFORM_ADMIN` | Partially update subscription               |
+| `POST`   | `/admin/subscriptions/{id}/cancel`     | JWT `PLATFORM_ADMIN` | Cancel subscription via payment gateway     |
+| `POST`   | `/admin/subscriptions/{id}/pause`      | JWT `PLATFORM_ADMIN` | Pause subscription via payment gateway      |
+| `POST`   | `/admin/subscriptions/{id}/reactivate` | JWT `PLATFORM_ADMIN` | Reactivate subscription via payment gateway |
+| `DELETE` | `/admin/subscriptions/{id}`            | JWT `PLATFORM_ADMIN` | Delete subscription                         |
 
 `DELETE` permanently removes the subscription record.
 
@@ -141,16 +145,13 @@ The `{tenantKey}` is validated against the authenticated tenant's JWT `tenant_id
 
 ### Plan Catalog (platform admin)
 
-| Method   | Path                      | Auth                 | Description                                     |
-| -------- | ------------------------- | -------------------- | ----------------------------------------------- |
-| `GET`    | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive)             |
-| `GET`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                            |
-| `POST`   | `/admin/plans`            | JWT `PLATFORM_ADMIN` | Create a plan                                   |
-| `PUT`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan (full update)                    |
-| `PATCH`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Partially update a plan                         |
-| `DELETE` | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Deactivate a plan (soft-delete, `active=false`) |
+| Method | Path                      | Auth                 | Description                         |
+| ------ | ------------------------- | -------------------- | ----------------------------------- |
+| `GET`  | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive) |
+| `GET`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                |
 
-`DELETE` performs a soft-delete by setting `active = false`. The row is retained for historical reference.
+> [!NOTE]
+> **Config-driven catalog**: Plans are defined in `application.yml` under `iqkv.billing.stripe.schema.products` and synchronized with Stripe at startup by `BillingSeedRunner`. There is no REST API for creating, updating, or deactivating plans — all catalog changes go through configuration and deployment.
 
 ---
 
@@ -189,11 +190,15 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 
 ### Plan Catalog (internal service-to-service)
 
-| Method | Path              | Auth | Description                                              |
-| ------ | ----------------- | ---- | -------------------------------------------------------- |
-| `GET`  | `/internal/plans` | None | Full plan feature catalog for gateway and service caches |
+| Method | Path                     | Auth | Description                                              |
+| ------ | ------------------------ | ---- | -------------------------------------------------------- |
+| `GET`  | `/internal/plans`        | None | Full plan feature catalog for gateway and service caches |
+| `GET`  | `/internal/plans/public` | None | Full plan catalog details for public pricing pages       |
 
-**Public within internal network** — no authentication required since the response contains only non-sensitive plan feature data (same as any public pricing page). Used by the gateway and downstream services to populate their local `PlanCatalogCache` at startup and on periodic refresh. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
+**Public within internal network** — no authentication required since the response contains only non-sensitive plan feature data (same as any public pricing page).
+
+- `GET /internal/plans`: Used by the gateway and downstream services to populate their local `PlanCatalogCache` at startup and on periodic refresh. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
+- `GET /internal/plans/public`: Exposes active plans with full details (display name, description, price, billing period, features) for public website pricing pages. Reads from static YAML properties — no DB reads.
 
 **Response Example:**
 

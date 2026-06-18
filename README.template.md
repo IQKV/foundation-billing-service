@@ -8,7 +8,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 
 - **Automatic customer provisioning** — listens for `tenant.created` and `tenant.provisioned` events on RabbitMQ and creates a payment gateway customer per tenant; the `external_customer_id` is stored in `billing_settings`
 - **Multi-gateway strategy** — `PaymentGatewayPort` interface (Strategy pattern + Hexagonal Architecture) decouples business logic from gateway SDKs; Stripe is the active implementation, additional gateways are reserved
-- **Plan catalog** — platform admin-managed plan definitions with typed `PlanFeatures` (scoped to `MULTI_TENANT` or `SINGLE_TENANT` mode); plan features (`prioritySupport`, `maxUsers`, `maxProjects`) are defined in YAML configuration, loaded into in-memory `PlanFeatureRegistry` at startup, and served via a public internal endpoint for gateway and downstream service caching; **entitlement evaluation is tightly coupled with plan features** — the entitlements endpoint returns complete feature data enabling client-side access control; `PlanEligibilityPolicy` validates scope against active rollout mode
+- **Plan catalog** — plan definitions with typed `PlanFeatures` (scoped to `MULTI_TENANT` or `SINGLE_TENANT` mode); plan features (`prioritySupport`, `maxUsers`, `maxProjects`) are defined in YAML configuration (compile-time record ensuring type safety). `BillingSeedRunner` synchronizes plans with the Stripe catalog (external Product and Price ID creation) at application startup. Plan management is config-driven — there is no REST API for creating, updating, or deactivating plans. The static feature registry is loaded into the in-memory `PlanFeatureRegistry` at startup and served via a public internal endpoint for gateway and downstream service caching; **entitlement evaluation is tightly coupled with plan features** — the entitlements endpoint returns complete feature data enabling client-side access control; `PlanEligibilityPolicy` validates scope against active rollout mode
 - **Billing settings** — each tenant has a 1:1 `billing_settings` record that is the single source of truth for payment gateway customer metadata; decoupled from IAM users by design
 - **Billing email** — a separate `billing_email` field allows finance teams to receive invoices without a system account
 - **Tax ID / VAT/GST** — stored in `billing_settings` for compliant B2B invoices
@@ -35,6 +35,7 @@ Base path: `/api/v1/billing`
 | Method  | Path                           | Auth                               | Description                                        |
 | ------- | ------------------------------ | ---------------------------------- | -------------------------------------------------- |
 | `GET`   | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` + `X-Tenant-ID` | Get billing settings (contact email, tax ID, etc.) |
+| `POST`  | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` + `X-Tenant-ID` | Create billing settings for a tenant               |
 | `PATCH` | `/settings/{tenantKey}`        | JWT `TENANT_OWNER` + `X-Tenant-ID` | Update billing settings (syncs to payment gateway) |
 | `POST`  | `/settings/{tenantKey}/portal` | JWT `TENANT_OWNER` + `X-Tenant-ID` | Create a Stripe Customer Portal session            |
 
@@ -70,13 +71,16 @@ Base path: `/api/v1/billing`
 
 ### Subscriptions (platform admin) — `/api/v1/billing/admin/subscriptions`
 
-| Method   | Path                         | Auth                 | Description                                |
-| -------- | ---------------------------- | -------------------- | ------------------------------------------ |
-| `GET`    | `/admin/subscriptions`       | JWT `PLATFORM_ADMIN` | List subscriptions (paginated, filterable) |
-| `GET`    | `/admin/subscriptions/count` | JWT `PLATFORM_ADMIN` | Count all subscriptions                    |
-| `GET`    | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Get subscription by ID                     |
-| `PATCH`  | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Partially update subscription              |
-| `DELETE` | `/admin/subscriptions/{id}`  | JWT `PLATFORM_ADMIN` | Delete subscription                        |
+| Method   | Path                                   | Auth                 | Description                                 |
+| -------- | -------------------------------------- | -------------------- | ------------------------------------------- |
+| `GET`    | `/admin/subscriptions`                 | JWT `PLATFORM_ADMIN` | List subscriptions (paginated, filterable)  |
+| `GET`    | `/admin/subscriptions/count`           | JWT `PLATFORM_ADMIN` | Count all subscriptions                     |
+| `GET`    | `/admin/subscriptions/{id}`            | JWT `PLATFORM_ADMIN` | Get subscription by ID                      |
+| `PATCH`  | `/admin/subscriptions/{id}`            | JWT `PLATFORM_ADMIN` | Partially update subscription               |
+| `POST`   | `/admin/subscriptions/{id}/cancel`     | JWT `PLATFORM_ADMIN` | Cancel subscription via payment gateway     |
+| `POST`   | `/admin/subscriptions/{id}/pause`      | JWT `PLATFORM_ADMIN` | Pause subscription via payment gateway      |
+| `POST`   | `/admin/subscriptions/{id}/reactivate` | JWT `PLATFORM_ADMIN` | Reactivate subscription via payment gateway |
+| `DELETE` | `/admin/subscriptions/{id}`            | JWT `PLATFORM_ADMIN` | Delete subscription                         |
 
 ### Refunds (platform admin) — `/api/v1/billing/admin/refunds`
 
@@ -94,14 +98,12 @@ Base path: `/api/v1/billing`
 
 ### Plan Catalog (platform admin) — `/api/v1/billing/admin/plans`
 
-| Method   | Path                      | Auth                 | Description                                     |
-| -------- | ------------------------- | -------------------- | ----------------------------------------------- |
-| `GET`    | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive)             |
-| `GET`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                            |
-| `POST`   | `/admin/plans`            | JWT `PLATFORM_ADMIN` | Create a plan                                   |
-| `PUT`    | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Replace a plan (full update)                    |
-| `PATCH`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Partially update a plan                         |
-| `DELETE` | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Deactivate a plan (soft-delete, `active=false`) |
+| Method | Path                      | Auth                 | Description                         |
+| ------ | ------------------------- | -------------------- | ----------------------------------- |
+| `GET`  | `/admin/plans`            | JWT `PLATFORM_ADMIN` | List all plans (including inactive) |
+| `GET`  | `/admin/plans/{planCode}` | JWT `PLATFORM_ADMIN` | Get plan by planCode                |
+
+> Plans are defined in `application.yml` under `iqkv.billing.stripe.schema.products` and synchronized with Stripe at startup by `BillingSeedRunner`. There is no REST API for creating, updating, or deactivating plans — all catalog changes go through configuration and deployment.
 
 ### Entitlements — `/api/v1/billing/entitlements`
 
@@ -130,9 +132,10 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 
 ### Plan Catalog (internal) — `/api/v1/billing/internal/plans`
 
-| Method | Path              | Auth | Description                                                            |
-| ------ | ----------------- | ---- | ---------------------------------------------------------------------- |
-| `GET`  | `/internal/plans` | None | Full plan feature catalog — used by gateway/service `PlanCatalogCache` |
+| Method | Path                     | Auth | Description                                                            |
+| ------ | ------------------------ | ---- | ---------------------------------------------------------------------- |
+| `GET`  | `/internal/plans`        | None | Full plan feature catalog — used by gateway/service `PlanCatalogCache` |
+| `GET`  | `/internal/plans/public` | None | Full plan catalog details for public pricing pages                     |
 
 **Public within internal network** — no authentication required since the response contains only non-sensitive plan feature data (same as any public pricing page). Not exposed via a public gateway route. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
 
@@ -364,7 +367,7 @@ Please read our [Contributing Guidelines](.github/CONTRIBUTING.md) and [Code of 
 - **Platform rollout mode**: Controlled via `ROLLOUT_MODE` (`MULTI_TENANT` | `SINGLE_TENANT`); must be identical across IAM, Billing, and Gateway; `SubscriptionSubjectResolver` selects `TENANT` or `USER` subject scope based on active mode; service fails readiness on invalid/missing mode
 - **Single-tenant mode**: `UserBillingSettingsServiceImpl` handles per-user billing settings; `SingleTenantSubscriptionSubjectResolver` scopes subscriptions to `subject_type=USER`; `BillingContactResolver` uses `DEFAULT_BILLING_EMAIL` fallback when `ownerEmail` is absent
 - **Payment gateway abstraction**: Strategy pattern via `PaymentGatewayPort` — `createCustomer()` and `verifyAndParseWebhookEvent()` are the two gateway operations; `StripeGatewayAdapter` is the sole Stripe SDK consumer; `WebhookProcessingService` operates entirely on gateway-agnostic `GatewayWebhookEvent` sealed types; active gateway selected via `PAYMENT_GATEWAY_TYPE` env var
-- **Plan catalog**: Admin-managed only (`plan_catalog` table, `PLATFORM_ADMIN` authority required); no end-user plan CRUD; plan features (`prioritySupport`, `maxUsers`, `maxProjects`) are defined in YAML configuration and bound to the typed `PlanFeatures` record; `BillingSeedRunner` serializes features to the `feature_set` column on startup; `PlanFeatureRegistry` holds an in-memory `planCode → PlanFeatures` map used for zero-latency entitlement evaluation and the public internal plans endpoint (`/internal/plans`); **entitlement evaluation is tightly coupled with plan features** — the entitlements endpoint (`/entitlements/me`) returns complete feature data enabling fine-grained access control decisions; `PlanEligibilityPolicy` validates plan scope against active rollout mode; deactivation is a soft-delete
+- **Plan catalog**: Config-driven only (`plan_catalog` table, `PLATFORM_ADMIN` authority for read access). Plan features (`prioritySupport`, `maxUsers`, `maxProjects`) are defined in YAML configuration and bound to the typed `PlanFeatures` record. `BillingSeedRunner` serializes features to the `feature_set` column on startup and synchronizes plans with the Stripe catalog (external Product and Price ID creation). There is no REST API for creating, updating, or deactivating plans — all catalog changes go through configuration and deployment. `PlanFeatureRegistry` holds an in-memory `planCode → PlanFeatures` map used for zero-latency entitlement evaluation and the public internal plans endpoint (`/internal/plans`); **entitlement evaluation is tightly coupled with plan features** — the entitlements endpoint (`/entitlements/me`) returns complete feature data enabling fine-grained access control decisions; `PlanEligibilityPolicy` validates plan scope against active rollout mode; deactivation is a soft-delete managed via config change and redeployment
 - **Observability**: Micrometer + Prometheus; structured JSON logging with Logstash encoder; health probes for Kubernetes
 - **GitHub Integration**: Issue templates, labels, Dependabot, and CI workflows
 - **Quality Tools**: Checkstyle, JaCoCo (90% gate), ArchUnit, commit convention enforcement
