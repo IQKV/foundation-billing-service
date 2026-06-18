@@ -157,7 +157,7 @@ iqkv:
         #       maxUsers: 5
         #       maxProjects: 3
         #       features:
-        #         - code: "priority_support"
+        #         priority_support:
         #           title: "Priority Support"
         #           value: "false"
         #           description: "Access to priority support channel"

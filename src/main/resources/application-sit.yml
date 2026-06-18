@@ -48,7 +48,7 @@ iqkv:
               maxUsers: 5
               maxProjects: 3
               features:
-                - code: "priority_support"
+                priority_support:
                   title: "Priority Support"
                   value: "false"
                   description: "Access to priority support channel"
@@ -65,7 +65,7 @@ iqkv:
               maxUsers: 5
               maxProjects: 3
               features:
-                - code: "priority_support"
+                priority_support:
                   title: "Priority Support"
                   value: "false"
                   description: "Access to priority support channel"
@@ -82,7 +82,7 @@ iqkv:
               maxUsers: 50
               maxProjects: 0
               features:
-                - code: "priority_support"
+                priority_support:
                   title: "Priority Support"
                   value: "true"
                   description: "Access to priority support channel"
@@ -99,7 +99,7 @@ iqkv:
               maxUsers: 50
               maxProjects: 0
               features:
-                - code: "priority_support"
+                priority_support:
                   title: "Priority Support"
                   value: "true"
                   description: "Access to priority support channel"

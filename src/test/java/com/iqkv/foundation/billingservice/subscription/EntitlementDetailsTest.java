@@ -19,7 +19,9 @@ package com.iqkv.foundation.billingservice.subscription;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
+import java.util.Map;
 
+import com.iqkv.foundation.billingservice.plan.PlanFeature;
 import com.iqkv.foundation.billingservice.plan.PlanFeatures;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +36,9 @@ class EntitlementDetailsTest {
     final String planCode = "pro-monthly";
     final String status = "active";
     final Instant periodEnd = Instant.now().plusSeconds(2592000);
-    final PlanFeatures features = new PlanFeatures(true, 50, 0);
+    final PlanFeatures features = new PlanFeatures(50, 0, Map.of(
+        "priority_support", new PlanFeature("priority_support", "Priority Support", "true", "Access to priority support channel")
+    ));
 
     final var details = new EntitlementDetails(subject, planCode, status, periodEnd, features);
 
@@ -43,7 +47,7 @@ class EntitlementDetailsTest {
     assertThat(details.status()).isEqualTo(status);
     assertThat(details.currentPeriodEnd()).isEqualTo(periodEnd);
     assertThat(details.features()).isEqualTo(features);
-    assertThat(details.features().prioritySupport()).isTrue();
+    assertThat(details.features().has("priority_support")).isTrue();
     assertThat(details.features().maxUsers()).isEqualTo(50);
   }
 
@@ -58,7 +62,7 @@ class EntitlementDetailsTest {
     assertThat(details.subject().type()).isEqualTo(SubjectType.USER);
     assertThat(details.subject().key()).isEqualTo("user-456");
     assertThat(details.features()).isEqualTo(PlanFeatures.NONE);
-    assertThat(details.features().prioritySupport()).isFalse();
+    assertThat(details.features().has("priority_support")).isFalse();
     assertThat(details.features().maxUsers()).isEqualTo(1);
   }
 
@@ -67,7 +71,7 @@ class EntitlementDetailsTest {
   void shouldSupportRecordEquality() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Instant periodEnd = Instant.now();
-    final PlanFeatures features = new PlanFeatures(false, 5, 3);
+    final PlanFeatures features = new PlanFeatures(5, 3, Map.of());
     final var details1 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, features);
     final var details2 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, features);
 

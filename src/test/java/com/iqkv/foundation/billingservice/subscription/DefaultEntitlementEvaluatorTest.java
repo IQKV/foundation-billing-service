@@ -22,12 +22,14 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.plan.Plan;
+import com.iqkv.foundation.billingservice.plan.PlanFeature;
 import com.iqkv.foundation.billingservice.plan.PlanFeatureRegistry;
 import com.iqkv.foundation.billingservice.plan.PlanFeatures;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -72,7 +74,9 @@ class DefaultEntitlementEvaluatorTest {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Subscription subscription = createSubscription("price_pro123", "active");
     final Plan plan = createPlan("pro-monthly");
-    final PlanFeatures expectedFeatures = new PlanFeatures(true, 50, 0);
+    final PlanFeatures expectedFeatures = new PlanFeatures(50, 0, Map.of(
+        "priority_support", new PlanFeature("priority_support", "Priority Support", "true", "Access to priority support channel")
+    ));
 
     when(subscriptionMapper.findActiveBySubject("TENANT", "tenant-123")).thenReturn(Optional.of(subscription));
     when(planMapper.findByExternalPriceId("price_pro123")).thenReturn(Optional.of(plan));
@@ -85,7 +89,7 @@ class DefaultEntitlementEvaluatorTest {
     assertThat(result.get().planCode()).isEqualTo("pro-monthly");
     assertThat(result.get().status()).isEqualTo("active");
     assertThat(result.get().features()).isEqualTo(expectedFeatures);
-    assertThat(result.get().features().prioritySupport()).isTrue();
+    assertThat(result.get().features().has("priority_support")).isTrue();
     verify(subscriptionMapper).findActiveBySubject("TENANT", "tenant-123");
     verify(planMapper).findByExternalPriceId("price_pro123");
     verify(planFeatureRegistry).forPlan("pro-monthly");

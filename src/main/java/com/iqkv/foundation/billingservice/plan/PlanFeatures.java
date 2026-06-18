@@ -17,7 +17,7 @@
 package com.iqkv.foundation.billingservice.plan;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 
 /**
  * Feature set for a subscription plan.
@@ -28,28 +28,29 @@ import java.util.List;
  *       {@code int} fields for compile-time safety. These are enforced at write time by IAM and
  *       other services; a typo in the field name would be a silent runtime bug, so they stay
  *       typed.</li>
- *   <li><b>Open feature list</b> ({@link #features}) — an extensible {@code List<PlanFeature>}
- *       for display-oriented and entitlement flags (e.g. {@code priority_support},
- *       {@code custom_domain}, {@code sso}). Adding a new feature requires only a YAML change —
- *       no recompilation of any service.</li>
+ *   <li><b>Open feature map</b> ({@link #features}) — an extensible
+ *       {@code Map<String, PlanFeature>} keyed by feature code (e.g. {@code "priority_support"}).
+ *       O(1) lookup, no duplicate codes, insertion order preserved via {@code LinkedHashMap}
+ *       (Spring Boot's default for YAML map binding). Adding a new feature requires only a
+ *       YAML change — no recompilation of any service.</li>
  * </ul>
  *
  * <p>Bound from {@code iqkv.billing.stripe.schema.products.<planCode>.features} in YAML.
  * Absent quota fields default to the most restrictive value ({@code 1}).
- * An absent or empty {@code features} list is treated as an empty list.
+ * An absent or empty {@code features} map is treated as an empty map.
  *
- * <p>{@link #NONE} is the safe fallback — most restrictive quotas, empty feature list.
+ * <p>{@link #NONE} is the safe fallback — most restrictive quotas, empty feature map.
  *
  * <p>{@code maxUsers} and {@code maxProjects} use {@code 0} to mean "unlimited".
  */
 public record PlanFeatures(
     int maxUsers,
     int maxProjects,
-    List<PlanFeature> features
+    Map<String, PlanFeature> features
 ) {
 
   /** Safe fallback: most restrictive quotas, no display features. */
-  public static final PlanFeatures NONE = new PlanFeatures(1, 1, Collections.emptyList());
+  public static final PlanFeatures NONE = new PlanFeatures(1, 1, Collections.emptyMap());
 
   public PlanFeatures {
     if (maxUsers < 0) {
@@ -58,12 +59,12 @@ public record PlanFeatures(
     if (maxProjects < 0) {
       throw new IllegalArgumentException("maxProjects must be >= 0");
     }
-    features = features != null ? Collections.unmodifiableList(features) : Collections.emptyList();
+    features = features != null ? Collections.unmodifiableMap(features) : Collections.emptyMap();
   }
 
   /**
-   * Returns {@code true} if the feature list contains an entry with the given code
-   * whose value is {@code "true"} (case-insensitive).
+   * Returns {@code true} if the feature map contains an entry for the given code
+   * whose value is {@code "true"} (case-insensitive). O(1) lookup.
    *
    * <p>Use this for display-only boolean features. For quota enforcement, use the
    * typed fields {@link #maxUsers()} and {@link #maxProjects()} directly.
@@ -74,10 +75,7 @@ public record PlanFeatures(
     if (code == null || code.isBlank()) {
       return false;
     }
-    return features.stream()
-        .filter(f -> code.equals(f.code()))
-        .findFirst()
-        .map(PlanFeature::isEnabled)
-        .orElse(false);
+    final PlanFeature feature = features.get(code);
+    return feature != null && feature.isEnabled();
   }
 }

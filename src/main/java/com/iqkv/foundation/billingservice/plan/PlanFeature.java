@@ -17,17 +17,15 @@
 package com.iqkv.foundation.billingservice.plan;
 
 /**
- * A single named feature entry in a plan's feature list.
+ * Value object for a single named feature entry within a plan's feature map.
  *
- * <p>Used in the open-ended {@code features} list on {@link PlanFeatures} to carry
- * display-oriented and entitlement flags without requiring a Java record change per feature.
- * New features (e.g. {@code custom_domain}, {@code sso}, {@code api_calls_per_month}) are
- * added purely in YAML — no recompilation required.
+ * <p>The feature code (e.g. {@code "priority_support"}) is also the map key on
+ * {@link PlanFeatures#features()}, so it is carried here as well to make the object
+ * self-contained when iterating the map or serialising individual entries (e.g. REST
+ * responses, pricing-page DTOs). New features are added purely in YAML; no Java change required.
  *
- * <p>Quota-enforced features ({@code max_users}, {@code max_projects}) remain as typed
- * fields on {@link PlanFeatures} for compile-time safety.
- *
- * @param code        machine-readable identifier (e.g. {@code "priority_support"})
+ * @param code        machine-readable identifier, matches the map key
+ *                    (e.g. {@code "priority_support"})
  * @param title       human-readable label shown on pricing pages (e.g. {@code "Priority Support"})
  * @param value       feature value as a string — {@code "true"}/{@code "false"} for boolean
  *                    features, a number string for limits (e.g. {@code "10"})
@@ -42,7 +40,6 @@ public record PlanFeature(
 
   /**
    * Returns {@code true} if this feature's value is the string {@code "true"} (case-insensitive).
-   * Convenience method for boolean feature checks.
    */
   public boolean isEnabled() {
     return "true".equalsIgnoreCase(value);
