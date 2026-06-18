@@ -19,7 +19,6 @@ package com.iqkv.foundation.billingservice.plan;
 import java.util.List;
 
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
-import com.iqkv.foundation.billingservice.shared.exception.DuplicateResourceException;
 import org.springframework.stereotype.Service;
 
 /**

@@ -17,8 +17,6 @@
 package com.iqkv.foundation.billingservice.plan;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,7 +26,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
-import com.iqkv.foundation.billingservice.shared.exception.DuplicateResourceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
