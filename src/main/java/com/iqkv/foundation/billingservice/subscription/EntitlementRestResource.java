@@ -92,7 +92,7 @@ public class EntitlementRestResource {
   public ResponseEntity<EntitlementResponse> getMyEntitlements(
       @AuthenticationPrincipal final Jwt jwt) {
     final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
-    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UUID userId = UUID.fromString(jwt.getClaimAsString(JwtClaimNames.USER_ID));
 
     final SubscriptionSubject subject = subjectResolver.resolveSubject(tenantKey, userId);
 
