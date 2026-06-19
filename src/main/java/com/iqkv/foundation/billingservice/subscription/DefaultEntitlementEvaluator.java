@@ -65,9 +65,16 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
         subscriptionMapper.findActiveBySubject(subject.type().name(), subject.key());
 
     if (activeSubscription.isEmpty()) {
-      log.debug("No active subscription found for subject type={} key={}", subject.type(), subject.key());
-      meterRegistry.counter("billing_entitlements_check_total", "result", "denied").increment();
-      return Optional.empty();
+      log.debug("No active subscription found for subject type={} key={} - returning free plan", subject.type(), subject.key());
+      meterRegistry.counter("billing_entitlements_check_total", "result", "free").increment();
+      // Return default free plan when no subscription
+      return Optional.of(new EntitlementDetails(
+          subject,
+          "free",
+          "active", // free plan is always active
+          null, // free plan has no period end
+          PlanFeatures.NONE
+      ));
     }
 
     final Subscription subscription = activeSubscription.get();

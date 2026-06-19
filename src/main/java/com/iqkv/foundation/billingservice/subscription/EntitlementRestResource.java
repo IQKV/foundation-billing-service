@@ -80,14 +80,14 @@ public class EntitlementRestResource {
       summary = "Get current subject entitlements",
       description = "Returns the active plan code, subscription status, period end, and typed feature set "
                     + "for the current authenticated subject. Resolves subject by rollout mode "
-                    + "(TENANT in multi-tenant, USER in single-tenant). Returns 404 when no active subscription exists.")
+                    + "(TENANT in multi-tenant, USER in single-tenant). Returns free plan entitlements "
+                    + "when no active subscription exists.")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
              description = "Tenant key propagated by the gateway")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Entitlements returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
-      @ApiResponse(responseCode = "403", description = "Access denied"),
-      @ApiResponse(responseCode = "404", description = "No active subscription found")
+      @ApiResponse(responseCode = "403", description = "Access denied")
   })
   public ResponseEntity<EntitlementResponse> getMyEntitlements(
       @AuthenticationPrincipal final Jwt jwt) {
@@ -96,13 +96,14 @@ public class EntitlementRestResource {
 
     final SubscriptionSubject subject = subjectResolver.resolveSubject(tenantKey, userId);
 
-    return entitlementEvaluator.evaluateEntitlements(subject)
-        .map(d -> ResponseEntity.ok(new EntitlementResponse(
-            d.planCode(),
-            d.status(),
-            d.currentPeriodEnd(),
-            d.features()
-        )))
-        .orElse(ResponseEntity.notFound().build());
+    final EntitlementDetails details = entitlementEvaluator.evaluateEntitlements(subject)
+        .orElseThrow(() -> new IllegalStateException("Entitlements should always be present"));
+
+    return ResponseEntity.ok(new EntitlementResponse(
+        details.planCode(),
+        details.status(),
+        details.currentPeriodEnd(),
+        details.features()
+    ));
   }
 }

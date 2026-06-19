@@ -114,14 +114,19 @@ class DefaultEntitlementEvaluatorTest {
   }
 
   @Test
-  @DisplayName("Should return empty when no active subscription exists")
-  void shouldReturnEmptyWhenNoActiveSubscription() {
+  @DisplayName("Should return free plan when no active subscription exists")
+  void shouldReturnFreePlanWhenNoActiveSubscription() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-999");
     when(subscriptionMapper.findActiveBySubject("TENANT", "tenant-999")).thenReturn(Optional.empty());
 
     final Optional<EntitlementDetails> result = entitlementEvaluator.evaluateEntitlements(subject);
 
-    assertThat(result).isEmpty();
+    assertThat(result).isPresent();
+    assertThat(result.get().subject()).isEqualTo(subject);
+    assertThat(result.get().planCode()).isEqualTo("free");
+    assertThat(result.get().status()).isEqualTo("active");
+    assertThat(result.get().currentPeriodEnd()).isNull();
+    assertThat(result.get().features()).isEqualTo(PlanFeatures.NONE);
     verify(subscriptionMapper).findActiveBySubject("TENANT", "tenant-999");
     verifyNoInteractions(planMapper, planFeatureRegistry);
   }
