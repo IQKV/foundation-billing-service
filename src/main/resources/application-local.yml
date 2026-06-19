@@ -58,6 +58,10 @@ iqkv:
                   title: "Priority Support"
                   value: "false"
                   description: "Access to priority support channel"
+                advanced_analytics:
+                  title: "Advanced Analytics"
+                  value: "false"
+                  description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
           pro-monthly:
             planCode: "pro-monthly"
             displayName: "Pro Monthly (Local)"
@@ -75,3 +79,7 @@ iqkv:
                   title: "Priority Support"
                   value: "true"
                   description: "Access to priority support channel"
+                advanced_analytics:
+                  title: "Advanced Analytics"
+                  value: "true"
+                  description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"

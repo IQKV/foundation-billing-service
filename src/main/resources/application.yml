@@ -161,6 +161,10 @@ iqkv:
         #           title: "Priority Support"
         #           value: "false"
         #           description: "Access to priority support channel"
+        #         advanced_analytics:
+        #           title: "Advanced Analytics"
+        #           value: "false"
+        #           description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
   auth:
     jwt:
       public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public.pem}
