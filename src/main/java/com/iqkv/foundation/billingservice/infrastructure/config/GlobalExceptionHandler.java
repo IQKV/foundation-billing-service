@@ -27,6 +27,7 @@ import com.iqkv.foundation.billingservice.plan.PlanScopeMismatchException;
 import com.iqkv.foundation.billingservice.shared.exception.DuplicateResourceException;
 import com.iqkv.foundation.billingservice.shared.exception.MessagingException;
 import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException;
+import com.iqkv.foundation.billingservice.shared.exception.PlanFeatureNotAvailableException;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
 import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
@@ -116,6 +117,16 @@ public class GlobalExceptionHandler {
     log.warn("Access denied: {}", ex.getMessage());
     final ProblemDetail pd = problem("about:blank", "Forbidden", 403,
         ex.getMessage(), request);
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
+  }
+
+  @ExceptionHandler(PlanFeatureNotAvailableException.class)
+  public ResponseEntity<ProblemDetail> handlePlanFeatureNotAvailable(final PlanFeatureNotAvailableException ex,
+                                                                     final HttpServletRequest request) {
+    log.warn("Plan feature not available: featureCode={}, planMessage={}", ex.getFeatureCode(), ex.getMessage());
+    final ProblemDetail pd = problem("about:blank", "Plan upgrade required", 403,
+        ex.getMessage(), request);
+    pd.setProperty("featureCode", ex.getFeatureCode());
     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
   }
 

@@ -73,7 +73,7 @@ public interface PaymentGatewayPort {
   /**
    * Cancels an existing subscription.
    *
-   * @param subscriptionId      external subscription ID
+   * @param subscriptionId    external subscription ID
    * @param cancelAtPeriodEnd whether to cancel at the end of the period or immediately
    * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if cancellation fails
    */
@@ -122,7 +122,7 @@ public interface PaymentGatewayPort {
    * @param payload   the raw webhook payload
    * @param signature the signature header value from the webhook request
    * @return an optional containing the parsed event if the signature is valid and the event type
-   *     is supported; empty if the event type is not handled
+   * is supported; empty if the event type is not handled
    * @throws com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException if the signature is invalid or the payload cannot be deserialized
    */
   Optional<GatewayWebhookEvent> verifyAndParseWebhookEvent(String payload, String signature);

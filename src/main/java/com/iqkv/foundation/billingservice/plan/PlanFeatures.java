@@ -49,7 +49,9 @@ public record PlanFeatures(
     Map<String, PlanFeature> features
 ) {
 
-  /** Safe fallback: most restrictive quotas, no display features. */
+  /**
+   * Safe fallback: most restrictive quotas, no display features.
+   */
   public static final PlanFeatures NONE = new PlanFeatures(1, 1, Collections.emptyMap());
 
   public PlanFeatures {

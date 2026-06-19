@@ -67,7 +67,7 @@ public class BillingSettingsRestResource {
   @Operation(
       summary = "Get billing settings",
       description = "Returns billing settings for the given tenant. Requires TENANT_OWNER or ADMIN authority. "
-                   + "The authenticated tenant must match the tenantKey path variable.")
+                    + "The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
              description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
@@ -96,8 +96,8 @@ public class BillingSettingsRestResource {
   @Operation(
       summary = "Create billing settings",
       description = "Creates billing settings for the tenant. Billing email and currency are required. "
-                   + "Returns 409 if settings already exist. Requires TENANT_OWNER or ADMIN authority. "
-                   + "The authenticated tenant must match the tenantKey path variable.")
+                    + "Returns 409 if settings already exist. Requires TENANT_OWNER or ADMIN authority. "
+                    + "The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
              description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
@@ -125,7 +125,7 @@ public class BillingSettingsRestResource {
   @Operation(
       summary = "Update billing settings",
       description = "Partially updates billing settings. Only non-null fields are applied. "
-                   + "Requires TENANT_OWNER or ADMIN authority. The authenticated tenant must match the tenantKey path variable.")
+                    + "Requires TENANT_OWNER or ADMIN authority. The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
              description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
@@ -152,7 +152,7 @@ public class BillingSettingsRestResource {
   @Operation(
       summary = "Create customer portal session",
       description = "Creates a Stripe Customer Portal session and returns the URL for redirection. "
-                   + "Requires TENANT_OWNER or ADMIN authority. The authenticated tenant must match the tenantKey path variable.")
+                    + "Requires TENANT_OWNER or ADMIN authority. The authenticated tenant must match the tenantKey path variable.")
   @Parameter(name = "tenantKey", in = ParameterIn.PATH, required = true,
              description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
