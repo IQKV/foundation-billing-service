@@ -29,6 +29,7 @@ YAML Config → PlanFeatureRegistry → /internal/plans → Gateway/Services →
 
 - **`maxUsers`** (integer): Maximum users per tenant — typed quota field (0 = unlimited)
 - **`maxProjects`** (integer): Maximum projects per tenant — typed quota field (0 = unlimited)
+- **`trialPeriodDays`** (integer): Free trial length in days (0 = no trial)
 - **`features`** (map): Open `Map<String, PlanFeature>` keyed by feature code (e.g. `priority_support`). Each entry carries `code`, `title`, `value`, and `description`. Adding a new feature requires only a YAML change — no code recompilation.
 
 ### Integration Points
@@ -165,12 +166,38 @@ The `{tenantKey}` is validated against the authenticated tenant's JWT `tenant_id
 
 **Entitlement evaluation is tightly coupled with plan features** — this endpoint serves as the primary integration point between billing and platform access control. The response includes the complete `PlanFeatures` record for the tenant's active plan, enabling fine-grained access control decisions in client applications.
 
-**Response Example:**
+**Response Example (with trial):**
+
+```json
+{
+    "planCode": "pro-monthly",
+    "status": "trialing",
+    "isInTrial": true,
+    "trialDaysLeft": 7,
+    "currentPeriodEnd": "2026-07-15T00:00:00Z",
+    "features": {
+        "maxUsers": 50,
+        "maxProjects": 0,
+        "features": {
+            "priority_support": {
+                "code": "priority_support",
+                "title": "Priority Support",
+                "value": "true",
+                "description": "Access to priority support channel"
+            }
+        }
+    }
+}
+```
+
+**Response Example (without trial):**
 
 ```json
 {
     "planCode": "pro-monthly",
     "status": "active",
+    "isInTrial": false,
+    "trialDaysLeft": null,
     "currentPeriodEnd": "2026-07-15T00:00:00Z",
     "features": {
         "maxUsers": 50,
@@ -215,6 +242,14 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 [
     {
         "planCode": "basic-monthly",
+        "displayName": "Basic Monthly",
+        "description": "Entry-level plan for small teams.",
+        "billingPeriod": "MONTHLY",
+        "priceMinor": 1000,
+        "currency": "USD",
+        "scope": "TENANT",
+        "active": true,
+        "trialPeriodDays": 14,
         "features": {
             "maxUsers": 5,
             "maxProjects": 3,
@@ -223,6 +258,14 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
     },
     {
         "planCode": "pro-monthly",
+        "displayName": "Pro Monthly",
+        "description": "Pro plan for larger teams with priority support.",
+        "billingPeriod": "MONTHLY",
+        "priceMinor": 3000,
+        "currency": "USD",
+        "scope": "TENANT",
+        "active": true,
+        "trialPeriodDays": 0,
         "features": {
             "maxUsers": 50,
             "maxProjects": 0,

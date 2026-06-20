@@ -8,7 +8,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 
 - **Automatic customer provisioning** — listens for `tenant.created` and `tenant.provisioned` events on RabbitMQ and creates a payment gateway customer per tenant; the `external_customer_id` is stored in `billing_settings`
 - **Multi-gateway strategy** — `PaymentGatewayPort` interface (Strategy pattern + Hexagonal Architecture) decouples business logic from gateway SDKs; Stripe is the active implementation, additional gateways are reserved
-- **Plan catalog** — plan definitions with typed `PlanFeatures` (scoped to `MULTI_TENANT` or `SINGLE_TENANT` mode); quota fields (`maxUsers`, `maxProjects`) are typed `int` fields; display features (e.g. `priority_support`) are held in an extensible `Map<String, PlanFeature>` keyed by feature code — adding a new feature requires only a YAML change. `BillingSeedRunner` synchronizes plans with the Stripe catalog (external Product and Price ID creation) at application startup. Plan management is config-driven — there is no REST API for creating, updating, or deactivating plans. The static feature registry is loaded into the in-memory `PlanFeatureRegistry` at startup and served via a public internal endpoint for gateway and downstream service caching; **entitlement evaluation is tightly coupled with plan features** — the entitlements endpoint returns complete feature data enabling client-side access control; `PlanEligibilityPolicy` validates scope against active rollout mode
+- **Plan catalog** — plan definitions with typed `PlanFeatures` (scoped to `MULTI_TENANT` or `SINGLE_TENANT` mode); quota fields (`maxUsers`, `maxProjects`) are typed `int` fields; `trialPeriodDays` to define free trial length in days (0 means no trial); display features (e.g. `priority_support`) are held in an extensible `Map<String, PlanFeature>` keyed by feature code — adding a new feature requires only a YAML change. `BillingSeedRunner` synchronizes plans with the Stripe catalog (external Product and Price ID creation) at application startup. Plan management is config-driven — there is no REST API for creating, updating, or deactivating plans. The static feature registry is loaded into the in-memory `PlanFeatureRegistry` at startup and served via a public internal endpoint for gateway and downstream service caching; **entitlement evaluation is tightly coupled with plan features** — the entitlements endpoint returns complete feature data enabling client-side access control; `PlanEligibilityPolicy` validates scope against active rollout mode
 - **Billing settings** — each tenant has a 1:1 `billing_settings` record that is the single source of truth for payment gateway customer metadata; decoupled from IAM users by design
 - **Billing email** — a separate `billing_email` field allows finance teams to receive invoices without a system account
 - **Tax ID / VAT/GST** — stored in `billing_settings` for compliant B2B invoices
@@ -113,12 +113,38 @@ Base path: `/api/v1/billing`
 
 **Entitlement evaluation is tightly coupled with plan features** — this endpoint serves as the primary integration point between billing and platform access control. The response includes complete `PlanFeatures` data enabling downstream services to make fine-grained authorization decisions.
 
-**Response Structure:**
+**Response Structure (with trial):**
+
+```json
+{
+    "planCode": "pro-monthly",
+    "status": "trialing",
+    "isInTrial": true,
+    "trialDaysLeft": 7,
+    "currentPeriodEnd": "2026-07-15T00:00:00Z",
+    "features": {
+        "maxUsers": 50,
+        "maxProjects": 0,
+        "features": {
+            "priority_support": {
+                "code": "priority_support",
+                "title": "Priority Support",
+                "value": "true",
+                "description": "Access to priority support channel"
+            }
+        }
+    }
+}
+```
+
+**Response Structure (without trial):**
 
 ```json
 {
     "planCode": "pro-monthly",
     "status": "active",
+    "isInTrial": false,
+    "trialDaysLeft": null,
     "currentPeriodEnd": "2026-07-15T00:00:00Z",
     "features": {
         "maxUsers": 50,
@@ -152,6 +178,14 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 [
     {
         "planCode": "basic-monthly",
+        "displayName": "Basic Monthly",
+        "description": "Entry-level plan for small teams.",
+        "billingPeriod": "MONTHLY",
+        "priceMinor": 1000,
+        "currency": "USD",
+        "scope": "TENANT",
+        "active": true,
+        "trialPeriodDays": 14,
         "features": {
             "maxUsers": 5,
             "maxProjects": 3,
@@ -160,6 +194,14 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
     },
     {
         "planCode": "pro-monthly",
+        "displayName": "Pro Monthly",
+        "description": "Pro plan for larger teams with priority support.",
+        "billingPeriod": "MONTHLY",
+        "priceMinor": 3000,
+        "currency": "USD",
+        "scope": "TENANT",
+        "active": true,
+        "trialPeriodDays": 0,
         "features": {
             "maxUsers": 50,
             "maxProjects": 0,

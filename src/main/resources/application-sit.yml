@@ -44,7 +44,7 @@ iqkv:
             currency: "USD"
             scope: "TENANT"
             active: true
-            trialPeriodDays: 14
+            trialPeriodDays: 0
             features:
               maxUsers: 10
               maxProjects: 1
@@ -88,6 +88,7 @@ iqkv:
             currency: "USD"
             scope: "TENANT"
             active: true
+            trialPeriodDays: 3
             features:
               maxUsers: 97
               maxProjects: 0
@@ -109,6 +110,7 @@ iqkv:
             currency: "USD"
             scope: "TENANT"
             active: true
+            trialPeriodDays: 14
             features:
               maxUsers: 98
               maxProjects: 0
