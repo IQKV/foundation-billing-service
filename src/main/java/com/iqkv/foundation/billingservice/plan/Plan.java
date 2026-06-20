@@ -19,6 +19,8 @@ package com.iqkv.foundation.billingservice.plan;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * Domain class representing a pre-provisioned subscription plan in the plan catalog.
  *
@@ -177,6 +179,7 @@ public class Plan {
     this.active = active;
   }
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   public Integer getTrialPeriodDays() {
     return trialPeriodDays;
   }
