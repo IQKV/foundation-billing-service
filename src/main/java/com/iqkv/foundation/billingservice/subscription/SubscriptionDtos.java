@@ -17,6 +17,7 @@
 package com.iqkv.foundation.billingservice.subscription;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -43,11 +44,12 @@ public final class SubscriptionDtos {
       Long quantity,
       Instant trialStart,
       Instant trialEnd,
+      boolean isInTrial,
+      Long trialDaysLeft,
       Instant currentPeriodStart,
       Instant currentPeriodEnd,
       boolean cancelAtPeriodEnd,
-      Instant canceledAt
-  ) {
+      Instant canceledAt) {
   }
 
   /**
@@ -160,15 +162,16 @@ public final class SubscriptionDtos {
       Long quantity,
       Instant trialStart,
       Instant trialEnd,
+      boolean isInTrial,
+      Long trialDaysLeft,
       Instant currentPeriodStart,
       Instant currentPeriodEnd,
       boolean cancelAtPeriodEnd,
       Instant canceledAt,
       String subjectType,
       String subjectKey,
-      java.time.LocalDateTime createdAt,
-      java.time.LocalDateTime updatedAt
-  ) {
+      LocalDateTime createdAt,
+      LocalDateTime updatedAt) {
   }
 
   /**

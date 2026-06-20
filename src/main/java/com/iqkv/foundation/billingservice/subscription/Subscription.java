@@ -195,6 +195,22 @@ public class Subscription {
     this.canceledAt = canceledAt;
   }
 
+  public String getSubjectType() {
+    return subjectType;
+  }
+
+  public void setSubjectType(String subjectType) {
+    this.subjectType = subjectType;
+  }
+
+  public String getSubjectKey() {
+    return subjectKey;
+  }
+
+  public void setSubjectKey(String subjectKey) {
+    this.subjectKey = subjectKey;
+  }
+
   public LocalDateTime getCreatedAt() {
     return createdAt;
   }
@@ -211,19 +227,14 @@ public class Subscription {
     this.updatedAt = updatedAt;
   }
 
-  public String getSubjectType() {
-    return subjectType;
-  }
-
-  public void setSubjectType(String subjectType) {
-    this.subjectType = subjectType;
-  }
-
-  public String getSubjectKey() {
-    return subjectKey;
-  }
-
-  public void setSubjectKey(String subjectKey) {
-    this.subjectKey = subjectKey;
+  /**
+   * Returns true if the subscription is currently in a trial period.
+   */
+  public boolean isInTrial() {
+    if (trialStart == null || trialEnd == null) {
+      return false;
+    }
+    final var now = Instant.now();
+    return now.isAfter(trialStart) && now.isBefore(trialEnd);
   }
 }

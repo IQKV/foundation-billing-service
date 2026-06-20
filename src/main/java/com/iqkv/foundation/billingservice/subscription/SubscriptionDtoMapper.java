@@ -16,6 +16,9 @@
 
 package com.iqkv.foundation.billingservice.subscription;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 /**
  * Maps {@link Subscription} domain objects to API response DTOs.
  */
@@ -38,11 +41,12 @@ public final class SubscriptionDtoMapper {
         subscription.getQuantity(),
         subscription.getTrialStart(),
         subscription.getTrialEnd(),
+        subscription.isInTrial(),
+        computeTrialDaysLeft(subscription.getTrialEnd()),
         subscription.getCurrentPeriodStart(),
         subscription.getCurrentPeriodEnd(),
         subscription.isCancelAtPeriodEnd(),
-        subscription.getCanceledAt()
-    );
+        subscription.getCanceledAt());
   }
 
   /**
@@ -59,6 +63,8 @@ public final class SubscriptionDtoMapper {
         subscription.getQuantity(),
         subscription.getTrialStart(),
         subscription.getTrialEnd(),
+        subscription.isInTrial(),
+        computeTrialDaysLeft(subscription.getTrialEnd()),
         subscription.getCurrentPeriodStart(),
         subscription.getCurrentPeriodEnd(),
         subscription.isCancelAtPeriodEnd(),
@@ -66,7 +72,17 @@ public final class SubscriptionDtoMapper {
         subscription.getSubjectType(),
         subscription.getSubjectKey(),
         subscription.getCreatedAt(),
-        subscription.getUpdatedAt()
-    );
+        subscription.getUpdatedAt());
+  }
+
+  private static Long computeTrialDaysLeft(Instant trialEnd) {
+    if (trialEnd == null) {
+      return null;
+    }
+    final var now = Instant.now();
+    if (now.isAfter(trialEnd)) {
+      return 0L;
+    }
+    return ChronoUnit.DAYS.between(now, trialEnd);
   }
 }
