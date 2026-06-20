@@ -17,34 +17,35 @@
         <result property="externalProductId" column="external_product_id"/>
         <result property="externalPriceId" column="external_price_id"/>
         <result property="active" column="active"/>
+        <result property="trialPeriodDays" column="trial_period_days"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <select id="findById" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at
+        feature_set, scope, external_product_id, external_price_id, active, trial_period_days, created_at, updated_at
         FROM plan_catalog
         WHERE id = #{id}::uuid
     </select>
 
     <select id="findByPlanCode" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at
+        feature_set, scope, external_product_id, external_price_id, active, trial_period_days, created_at, updated_at
         FROM plan_catalog
         WHERE plan_code = #{planCode}
     </select>
 
     <select id="findByExternalPriceId" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at
+        feature_set, scope, external_product_id, external_price_id, active, trial_period_days, created_at, updated_at
         FROM plan_catalog
         WHERE external_price_id = #{externalPriceId}
     </select>
 
     <select id="findAllActive" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at
+        feature_set, scope, external_product_id, external_price_id, active, trial_period_days, created_at, updated_at
         FROM plan_catalog
         WHERE active = true
         ORDER BY plan_code ASC
@@ -52,7 +53,7 @@
 
     <select id="findAll" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at
+        feature_set, scope, external_product_id, external_price_id, active, trial_period_days, created_at, updated_at
         FROM plan_catalog
         ORDER BY plan_code ASC
     </select>
@@ -60,7 +61,7 @@
     <insert id="insert" parameterType="com.iqkv.foundation.billingservice.plan.Plan">
         INSERT INTO plan_catalog
         (id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, created_at, updated_at)
+        feature_set, scope, external_product_id, external_price_id, active, trial_period_days, created_at, updated_at)
         VALUES
         (COALESCE(#{id}::uuid, gen_random_uuid()),
         #{planCode}, #{displayName}, #{description}, #{billingPeriod}, #{priceMinor},
@@ -70,6 +71,7 @@
         #{externalProductId},
         #{externalPriceId},
         COALESCE(#{active}, true),
+        COALESCE(#{trialPeriodDays}, 0),
         COALESCE(#{createdAt}, now()),
         COALESCE(#{updatedAt}, now()))
     </insert>
@@ -86,6 +88,7 @@
         external_product_id = #{externalProductId},
         external_price_id = #{externalPriceId},
         active = #{active},
+        trial_period_days = COALESCE(#{trialPeriodDays}, 0),
         updated_at = now()
         WHERE plan_code = #{planCode}
     </update>

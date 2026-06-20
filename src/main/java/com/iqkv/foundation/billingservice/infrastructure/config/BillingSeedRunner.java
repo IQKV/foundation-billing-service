@@ -103,6 +103,7 @@ public class BillingSeedRunner implements ApplicationRunner {
     plan.setFeatureSet(serializeFeatures(features, schema.planCode()));
     plan.setScope(schema.scope());
     plan.setActive(schema.active() != null ? schema.active() : Boolean.TRUE);
+    plan.setTrialPeriodDays(schema.trialPeriodDays() != null ? schema.trialPeriodDays() : 0);
 
     if (plan.getId() == null) {
       planMapper.insert(plan);

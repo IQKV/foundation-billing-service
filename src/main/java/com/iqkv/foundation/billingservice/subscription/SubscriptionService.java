@@ -135,12 +135,13 @@ public class SubscriptionService {
       throw new IllegalStateException("Plan " + request.planCode() + " has no externalPriceId (not synced with payment gateway yet)");
     }
 
+    final Integer trialDays = request.trialPeriodDays() != null ? request.trialPeriodDays() : plan.getTrialPeriodDays();
     final var command = new CreateCheckoutSessionCommand(
         settings.getExternalCustomerId(),
         plan.getExternalPriceId(),
         request.successUrl(),
         request.cancelUrl(),
-        request.trialPeriodDays(),
+        trialDays,
         request.quantity(),
         request.allowPromotionCodes(),
         java.util.Map.of("tenantKey", tenantKey)

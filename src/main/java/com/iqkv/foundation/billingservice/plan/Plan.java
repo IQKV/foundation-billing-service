@@ -42,6 +42,7 @@ public class Plan {
   private String externalProductId;
   private String externalPriceId;
   private Boolean active;         // default true
+  private Integer trialPeriodDays; // 0 means no trial, > 0 means number of days
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -60,6 +61,7 @@ public class Plan {
               final String externalProductId,
               final String externalPriceId,
               final Boolean active,
+              final Integer trialPeriodDays,
               final LocalDateTime createdAt,
               final LocalDateTime updatedAt) {
     this.id = id;
@@ -74,6 +76,7 @@ public class Plan {
     this.externalProductId = externalProductId;
     this.externalPriceId = externalPriceId;
     this.active = active;
+    this.trialPeriodDays = trialPeriodDays;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -172,6 +175,14 @@ public class Plan {
 
   public void setActive(Boolean active) {
     this.active = active;
+  }
+
+  public Integer getTrialPeriodDays() {
+    return trialPeriodDays;
+  }
+
+  public void setTrialPeriodDays(Integer trialPeriodDays) {
+    this.trialPeriodDays = trialPeriodDays;
   }
 
   public LocalDateTime getCreatedAt() {

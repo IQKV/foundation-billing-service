@@ -37,6 +37,7 @@ public record StripeProductSchema(
     @NotBlank String currency,
     PlanFeatures features,
     @NotBlank String scope,
-    Boolean active
+    Boolean active,
+    Integer trialPeriodDays
 ) {
 }
