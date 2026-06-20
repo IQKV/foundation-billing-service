@@ -109,7 +109,7 @@ class DomainEntitiesTest {
         "Professional plan description",
         "MONTHLY", 2999, "USD",
         "{\"feature\":true}", "TENANT",
-        "prod_ext123", "price_ext456", true, now, now
+        "prod_ext123", "price_ext456", true, 0, now, now
     );
 
     // Assert

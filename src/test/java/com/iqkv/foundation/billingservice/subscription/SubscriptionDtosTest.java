@@ -46,7 +46,7 @@ class SubscriptionDtosTest {
     // Act
     final var response = new SubscriptionDtos.SubscriptionResponse(
         id, tenantKey, externalSubscriptionId, status, planId,
-        quantity, trialStart, trialEnd,
+        quantity, trialStart, trialEnd, false, null,
         periodStart, periodEnd, true, canceledAt
     );
 
@@ -71,7 +71,7 @@ class SubscriptionDtosTest {
     // Arrange & Act
     final var response = new SubscriptionDtos.SubscriptionResponse(
         UUID.randomUUID(), "tenant-123", "sub_abc", "active", "price_123",
-        null, null, null,
+        null, null, null, false, null,
         Instant.now(), Instant.now().plusSeconds(2592000), false, null
     );
 
@@ -91,12 +91,12 @@ class SubscriptionDtosTest {
     final Instant now = Instant.now();
     final var response1 = new SubscriptionDtos.SubscriptionResponse(
         id, "tenant-123", "sub_abc", "active", "price_123",
-        5L, null, null,
+        5L, null, null, false, null,
         now, now.plusSeconds(2592000), false, null
     );
     final var response2 = new SubscriptionDtos.SubscriptionResponse(
         id, "tenant-123", "sub_abc", "active", "price_123",
-        5L, null, null,
+        5L, null, null, false, null,
         now, now.plusSeconds(2592000), false, null
     );
 
@@ -111,7 +111,7 @@ class SubscriptionDtosTest {
     // Arrange
     final var response = new SubscriptionDtos.SubscriptionResponse(
         UUID.randomUUID(), "tenant-123", "sub_abc", "active", "price_123",
-        1L, null, null,
+        1L, null, null, false, null,
         Instant.now(), Instant.now().plusSeconds(2592000), false, null
     );
 
@@ -278,7 +278,7 @@ class SubscriptionDtosTest {
     // Act
     final var response = new SubscriptionDtos.AdminSubscriptionResponse(
         id, "tenant-123", "sub_ext123", "active", "price_123", 2L,
-        null, null, now, now.plusSeconds(2592000), false, null,
+        null, null, false, null, now, now.plusSeconds(2592000), false, null,
         "TENANT", "tenant-123", created, created
     );
 
@@ -319,7 +319,7 @@ class SubscriptionDtosTest {
     // Arrange
     final var subscription = new SubscriptionDtos.AdminSubscriptionResponse(
         UUID.randomUUID(), "tenant-123", "sub_1", "active", "price_1", 1L,
-        null, null, Instant.now(), Instant.now(), false, null,
+        null, null, false, null, Instant.now(), Instant.now(), false, null,
         "TENANT", "tenant-123", java.time.LocalDateTime.now(), java.time.LocalDateTime.now()
     );
     final var content = java.util.List.of(subscription);
