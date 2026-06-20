@@ -87,7 +87,7 @@ iqkv:
             scope: "TENANT"
             active: true
             features:
-              maxUsers: 95
+              maxUsers: 97
               maxProjects: 0
               features:
                 priority_support:
@@ -108,7 +108,7 @@ iqkv:
             scope: "TENANT"
             active: true
             features:
-              maxUsers: 95
+              maxUsers: 98
               maxProjects: 0
               features:
                 priority_support:
