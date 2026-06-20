@@ -50,6 +50,7 @@ iqkv:
             currency: "USD"
             scope: "TENANT"
             active: true
+            trialPeriodDays: 14
             features:
               maxUsers: 5
               maxProjects: 3
