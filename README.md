@@ -224,7 +224,7 @@ The Billing service publishes payment-related events to RabbitMQ for downstream 
 
 ## Tech Stack
 
-- Java 25 / Spring Boot 4.0
+- Java 25 / Spring Boot 4.1
 - MyBatis 3.x (no JPA) + PostgreSQL 17
 - Liquibase for schema migrations
 - RabbitMQ for async event consumption and publishing
