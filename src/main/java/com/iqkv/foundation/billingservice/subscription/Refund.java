@@ -34,6 +34,8 @@ public class Refund {
   private String currency;
   private String status;
   private Instant occurredAt;
+  private String subjectType;             // TENANT | USER
+  private String subjectKey;              // tenantKey or userId depending on subjectType
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -49,6 +51,8 @@ public class Refund {
                 final String currency,
                 final String status,
                 final Instant occurredAt,
+                final String subjectType,
+                final String subjectKey,
                 final LocalDateTime createdAt,
                 final LocalDateTime updatedAt) {
     this.id = id;
@@ -60,6 +64,8 @@ public class Refund {
     this.currency = currency;
     this.status = status;
     this.occurredAt = occurredAt;
+    this.subjectType = subjectType;
+    this.subjectKey = subjectKey;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -150,5 +156,21 @@ public class Refund {
 
   public void setUpdatedAt(LocalDateTime updatedAt) {
     this.updatedAt = updatedAt;
+  }
+
+  public String getSubjectType() {
+    return subjectType;
+  }
+
+  public void setSubjectType(String subjectType) {
+    this.subjectType = subjectType;
+  }
+
+  public String getSubjectKey() {
+    return subjectKey;
+  }
+
+  public void setSubjectKey(String subjectKey) {
+    this.subjectKey = subjectKey;
   }
 }

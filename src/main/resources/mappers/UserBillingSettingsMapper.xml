@@ -25,6 +25,10 @@
         WHERE user_id = #{userId}::uuid
     </select>
 
+    <select id="existsByUserId" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM user_billing_settings WHERE user_id = #{userId}::uuid)
+    </select>
+
     <insert id="insert" parameterType="com.iqkv.foundation.billingservice.userbilling.UserBillingSettings">
         INSERT INTO user_billing_settings
         (id, user_id, external_customer_id, billing_email, company_name,

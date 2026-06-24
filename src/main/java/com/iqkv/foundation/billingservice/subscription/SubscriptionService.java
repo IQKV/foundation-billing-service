@@ -50,6 +50,7 @@ public class SubscriptionService {
   private final SubscriptionSubjectResolver subjectResolver;
   private final PaymentGatewayPort paymentGatewayPort;
   private final BillingSettingsMapper billingSettingsMapper;
+  private final com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper userBillingSettingsMapper;
   private final PlanMapper planMapper;
   private final MeterRegistry meterRegistry;
 
@@ -58,6 +59,7 @@ public class SubscriptionService {
                              final SubscriptionSubjectResolver subjectResolver,
                              final PaymentGatewayPort paymentGatewayPort,
                              final BillingSettingsMapper billingSettingsMapper,
+                             final com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper userBillingSettingsMapper,
                              final PlanMapper planMapper,
                              final MeterRegistry meterRegistry) {
     this.subscriptionMapper = subscriptionMapper;
@@ -65,6 +67,7 @@ public class SubscriptionService {
     this.subjectResolver = subjectResolver;
     this.paymentGatewayPort = paymentGatewayPort;
     this.billingSettingsMapper = billingSettingsMapper;
+    this.userBillingSettingsMapper = userBillingSettingsMapper;
     this.planMapper = planMapper;
     this.meterRegistry = meterRegistry;
   }
@@ -153,6 +156,60 @@ public class SubscriptionService {
   }
 
   /**
+   * Creates a checkout session for the current subject (tenant or user depending on mode).
+   */
+  public SubscriptionDtos.CheckoutSessionResponse createCheckoutSessionForSubject(
+      final String tenantKey,
+      final UUID userId,
+      final SubscriptionDtos.CreateCheckoutSessionRequest request) {
+    final SubscriptionSubject subject = subjectResolver.resolveSubject(tenantKey, userId);
+    
+    String externalCustomerId;
+    final Map<String, String> metadata = new java.util.HashMap<>();
+    
+    if (subject.type() == SubjectType.TENANT) {
+      final var settings = billingSettingsMapper.findByTenantKey(subject.key())
+          .orElseThrow(() -> new ResourceNotFoundException("Billing settings not found for tenant: " + subject.key()));
+      if (settings.getExternalCustomerId() == null) {
+        throw new IllegalStateException("External customer ID not found for tenant: " + subject.key());
+      }
+      externalCustomerId = settings.getExternalCustomerId();
+      metadata.put("tenantKey", subject.key());
+    } else {
+      final var settings = userBillingSettingsMapper.findByUserId(userId)
+          .orElseThrow(() -> new ResourceNotFoundException("User billing settings not found for user: " + userId));
+      if (settings.getExternalCustomerId() == null) {
+        throw new IllegalStateException("External customer ID not found for user: " + userId);
+      }
+      externalCustomerId = settings.getExternalCustomerId();
+      metadata.put("userId", userId.toString());
+    }
+
+    final Plan plan = planMapper.findByPlanCode(request.planCode())
+        .orElseThrow(() -> new ResourceNotFoundException("Plan not found for planCode: " + request.planCode()));
+
+    if (plan.getExternalPriceId() == null) {
+      throw new IllegalStateException("Plan " + request.planCode() + " has no externalPriceId (not synced with payment gateway yet)");
+    }
+
+    final Integer trialDays = request.trialPeriodDays() != null ? request.trialPeriodDays() : plan.getTrialPeriodDays();
+    final var command = new CreateCheckoutSessionCommand(
+        externalCustomerId,
+        plan.getExternalPriceId(),
+        request.successUrl(),
+        request.cancelUrl(),
+        trialDays,
+        request.quantity(),
+        request.allowPromotionCodes(),
+        metadata
+    );
+
+    final String url = paymentGatewayPort.createCheckoutSession(command);
+    meterRegistry.counter("billing_checkout_sessions_total", "plan_id", request.planCode()).increment();
+    return new SubscriptionDtos.CheckoutSessionResponse(url);
+  }
+
+  /**
    * Updates an existing subscription.
    */
   public void updateSubscription(
@@ -212,6 +269,58 @@ public class SubscriptionService {
     final String refundId = paymentGatewayPort.createRefund(command);
     meterRegistry.counter("billing_refunds_issued_total", "reason", request.reason() != null ? request.reason() : "unknown").increment();
     return new SubscriptionDtos.RefundResponse(refundId);
+  }
+
+  /**
+   * Creates a refund for a payment for the current subject (tenant or user depending on mode).
+   */
+  public SubscriptionDtos.RefundResponse createRefundForSubject(
+      final String tenantKey,
+      final UUID userId,
+      final SubscriptionDtos.CreateRefundRequest request) {
+    final var subject = subjectResolver.resolveSubject(tenantKey, userId);
+    
+    String externalCustomerId;
+    final java.util.Map<String, String> metadata = new java.util.HashMap<>();
+    
+    if (subject.type() == SubjectType.TENANT) {
+      final var settings = billingSettingsMapper.findByTenantKey(subject.key())
+          .orElseThrow(() -> new ResourceNotFoundException("Billing settings not found for tenant: " + subject.key()));
+      if (settings.getExternalCustomerId() == null) {
+        throw new IllegalStateException("External customer ID not found for tenant: " + subject.key());
+      }
+      externalCustomerId = settings.getExternalCustomerId();
+      metadata.put("tenantKey", subject.key());
+    } else {
+      final var settings = userBillingSettingsMapper.findByUserId(userId)
+          .orElseThrow(() -> new ResourceNotFoundException("User billing settings not found for user: " + userId));
+      if (settings.getExternalCustomerId() == null) {
+        throw new IllegalStateException("External customer ID not found for user: " + userId);
+      }
+      externalCustomerId = settings.getExternalCustomerId();
+      metadata.put("userId", userId.toString());
+    }
+
+    final var command = new CreateRefundCommand(
+        request.paymentId(),
+        externalCustomerId,
+        request.amount(),
+        request.reason(),
+        metadata
+    );
+
+    final String refundId = paymentGatewayPort.createRefund(command);
+    meterRegistry.counter("billing_refunds_issued_total", "reason", request.reason() != null ? request.reason() : "unknown").increment();
+    return new SubscriptionDtos.RefundResponse(refundId);
+  }
+
+  /**
+   * Returns all refund records for the given subject (type + key),
+   * ordered by {@code occurred_at DESC}.
+   */
+  public java.util.List<Refund> getAllRefundsBySubject(final String tenantKey, final UUID userId) {
+    final var subject = subjectResolver.resolveSubject(tenantKey, userId);
+    return refundMapper.findAllBySubject(subject.type().name(), subject.key());
   }
 
   // ─── Platform admin ────────────────────────────────────────────────────────

@@ -31,6 +31,11 @@ public interface UserBillingSettingsMapper {
   Optional<UserBillingSettings> findByUserId(UUID userId);
 
   /**
+   * Returns true if billing settings exist for the given user ID.
+   */
+  boolean existsByUserId(UUID userId);
+
+  /**
    * Inserts a new user billing settings record.
    */
   void insert(UserBillingSettings settings);

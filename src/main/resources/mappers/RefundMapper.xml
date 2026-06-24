@@ -14,6 +14,8 @@
         <result property="currency" column="currency"/>
         <result property="status" column="status"/>
         <result property="occurredAt" column="occurred_at"/>
+        <result property="subjectType" column="subject_type"/>
+        <result property="subjectKey" column="subject_key"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -22,11 +24,13 @@
         INSERT INTO refunds
         (id, tenant_key, external_refund_id, external_payment_id,
         external_customer_id, amount, currency, status, occurred_at,
+        subject_type, subject_key,
         created_at, updated_at)
         VALUES
         (COALESCE(#{id}::uuid, gen_random_uuid()),
         #{tenantKey}, #{externalRefundId}, #{externalPaymentId},
         #{externalCustomerId}, #{amount}, #{currency}, #{status}, #{occurredAt},
+        #{subjectType}, #{subjectKey},
         COALESCE(#{createdAt}, now()),
         COALESCE(#{updatedAt}, now()))
         ON CONFLICT (external_refund_id) DO UPDATE
@@ -38,9 +42,20 @@
     <select id="findAllByTenantKey" resultMap="refundResultMap">
         SELECT id, tenant_key, external_refund_id, external_payment_id,
         external_customer_id, amount, currency, status, occurred_at,
+        subject_type, subject_key,
         created_at, updated_at
         FROM refunds
         WHERE tenant_key = #{tenantKey}
+        ORDER BY occurred_at DESC
+    </select>
+
+    <select id="findAllBySubject" resultMap="refundResultMap">
+        SELECT id, tenant_key, external_refund_id, external_payment_id,
+        external_customer_id, amount, currency, status, occurred_at,
+        subject_type, subject_key,
+        created_at, updated_at
+        FROM refunds
+        WHERE subject_type = #{subjectType} AND subject_key = #{subjectKey}
         ORDER BY occurred_at DESC
     </select>
 

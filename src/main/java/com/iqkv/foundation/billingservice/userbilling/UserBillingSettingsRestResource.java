@@ -24,13 +24,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
  * REST resource for individual user billing settings (single-tenant mode).
@@ -50,11 +55,66 @@ public class UserBillingSettingsRestResource {
     this.userBillingSettingsService = userBillingSettingsService;
   }
 
+  @GetMapping
+  @Operation(
+      summary = "Get billing settings",
+      description = "Returns billing settings for the authenticated user. Only active in SINGLE_TENANT mode.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Billing settings returned"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "404", description = "User billing settings not found")
+  })
+  public ResponseEntity<BillingSettingsDtos.BillingSettingsResponse> getSettings(
+      @AuthenticationPrincipal final Jwt jwt) {
+    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UserBillingSettings settings = userBillingSettingsService.getByUserId(userId);
+    return ResponseEntity.ok(UserBillingSettingsDtoMapper.toResponse(settings));
+  }
+
+  @PostMapping
+  @Operation(
+      summary = "Create billing settings",
+      description = "Creates billing settings for the authenticated user. Billing email and currency are required. "
+          + "Returns 409 if settings already exist. Only active in SINGLE_TENANT mode.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "201", description = "Billing settings created"),
+      @ApiResponse(responseCode = "400", description = "Validation error"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "409", description = "Billing settings already exist for this user")
+  })
+  public ResponseEntity<BillingSettingsDtos.BillingSettingsResponse> createSettings(
+      @Valid @RequestBody final BillingSettingsDtos.CreateBillingSettingsRequest request,
+      @AuthenticationPrincipal final Jwt jwt) {
+    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UserBillingSettings created = userBillingSettingsService.createForUser(userId, request);
+    return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest().build().toUri())
+        .body(UserBillingSettingsDtoMapper.toResponse(created));
+  }
+
+  @PatchMapping
+  @Operation(
+      summary = "Update billing settings",
+      description = "Partially updates billing settings. Only non-null fields are applied. "
+          + "Only active in SINGLE_TENANT mode.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Billing settings updated"),
+      @ApiResponse(responseCode = "400", description = "Validation error"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "404", description = "User billing settings not found")
+  })
+  public ResponseEntity<BillingSettingsDtos.BillingSettingsResponse> updateSettings(
+      @Valid @RequestBody final BillingSettingsDtos.UpdateBillingSettingsRequest request,
+      @AuthenticationPrincipal final Jwt jwt) {
+    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UserBillingSettings settings = userBillingSettingsService.updateForUser(userId, request);
+    return ResponseEntity.ok(UserBillingSettingsDtoMapper.toResponse(settings));
+  }
+
   @PostMapping("/portal")
   @Operation(
       summary = "Create customer portal session",
       description = "Creates a Stripe Customer Portal session for the authenticated user and returns the URL for redirection. "
-                    + "Only active in SINGLE_TENANT mode.")
+          + "Only active in SINGLE_TENANT mode.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Portal session created"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),

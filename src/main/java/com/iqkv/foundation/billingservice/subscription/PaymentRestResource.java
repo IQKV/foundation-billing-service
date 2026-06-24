@@ -99,6 +99,46 @@ public class PaymentRestResource {
         .toList());
   }
 
+  @PostMapping("/me/refund")
+  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'ADMIN')")
+  @Operation(
+      summary = "Create refund for current subject",
+      description = "Creates a refund for a payment for the current subject (tenant or user depending on mode). "
+          + "Requires TENANT_OWNER or ADMIN authority.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Refund created"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER or ADMIN")
+  })
+  public ResponseEntity<SubscriptionDtos.RefundResponse> createRefundForMe(
+      @RequestBody final SubscriptionDtos.CreateRefundRequest request,
+      @AuthenticationPrincipal final Jwt jwt) {
+    final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
+    final UUID userId = UUID.fromString(jwt.getSubject());
+    return ResponseEntity.ok(subscriptionService.createRefundForSubject(tenantKey, userId, request));
+  }
+
+  @GetMapping("/me/refunds")
+  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'ADMIN')")
+  @Operation(
+      summary = "List refunds for current subject",
+      description = "Returns all refunds for the current subject (tenant or user depending on mode), "
+          + "ordered by occurred_at DESC. Requires TENANT_OWNER or ADMIN authority.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Refund list returned"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied — not TENANT_OWNER or ADMIN")
+  })
+  public ResponseEntity<List<SubscriptionDtos.AdminRefundResponse>> listRefundsForMe(
+      @AuthenticationPrincipal final Jwt jwt) {
+    final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
+    final UUID userId = UUID.fromString(jwt.getSubject());
+    final var refunds = subscriptionService.getAllRefundsBySubject(tenantKey, userId);
+    return ResponseEntity.ok(refunds.stream()
+        .map(RefundDtoMapper::toAdminResponse)
+        .toList());
+  }
+
   /**
    * Verifies that the authenticated tenant matches the requested tenantKey.
    */

@@ -24,6 +24,8 @@ import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper;
+import com.iqkv.foundation.billingservice.settings.BillingSettingsDtos;
+import com.iqkv.foundation.billingservice.shared.exception.DuplicateResourceException;
 import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
@@ -73,6 +75,81 @@ public class UserBillingSettingsServiceImpl implements UserBillingSettingsServic
   public UserBillingSettings getOrCreateUserBillingSettings(final UUID userId) {
     return userBillingSettingsMapper.findByUserId(userId)
         .orElseGet(() -> createUserBillingSettings(userId));
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public UserBillingSettings getByUserId(final UUID userId) {
+    return userBillingSettingsMapper.findByUserId(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("UserBillingSettings not found for userId=" + userId));
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public UserBillingSettings createForUser(final UUID userId, final BillingSettingsDtos.CreateBillingSettingsRequest request) {
+    if (userBillingSettingsMapper.existsByUserId(userId)) {
+      throw new DuplicateResourceException("UserBillingSettings already exist for userId=" + userId);
+    }
+
+    final String externalCustomerId = paymentGatewayPort.createCustomer(
+        new CreateCustomerCommand(
+            request.companyName() != null ? request.companyName() : "user:" + userId,
+            request.billingEmail(),
+            Map.of("userId", userId.toString())));
+
+    final LocalDateTime now = LocalDateTime.now();
+    final UserBillingSettings settings = new UserBillingSettings(
+        UUID.randomUUID(),
+        userId,
+        externalCustomerId,
+        request.billingEmail(),
+        request.companyName(),
+        request.billingAddress(),
+        request.taxId(),
+        request.taxIdType(),
+        request.currency(),
+        now,
+        now
+    );
+
+    userBillingSettingsMapper.insert(settings);
+    log.info("UserBillingSettings created: userId={}, externalCustomerId={}", userId, externalCustomerId);
+    return settings;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public UserBillingSettings updateForUser(final UUID userId, final BillingSettingsDtos.UpdateBillingSettingsRequest request) {
+    final UserBillingSettings settings = getByUserId(userId);
+
+    if (request.billingEmail() != null) {
+      settings.setBillingEmail(request.billingEmail());
+    }
+    if (request.companyName() != null) {
+      settings.setCompanyName(request.companyName());
+    }
+    if (request.billingAddress() != null) {
+      settings.setBillingAddress(request.billingAddress());
+    }
+    if (request.taxId() != null) {
+      settings.setTaxId(request.taxId());
+    }
+    if (request.taxIdType() != null) {
+      settings.setTaxIdType(request.taxIdType());
+    }
+    if (request.currency() != null) {
+      settings.setCurrency(request.currency());
+    }
+
+    settings.setUpdatedAt(LocalDateTime.now());
+    userBillingSettingsMapper.update(settings);
+    return settings;
   }
 
   /**

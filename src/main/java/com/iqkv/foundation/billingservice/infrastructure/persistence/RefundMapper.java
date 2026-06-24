@@ -38,6 +38,13 @@ public interface RefundMapper {
   List<Refund> findAllByTenantKey(String tenantKey);
 
   /**
+   * Returns all refund records for the given subject (type + key),
+   * ordered by {@code occurred_at DESC}.
+   */
+  List<Refund> findAllBySubject(@Param("subjectType") String subjectType,
+                                @Param("subjectKey") String subjectKey);
+
+  /**
    * Returns refund by external refund ID.
    */
   Optional<Refund> findByExternalRefundId(String externalRefundId);

@@ -126,6 +126,20 @@ public class SubscriptionRestResource {
     return ResponseEntity.ok(subscriptionService.createCheckoutSession(tenantKey, request));
   }
 
+  @PostMapping("/me/checkout")
+  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'ADMIN')")
+  @Operation(
+      summary = "Create checkout session for current subject",
+      description = "Creates a Stripe Checkout Session for subscription creation for the current subject (tenant or user depending on mode). "
+                    + "Requires TENANT_OWNER or ADMIN authority.")
+  public ResponseEntity<SubscriptionDtos.CheckoutSessionResponse> createCheckoutForMe(
+      @RequestBody final SubscriptionDtos.CreateCheckoutSessionRequest request,
+      @AuthenticationPrincipal final Jwt jwt) {
+    final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
+    final UUID userId = UUID.fromString(jwt.getSubject());
+    return ResponseEntity.ok(subscriptionService.createCheckoutSessionForSubject(tenantKey, userId, request));
+  }
+
   @PostMapping("/{tenantKey}/{externalSubscriptionId}")
   @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'ADMIN')")
   @Operation(
