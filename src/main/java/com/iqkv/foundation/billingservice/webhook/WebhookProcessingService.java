@@ -443,6 +443,8 @@ public class WebhookProcessingService {
         event.currency(),
         event.status(),
         event.occurredAt(),
+        SubjectType.TENANT.name(),
+        tenantKey,
         null,
         null
     );
