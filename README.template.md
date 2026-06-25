@@ -51,15 +51,15 @@ Base path: `/api/v1/billing`
 
 ### Subscriptions — `/api/v1/billing/subscriptions`
 
-| Method  | Path                                                          | Auth                                        | Description                                 |
-| ------ | ------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------- |
-| `GET`  | `/subscriptions/{tenantKey}/active`                           | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get active subscription for tenant          |
-| `GET`  | `/subscriptions/{tenantKey}`                                  | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get all subscriptions for tenant            |
-| `POST` | `/subscriptions/{tenantKey}/checkout`                         | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Create a Checkout Session for subscription  |
-| `POST` | `/subscriptions/{tenantKey}/{subscriptionId}`                 | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Update an existing subscription             |
-| `PATCH`| `/subscriptions/{tenantKey}/{subscriptionId}/seats`           | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Adjust seat count (PER_SEAT plans only)     |
-| `GET`  | `/subscriptions/me/active`                                    | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get active subscription for current subject |
-| `GET`  | `/subscriptions/me`                                           | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get all subscriptions for current subject   |
+| Method  | Path                                                | Auth                                        | Description                                 |
+| ------- | --------------------------------------------------- | ------------------------------------------- | ------------------------------------------- |
+| `GET`   | `/subscriptions/{tenantKey}/active`                 | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get active subscription for tenant          |
+| `GET`   | `/subscriptions/{tenantKey}`                        | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get all subscriptions for tenant            |
+| `POST`  | `/subscriptions/{tenantKey}/checkout`               | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Create a Checkout Session for subscription  |
+| `POST`  | `/subscriptions/{tenantKey}/{subscriptionId}`       | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Update an existing subscription             |
+| `PATCH` | `/subscriptions/{tenantKey}/{subscriptionId}/seats` | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Adjust seat count (PER_SEAT plans only)     |
+| `GET`   | `/subscriptions/me/active`                          | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get active subscription for current subject |
+| `GET`   | `/subscriptions/me`                                 | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get all subscriptions for current subject   |
 
 ### Payments — `/api/v1/billing/payments`
 
