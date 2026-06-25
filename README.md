@@ -24,7 +24,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 - **Webhook processing** — payment gateway webhooks are ingested and processed idempotently; duplicate delivery is safe
 - **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, `invoice.created`, `invoice.finalized`, `invoice.updated`, `payment.failed`, and `refund.created` to the platform event bus
 - **Multi-gateway strategy** — `PaymentGatewayPort` interface decouples business logic from gateway SDKs; Stripe is the active implementation
-- **Plan catalog** — plan definitions with typed `PlanFeatures` (`maxUsers`, `maxProjects` as typed quota fields; extensible `features` map keyed by feature code such as `priority_support`; `trialPeriodDays` to define free trial length in days, 0 means no trial) defined in YAML configuration. `BillingSeedRunner` synchronizes plans with the Stripe catalog at application startup. Plan management is config-driven — there is no REST API for creating, updating, or deactivating plans. `PlanFeatureRegistry` serves an in-memory feature map loaded at startup for zero-latency entitlement evaluation and the internal plans endpoint (`/internal/plans`); features are the single source of truth for platform-wide access control
+- **Plan catalog** — plan definitions with typed `PlanFeatures` (`maxUsers`, `maxProjects` as typed quota fields; extensible `features` map keyed by feature code such as `priority_support`; `trialPeriodDays` to define free trial length in days, 0 means no trial) defined in YAML configuration. Each plan carries a `pricingModel` field — `FLAT` (fixed price per period, default) or `PER_SEAT` (price × seat count; `maxUsers` acts as the seat ceiling). `BillingSeedRunner` synchronizes plans with the Stripe catalog at application startup. Plan management is config-driven — there is no REST API for creating, updating, or deactivating plans. `PlanFeatureRegistry` serves an in-memory feature map loaded at startup for zero-latency entitlement evaluation and the internal plans endpoint (`/internal/plans`); features are the single source of truth for platform-wide access control
 - **Observability** — instrumented with Micrometer for Prometheus metrics; includes a custom Grafana dashboard for business KPIs (revenue, subscriptions, webhook health)
 
 ## Quick Links
@@ -59,12 +59,13 @@ Base path: `/api/v1/billing`
 
 ### Subscriptions
 
-| Method | Path                                          | Auth                           | Description                                 |
-| ------ | --------------------------------------------- | ------------------------------ | ------------------------------------------- |
+| Method  | Path                                                    | Auth                           | Description                                 |
+| ------ | ---------------------------------------------- | ------------------------------ | ------------------------------------------- |
 | `GET`  | `/subscriptions/{tenantKey}/active`           | JWT `TENANT_OWNER`             | Get active subscription for a tenant        |
 | `GET`  | `/subscriptions/{tenantKey}`                  | JWT `TENANT_OWNER`             | Get all subscriptions for a tenant          |
 | `POST` | `/subscriptions/{tenantKey}/checkout`         | JWT `TENANT_OWNER`             | Create a Checkout Session for subscription  |
 | `POST` | `/subscriptions/{tenantKey}/{subscriptionId}` | JWT `TENANT_OWNER`             | Update an existing subscription             |
+| `PATCH`| `/subscriptions/{tenantKey}/{subscriptionId}/seats` | JWT `TENANT_OWNER`       | Adjust seat count (PER_SEAT plans only)     |
 | `GET`  | `/subscriptions/me/active`                    | JWT `TENANT_OWNER` or `MEMBER` | Get active subscription for current subject |
 | `GET`  | `/subscriptions/me`                           | JWT `TENANT_OWNER` or `MEMBER` | Get all subscriptions for current subject   |
 
@@ -330,7 +331,7 @@ Note: The root `compose.yaml` is for development purposes only and is self-conta
 The service is instrumented with custom business metrics:
 
 - **Revenue & Payments**: `billing_revenue_total`, `billing_payments_total` (success/failure)
-- **Subscriptions**: `billing_subscriptions_active_count`, `billing_subscriptions_total` (lifecycle)
+- **Subscriptions**: `billing_subscriptions_active_count`, `billing_subscriptions_total` (lifecycle), `billing_seat_adjustments_total` (per-seat changes)
 - **Webhook Health**: `billing_webhooks_total`, `billing_webhooks_processing_duration_seconds`
 - **System Health**: `billing_emails_sent_total`, `billing_entitlements_check_total`
 

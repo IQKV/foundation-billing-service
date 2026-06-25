@@ -27,10 +27,11 @@ YAML Config → PlanFeatureRegistry → /internal/plans → Gateway/Services →
 
 `PlanFeatures` uses a split design:
 
-- **`maxUsers`** (integer): Maximum users per tenant — typed quota field (0 = unlimited)
+- **`maxUsers`** (integer): Maximum users per tenant — typed quota field (0 = unlimited); for `PER_SEAT` plans also acts as the maximum purchasable seat count
 - **`maxProjects`** (integer): Maximum projects per tenant — typed quota field (0 = unlimited)
 - **`trialPeriodDays`** (integer): Free trial length in days (0 = no trial)
 - **`features`** (map): Open `Map<String, PlanFeature>` keyed by feature code (e.g. `priority_support`). Each entry carries `code`, `title`, `value`, and `description`. Adding a new feature requires only a YAML change — no code recompilation.
+- **`pricingModel`** (string): Pricing mode for the plan — `FLAT` (fixed price per billing period, default) or `PER_SEAT` (price × seat count per billing period). Returned by both `/internal/plans` and `/internal/plans/public`. Downstream services use this field to render the correct price label and to know whether `maxUsers` is a hard cap or a seat ceiling.
 
 ### Integration Points
 

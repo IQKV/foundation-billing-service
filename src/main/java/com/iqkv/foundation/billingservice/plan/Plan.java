@@ -45,6 +45,7 @@ public class Plan {
   private String externalPriceId;
   private Boolean active;         // default true
   private Integer trialPeriodDays; // 0 means no trial, > 0 means number of days
+  private String pricingModel;    // FLAT (default) | PER_SEAT
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -64,6 +65,7 @@ public class Plan {
               final String externalPriceId,
               final Boolean active,
               final Integer trialPeriodDays,
+              final String pricingModel,
               final LocalDateTime createdAt,
               final LocalDateTime updatedAt) {
     this.id = id;
@@ -79,6 +81,7 @@ public class Plan {
     this.externalPriceId = externalPriceId;
     this.active = active;
     this.trialPeriodDays = trialPeriodDays;
+    this.pricingModel = pricingModel;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -186,6 +189,14 @@ public class Plan {
 
   public void setTrialPeriodDays(Integer trialPeriodDays) {
     this.trialPeriodDays = trialPeriodDays;
+  }
+
+  public String getPricingModel() {
+    return pricingModel;
+  }
+
+  public void setPricingModel(String pricingModel) {
+    this.pricingModel = pricingModel;
   }
 
   public LocalDateTime getCreatedAt() {

@@ -48,6 +48,7 @@ public class SubscriptionEvent implements AuditableEvent {
   private String subjectType;   // TENANT | USER
   private String subjectKey;    // tenantKey or userId depending on subjectType
   private String planCode;      // human-readable plan code (e.g. "pro-monthly"); nullable
+  private Long seatCount;       // purchased seat count for PER_SEAT plans; null for FLAT plans
   private AuditActor actor;
 
   /**
@@ -76,11 +77,12 @@ public class SubscriptionEvent implements AuditableEvent {
    * @param subjectType            the subject type (TENANT or USER)
    * @param subjectKey             the subject key (tenantKey or userId)
    * @param planCode               the human-readable plan code; may be null
+   * @param seatCount              purchased seat count for PER_SEAT plans; null for FLAT plans
    */
   public SubscriptionEvent(final String tenantKey, final String externalSubscriptionId,
                            final EventType eventType, final Instant occurredAt,
                            final String subjectType, final String subjectKey,
-                           final String planCode) {
+                           final String planCode, final Long seatCount) {
     this.tenantKey = tenantKey;
     this.externalSubscriptionId = externalSubscriptionId;
     this.eventType = eventType;
@@ -88,6 +90,7 @@ public class SubscriptionEvent implements AuditableEvent {
     this.subjectType = subjectType;
     this.subjectKey = subjectKey;
     this.planCode = planCode;
+    this.seatCount = seatCount;
   }
 
   public String getTenantKey() {
@@ -144,5 +147,13 @@ public class SubscriptionEvent implements AuditableEvent {
 
   public void setPlanCode(final String planCode) {
     this.planCode = planCode;
+  }
+
+  public Long getSeatCount() {
+    return seatCount;
+  }
+
+  public void setSeatCount(final Long seatCount) {
+    this.seatCount = seatCount;
   }
 }

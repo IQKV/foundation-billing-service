@@ -55,6 +55,7 @@ iqkv:
             scope: "TENANT"
             active: true
             trialPeriodDays: 0
+            pricingModel: "FLAT"
             features:
               maxUsers: 5
               maxProjects: 3
@@ -76,6 +77,7 @@ iqkv:
             scope: "TENANT"
             active: true
             trialPeriodDays: 0
+            pricingModel: "FLAT"
             features:
               maxUsers: 50
               maxProjects: 0

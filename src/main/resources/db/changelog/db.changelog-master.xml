@@ -15,6 +15,7 @@
     <include file="db/changelog/changes/20260527120000-add-plan-external-ids.xml"/>
     <include file="db/changelog/changes/20260617120000-add-plan-description.xml"/>
     <include file="db/changelog/changes/20260620120000-add-trial-period-days.xml"/>
+    <include file="db/changelog/changes/20260625120000-add-pricing-model-to-plan-catalog.xml"/>
 
     <!-- Demo data (Liquibase context: demo); enable with iqkv.liquibase.contexts=demo -->
     <include file="db/changelog/demo/master.xml"/>

@@ -130,12 +130,20 @@ iqkv:
         #   description   — optional; shown on checkout and public pricing pages
         #   billingPeriod — MONTHLY | ANNUAL
         #   priceMinor    — price in smallest currency unit (e.g. cents for USD)
+        #                   For FLAT plans: total price per period.
+        #                   For PER_SEAT plans: price per seat per period.
         #   currency      — ISO 4217 code (e.g. USD)
         #   scope         — TENANT (multi-tenant) | USER (single-tenant B2C)
         #   active        — false hides the plan from pricing pages and blocks new subscriptions
         #   trialPeriodDays — 0 (default) = no trial, > 0 = number of days for free trial
+        #   pricingModel  — FLAT (default) | PER_SEAT
+        #                   FLAT:     Stripe line item always uses quantity=1; priceMinor is the full period price.
+        #                   PER_SEAT: Stripe line item uses quantity=seatCount; invoice = priceMinor × seats.
+        #                             maxUsers acts as the seat ceiling (0 = unlimited).
+        #                   Omitting this field defaults to FLAT — all existing plans are unaffected.
         #   features:
-        #     maxUsers        — max members per tenant/user (0 = unlimited); enforced at signup
+        #     maxUsers        — max members per tenant/user (0 = unlimited); enforced at signup and invite.
+        #                       For PER_SEAT plans also acts as the maximum purchasable seat count.
         #     maxProjects     — max projects (0 = unlimited); enforced at project creation
         #     features        — open list of named feature entries; extensible without recompilation
         #       - code:        machine-readable key (e.g. "priority_support", "custom_domain")
@@ -143,7 +151,7 @@ iqkv:
         #         value:       "true"/"false" for boolean flags; a number string for limits
         #         description: optional tooltip / subtitle on pricing pages
         #
-        # Example:
+        # Example (FLAT plan):
         # products:
         #   basic-monthly:
         #     planCode: "basic-monthly"
@@ -155,6 +163,7 @@ iqkv:
         #     scope: "TENANT"
         #     active: true
         #     trialPeriodDays: 0
+        #     pricingModel: "FLAT"
         #     features:
         #       maxUsers: 5
         #       maxProjects: 3
@@ -167,6 +176,31 @@ iqkv:
         #           title: "Advanced Analytics"
         #           value: "false"
         #           description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
+        #
+        # Example (PER_SEAT plan — $5/seat/month, up to 200 seats):
+        #   pro-monthly-per-seat:
+        #     planCode: "pro-monthly-per-seat"
+        #     displayName: "Pro Monthly (per seat)"
+        #     description: "Billed per active user seat. $5 per seat per month."
+        #     billingPeriod: "MONTHLY"
+        #     priceMinor: 500
+        #     currency: "USD"
+        #     scope: "TENANT"
+        #     active: true
+        #     trialPeriodDays: 14
+        #     pricingModel: "PER_SEAT"
+        #     features:
+        #       maxUsers: 200
+        #       maxProjects: 0
+        #       features:
+        #         priority_support:
+        #           title: "Priority Support"
+        #           value: "true"
+        #           description: "Access to priority support channel"
+        #         advanced_analytics:
+        #           title: "Advanced Analytics"
+        #           value: "true"
+        #           description: "Access to detailed analytics dashboard"
   auth:
     jwt:
       public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public.pem}

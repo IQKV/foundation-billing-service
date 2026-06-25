@@ -82,6 +82,21 @@ public final class SubscriptionDtos {
   }
 
   /**
+   * Request body for adjusting the seat count on a PER_SEAT subscription.
+   *
+   * @param seatCount        new total seat count (must be ≥ 1 and ≤ plan's maxUsers when > 0)
+   * @param prorationBehavior Stripe proration mode: {@code "create_prorations"} (default),
+   *                          {@code "none"}, or {@code "always_invoice"}
+   */
+  public record AdjustSeatsRequest(
+      @jakarta.validation.constraints.NotNull
+      @jakarta.validation.constraints.Min(1)
+      Long seatCount,
+      String prorationBehavior
+  ) {
+  }
+
+  /**
    * Request body for creating a refund.
    */
   public record CreateRefundRequest(

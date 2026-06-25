@@ -21,12 +21,15 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import com.iqkv.foundation.billingservice.plan.PlanFeatures;
+import com.iqkv.foundation.billingservice.plan.PricingModel;
 
 /**
  * Configuration for a single product in the Stripe catalog schema.
  *
  * <p>Bound from {@code iqkv.billing.stripe.schema.products.<key>} in YAML.
  * {@code features} is optional — {@link PlanFeatures#NONE} is used when absent.
+ * {@code pricingModel} is optional — defaults to {@link PricingModel#FLAT} when absent,
+ * preserving backward compatibility for all existing plan definitions.
  */
 public record StripeProductSchema(
     @NotBlank String planCode,
@@ -38,6 +41,13 @@ public record StripeProductSchema(
     PlanFeatures features,
     @NotBlank String scope,
     Boolean active,
-    Integer trialPeriodDays
+    Integer trialPeriodDays,
+    PricingModel pricingModel
 ) {
+  /**
+   * Returns the effective pricing model, defaulting to {@link PricingModel#FLAT} when absent.
+   */
+  public PricingModel effectivePricingModel() {
+    return pricingModel != null ? pricingModel : PricingModel.FLAT;
+  }
 }

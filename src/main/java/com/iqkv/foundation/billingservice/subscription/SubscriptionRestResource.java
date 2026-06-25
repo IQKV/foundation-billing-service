@@ -156,6 +156,35 @@ public class SubscriptionRestResource {
     return ResponseEntity.noContent().build();
   }
 
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Seat count and optional proration behaviour",
+      required = true)
+  @org.springframework.web.bind.annotation.PatchMapping("/{tenantKey}/{externalSubscriptionId}/seats")
+  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'ADMIN')")
+  @Operation(
+      summary = "Adjust seat count",
+      description = "Changes the number of purchased seats on a PER_SEAT subscription. "
+                    + "Prorates the charge immediately by default (create_prorations). "
+                    + "Only valid for plans with pricingModel=PER_SEAT. "
+                    + "Requires TENANT_OWNER or ADMIN authority.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "204", description = "Seat adjustment initiated — gateway webhook will update local cache"),
+      @ApiResponse(responseCode = "400", description = "Invalid seat count"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied or tenant mismatch"),
+      @ApiResponse(responseCode = "404", description = "Subscription not found"),
+      @ApiResponse(responseCode = "422", description = "Seat limit exceeded for this plan")
+  })
+  public ResponseEntity<Void> adjustSeats(
+      @PathVariable @Pattern(regexp = "[a-z0-9]{8}") final String tenantKey,
+      @PathVariable final String externalSubscriptionId,
+      @jakarta.validation.Valid @RequestBody final SubscriptionDtos.AdjustSeatsRequest request,
+      @AuthenticationPrincipal final Jwt jwt) {
+    enforceOwnership(tenantKey, jwt);
+    subscriptionService.adjustSeats(tenantKey, externalSubscriptionId, request);
+    return ResponseEntity.noContent().build();
+  }
+
   @GetMapping("/me/active")
   @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'ADMIN', 'MEMBER')")
   @Operation(

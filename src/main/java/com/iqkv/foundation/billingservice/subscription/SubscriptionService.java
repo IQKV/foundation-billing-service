@@ -30,7 +30,10 @@ import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.plan.Plan;
+import com.iqkv.foundation.billingservice.plan.PlanFeatureRegistry;
+import com.iqkv.foundation.billingservice.plan.PricingModel;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
+import com.iqkv.foundation.billingservice.shared.exception.SeatLimitExceededException;
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
@@ -58,6 +61,7 @@ public class SubscriptionService {
   private final BillingSettingsMapper billingSettingsMapper;
   private final com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper userBillingSettingsMapper;
   private final PlanMapper planMapper;
+  private final PlanFeatureRegistry planFeatureRegistry;
   private final MeterRegistry meterRegistry;
   private final MessagingService messagingService;
 
@@ -68,6 +72,7 @@ public class SubscriptionService {
                               final BillingSettingsMapper billingSettingsMapper,
                               final com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper userBillingSettingsMapper,
                               final PlanMapper planMapper,
+                              final PlanFeatureRegistry planFeatureRegistry,
                               final MeterRegistry meterRegistry,
                               final MessagingService messagingService) {
     this.subscriptionMapper = subscriptionMapper;
@@ -77,8 +82,43 @@ public class SubscriptionService {
     this.billingSettingsMapper = billingSettingsMapper;
     this.userBillingSettingsMapper = userBillingSettingsMapper;
     this.planMapper = planMapper;
+    this.planFeatureRegistry = planFeatureRegistry;
     this.meterRegistry = meterRegistry;
     this.messagingService = messagingService;
+  }
+
+  // ─── Self-service ──────────────────────────────────────────────────────────
+
+  // ─── Seat routing helpers ──────────────────────────────────────────────────
+
+  /**
+   * Returns the effective Stripe line-item quantity for the given plan and caller-supplied value.
+   * <ul>
+   *   <li>For {@link PricingModel#FLAT} plans: always {@code 1}, caller input ignored.</li>
+   *   <li>For {@link PricingModel#PER_SEAT} plans: {@code requested} if ≥ 1, otherwise {@code 1}.</li>
+   * </ul>
+   */
+  private long resolveEffectiveQuantity(final Plan plan, final Long requested) {
+    if (PricingModel.PER_SEAT.name().equals(plan.getPricingModel())) {
+      return requested != null && requested > 0 ? requested : 1L;
+    }
+    return 1L;
+  }
+
+  /**
+   * Validates that the requested seat count does not exceed the plan ceiling.
+   * Only called for {@link PricingModel#PER_SEAT} plans.
+   *
+   * @throws SeatLimitExceededException if {@code requestedSeats} exceeds {@code maxUsers} (when > 0)
+   */
+  private void validateSeatCount(final Plan plan, final long requestedSeats) {
+    if (requestedSeats < 1) {
+      throw new IllegalArgumentException("Seat count must be at least 1");
+    }
+    final int maxUsers = planFeatureRegistry.forPlan(plan.getPlanCode()).maxUsers();
+    if (maxUsers > 0 && requestedSeats > maxUsers) {
+      throw new SeatLimitExceededException(plan.getPlanCode(), requestedSeats, maxUsers);
+    }
   }
 
   // ─── Self-service ──────────────────────────────────────────────────────────
@@ -156,13 +196,17 @@ public class SubscriptionService {
     }
 
     final Integer trialDays = request.trialPeriodDays() != null ? request.trialPeriodDays() : plan.getTrialPeriodDays();
+    final long effectiveQuantity = resolveEffectiveQuantity(plan, request.quantity());
+    if (PricingModel.PER_SEAT.name().equals(plan.getPricingModel())) {
+      validateSeatCount(plan, effectiveQuantity);
+    }
     final var command = new CreateCheckoutSessionCommand(
         settings.getExternalCustomerId(),
         plan.getExternalPriceId(),
         request.successUrl(),
         request.cancelUrl(),
         trialDays,
-        request.quantity(),
+        effectiveQuantity,
         request.allowPromotionCodes(),
         java.util.Map.of("tenantKey", tenantKey)
     );
@@ -223,13 +267,17 @@ public class SubscriptionService {
     }
 
     final Integer trialDays = request.trialPeriodDays() != null ? request.trialPeriodDays() : plan.getTrialPeriodDays();
+    final long effectiveQuantity = resolveEffectiveQuantity(plan, request.quantity());
+    if (PricingModel.PER_SEAT.name().equals(plan.getPricingModel())) {
+      validateSeatCount(plan, effectiveQuantity);
+    }
     final var command = new CreateCheckoutSessionCommand(
         externalCustomerId,
         plan.getExternalPriceId(),
         request.successUrl(),
         request.cancelUrl(),
         trialDays,
-        request.quantity(),
+        effectiveQuantity,
         request.allowPromotionCodes(),
         metadata
     );
@@ -285,6 +333,67 @@ public class SubscriptionService {
     paymentGatewayPort.updateSubscription(command);
     log.info("Updated subscription: externalSubscriptionId={}, tenantKey={}", externalSubscriptionId, tenantKey);
     meterRegistry.counter("billing_subscription_updates_total", "plan_id", request.planCode()).increment();
+  }
+
+  /**
+   * Adjusts the seat count on a {@link PricingModel#PER_SEAT} subscription.
+   *
+   * <p>Validates that {@code request.seatCount()} is within the plan ceiling before
+   * delegating to the payment gateway. The gateway webhook will write the updated
+   * {@code quantity} back to the local {@code subscriptions} cache automatically.
+   *
+   * @throws IllegalStateException      if the subscription's plan is not {@code PER_SEAT}
+   * @throws SeatLimitExceededException if the requested seat count exceeds {@code maxUsers}
+   * @throws TenantContextMismatchException if {@code tenantKey} does not own the subscription
+   */
+  public void adjustSeats(
+      final String tenantKey,
+      final String externalSubscriptionId,
+      final SubscriptionDtos.AdjustSeatsRequest request) {
+
+    final Subscription subscription = subscriptionMapper.findByExternalSubscriptionId(externalSubscriptionId)
+        .orElseThrow(() -> {
+          log.warn("Adjust seats failed: subscription not found, externalSubscriptionId={}", externalSubscriptionId);
+          return new ResourceNotFoundException("Subscription not found: " + externalSubscriptionId);
+        });
+
+    if (!tenantKey.equals(subscription.getTenantKey())) {
+      log.warn("Adjust seats failed: tenant mismatch, externalSubscriptionId={}, tenantKey={}",
+          externalSubscriptionId, tenantKey);
+      throw new TenantContextMismatchException(
+          "Subscription " + externalSubscriptionId + " does not belong to tenant " + tenantKey);
+    }
+
+    final Plan plan = planMapper.findByExternalPriceId(subscription.getPlanId())
+        .orElseThrow(() -> {
+          log.warn("Adjust seats failed: plan not found for priceId={}", subscription.getPlanId());
+          return new ResourceNotFoundException("Plan not found for priceId: " + subscription.getPlanId());
+        });
+
+    if (!PricingModel.PER_SEAT.name().equals(plan.getPricingModel())) {
+      throw new IllegalStateException(
+          "Plan " + plan.getPlanCode() + " uses " + plan.getPricingModel()
+          + " pricing — seat adjustment is only supported for PER_SEAT plans");
+    }
+
+    validateSeatCount(plan, request.seatCount());
+
+    final String prorationBehavior = request.prorationBehavior() != null
+        ? request.prorationBehavior()
+        : "create_prorations";
+
+    paymentGatewayPort.updateSubscription(new UpdateSubscriptionCommand(
+        externalSubscriptionId,
+        null,           // no plan change
+        request.seatCount(),
+        prorationBehavior,
+        java.util.Map.of("tenantKey", tenantKey)
+    ));
+
+    log.info("Seat adjustment initiated: tenantKey={}, subscription={}, seats={}",
+        tenantKey, externalSubscriptionId, request.seatCount());
+    meterRegistry.counter("billing_seat_adjustments_total",
+        "plan_code", plan.getPlanCode()).increment();
   }
 
   /**

@@ -8,7 +8,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 
 - **Automatic customer provisioning** — listens for `tenant.created` and `tenant.provisioned` events on RabbitMQ and creates a payment gateway customer per tenant; the `external_customer_id` is stored in `billing_settings`
 - **Multi-gateway strategy** — `PaymentGatewayPort` interface (Strategy pattern + Hexagonal Architecture) decouples business logic from gateway SDKs; Stripe is the active implementation, additional gateways are reserved
-- **Plan catalog** — plan definitions with typed `PlanFeatures` (scoped to `MULTI_TENANT` or `SINGLE_TENANT` mode); quota fields (`maxUsers`, `maxProjects`) are typed `int` fields; `trialPeriodDays` to define free trial length in days (0 means no trial); display features (e.g. `priority_support`) are held in an extensible `Map<String, PlanFeature>` keyed by feature code — adding a new feature requires only a YAML change. `BillingSeedRunner` synchronizes plans with the Stripe catalog (external Product and Price ID creation) at application startup. Plan management is config-driven — there is no REST API for creating, updating, or deactivating plans. The static feature registry is loaded into the in-memory `PlanFeatureRegistry` at startup and served via a public internal endpoint for gateway and downstream service caching; **entitlement evaluation is tightly coupled with plan features** — the entitlements endpoint returns complete feature data enabling client-side access control; `PlanEligibilityPolicy` validates scope against active rollout mode
+- **Plan catalog** — plan definitions with typed `PlanFeatures` (scoped to `MULTI_TENANT` or `SINGLE_TENANT` mode); quota fields (`maxUsers`, `maxProjects`) are typed `int` fields; `trialPeriodDays` to define free trial length in days (0 means no trial); display features (e.g. `priority_support`) are held in an extensible `Map<String, PlanFeature>` keyed by feature code — adding a new feature requires only a YAML change. Each plan carries a `pricingModel` field — `FLAT` (fixed price per period, default) or `PER_SEAT` (price multiplied by seat count; `maxUsers` acts as the seat ceiling; checkout validates and routes quantity automatically). `BillingSeedRunner` synchronizes plans with the Stripe catalog (external Product and Price ID creation) at application startup. Plan management is config-driven — there is no REST API for creating, updating, or deactivating plans. The static feature registry is loaded into the in-memory `PlanFeatureRegistry` at startup and served via a public internal endpoint for gateway and downstream service caching; **entitlement evaluation is tightly coupled with plan features** — the entitlements endpoint returns complete feature data enabling client-side access control; `PlanEligibilityPolicy` validates scope against active rollout mode
 - **Billing settings** — each tenant has a 1:1 `billing_settings` record that is the single source of truth for payment gateway customer metadata; decoupled from IAM users by design
 - **Billing email** — a separate `billing_email` field allows finance teams to receive invoices without a system account
 - **Tax ID / VAT/GST** — stored in `billing_settings` for compliant B2B invoices
@@ -51,14 +51,15 @@ Base path: `/api/v1/billing`
 
 ### Subscriptions — `/api/v1/billing/subscriptions`
 
-| Method | Path                                          | Auth                                        | Description                                 |
-| ------ | --------------------------------------------- | ------------------------------------------- | ------------------------------------------- |
-| `GET`  | `/subscriptions/{tenantKey}/active`           | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get active subscription for tenant          |
-| `GET`  | `/subscriptions/{tenantKey}`                  | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get all subscriptions for tenant            |
-| `POST` | `/subscriptions/{tenantKey}/checkout`         | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Create a Checkout Session for subscription  |
-| `POST` | `/subscriptions/{tenantKey}/{subscriptionId}` | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Update an existing subscription             |
-| `GET`  | `/subscriptions/me/active`                    | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get active subscription for current subject |
-| `GET`  | `/subscriptions/me`                           | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get all subscriptions for current subject   |
+| Method  | Path                                                          | Auth                                        | Description                                 |
+| ------ | ------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------- |
+| `GET`  | `/subscriptions/{tenantKey}/active`                           | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get active subscription for tenant          |
+| `GET`  | `/subscriptions/{tenantKey}`                                  | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Get all subscriptions for tenant            |
+| `POST` | `/subscriptions/{tenantKey}/checkout`                         | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Create a Checkout Session for subscription  |
+| `POST` | `/subscriptions/{tenantKey}/{subscriptionId}`                 | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Update an existing subscription             |
+| `PATCH`| `/subscriptions/{tenantKey}/{subscriptionId}/seats`           | JWT `TENANT_OWNER` + `X-Tenant-ID`          | Adjust seat count (PER_SEAT plans only)     |
+| `GET`  | `/subscriptions/me/active`                                    | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get active subscription for current subject |
+| `GET`  | `/subscriptions/me`                                           | JWT `TENANT_OWNER`/`MEMBER` + `X-Tenant-ID` | Get all subscriptions for current subject   |
 
 ### Payments — `/api/v1/billing/payments`
 
@@ -186,6 +187,7 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
         "scope": "TENANT",
         "active": true,
         "trialPeriodDays": 14,
+        "pricingModel": "FLAT",
         "features": {
             "maxUsers": 5,
             "maxProjects": 3,
@@ -202,6 +204,7 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
         "scope": "TENANT",
         "active": true,
         "trialPeriodDays": 0,
+        "pricingModel": "FLAT",
         "features": {
             "maxUsers": 50,
             "maxProjects": 0,
@@ -380,7 +383,7 @@ Note: The root `compose.yaml` is for development purposes only and is self-conta
 The service is instrumented with custom business metrics:
 
 - **Revenue & Payments**: `billing_revenue_total`, `billing_payments_total` (success/failure)
-- **Subscriptions**: `billing_subscriptions_active_count`, `billing_subscriptions_total` (lifecycle)
+- **Subscriptions**: `billing_subscriptions_active_count`, `billing_subscriptions_total` (lifecycle), `billing_seat_adjustments_total` (per-seat changes)
 - **Webhook Health**: `billing_webhooks_total`, `billing_webhooks_processing_duration_seconds`
 - **System Health**: `billing_emails_sent_total`, `billing_entitlements_check_total`
 
@@ -423,7 +426,7 @@ Please read our [Contributing Guidelines](.github/CONTRIBUTING.md) and [Code of 
 - **Platform rollout mode**: Controlled via `ROLLOUT_MODE` (`MULTI_TENANT` | `SINGLE_TENANT`); must be identical across IAM, Billing, and Gateway; `SubscriptionSubjectResolver` selects `TENANT` or `USER` subject scope based on active mode; service fails readiness on invalid/missing mode
 - **Single-tenant mode**: `UserBillingSettingsServiceImpl` handles per-user billing settings; `SingleTenantSubscriptionSubjectResolver` scopes subscriptions to `subject_type=USER`; `BillingContactResolver` uses `DEFAULT_BILLING_EMAIL` fallback when `ownerEmail` is absent
 - **Payment gateway abstraction**: Strategy pattern via `PaymentGatewayPort` — `createCustomer()` and `verifyAndParseWebhookEvent()` are the two gateway operations; `StripeGatewayAdapter` is the sole Stripe SDK consumer; `WebhookProcessingService` operates entirely on gateway-agnostic `GatewayWebhookEvent` sealed types; active gateway selected via `PAYMENT_GATEWAY_TYPE` env var
-- **Plan catalog**: Config-driven only (`plan_catalog` table, `PLATFORM_ADMIN` authority for read access). `PlanFeatures` holds typed quota fields (`maxUsers`, `maxProjects`) and an extensible `Map<String, PlanFeature>` keyed by feature code (e.g. `priority_support`). Each `PlanFeature` carries `code`, `title`, `value`, and `description` — adding a new feature requires only a YAML change, no recompilation. `BillingSeedRunner` serializes features to the `feature_set` column on startup and synchronizes plans with the Stripe catalog (external Product and Price ID creation). There is no REST API for creating, updating, or deactivating plans — all catalog changes go through configuration and deployment. `PlanFeatureRegistry` holds an in-memory `planCode → PlanFeatures` map used for zero-latency entitlement evaluation and the public internal plans endpoint (`/internal/plans`); **entitlement evaluation is tightly coupled with plan features** — the entitlements endpoint (`/entitlements/me`) returns complete feature data enabling fine-grained access control decisions; `PlanEligibilityPolicy` validates plan scope against active rollout mode; deactivation is a soft-delete managed via config change and redeployment
+- **Plan catalog**: Config-driven only (`plan_catalog` table, `PLATFORM_ADMIN` authority for read access). `PlanFeatures` holds typed quota fields (`maxUsers`, `maxProjects`) and an extensible `Map<String, PlanFeature>` keyed by feature code (e.g. `priority_support`). Each `PlanFeature` carries `code`, `title`, `value`, and `description` — adding a new feature requires only a YAML change, no recompilation. Each plan now carries a `pricingModel` field (`FLAT` or `PER_SEAT`); `FLAT` is the default and all existing plans use it. For `PER_SEAT` plans, `SubscriptionService.resolveEffectiveQuantity` routes the correct Stripe line-item quantity at checkout and `validateSeatCount` enforces the `maxUsers` ceiling before the gateway call. `BillingSeedRunner` serializes features and `pricingModel` to the `plan_catalog` table on startup and synchronizes plans with the Stripe catalog (external Product and Price ID creation). There is no REST API for creating, updating, or deactivating plans — all catalog changes go through configuration and deployment. `PlanFeatureRegistry` holds an in-memory `planCode → PlanFeatures` map (and a parallel `planCode → PricingModel` map) used for zero-latency entitlement evaluation and the public internal plans endpoint (`/internal/plans`); **entitlement evaluation is tightly coupled with plan features** — the entitlements endpoint (`/entitlements/me`) returns complete feature data enabling fine-grained access control decisions; `PlanEligibilityPolicy` validates plan scope against active rollout mode; deactivation is a soft-delete managed via config change and redeployment
 - **Observability**: Micrometer + Prometheus; structured JSON logging with Logstash encoder; health probes for Kubernetes
 - **GitHub Integration**: Issue templates, labels, Dependabot, and CI workflows
 - **Quality Tools**: Checkstyle, JaCoCo (90% gate), ArchUnit, commit convention enforcement

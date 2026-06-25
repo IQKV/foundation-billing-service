@@ -40,7 +40,7 @@ class MessagingEventsTest {
     final var event = new SubscriptionEvent(
         "tenant-123", "sub_ext456",
         SubscriptionEvent.EventType.SUBSCRIPTION_CREATED, now,
-        "TENANT", "tenant-123", null
+        "TENANT", "tenant-123", null, null
     );
 
     // Assert

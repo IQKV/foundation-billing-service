@@ -25,24 +25,43 @@ import com.iqkv.foundation.billingservice.infrastructure.config.StripeProductSch
 import org.springframework.stereotype.Component;
 
 /**
- * In-memory registry of {@code planCode → PlanFeatures}, populated at startup from
- * {@link BillingConfigurationProperties}. Read-only after initialization — O(1) lookups
- * with no DB or network calls.
+ * In-memory registry of {@code planCode → PlanFeatures} and {@code planCode → PricingModel},
+ * populated at startup from {@link BillingConfigurationProperties}. Read-only after
+ * initialization — O(1) lookups with no DB or network calls.
  *
- * <p>This is the single in-process authority on what features each plan includes.
- * It is also the backing store for {@code GET /api/v1/billing/internal/plans}.
+ * <p>This is the single in-process authority on what features and pricing model each plan
+ * includes. It is also the backing store for
+ * {@code GET /api/v1/billing/internal/plans} consumed by IAM and Gateway.
  */
 @Component
 public class PlanFeatureRegistry {
 
-  private final Map<String, PlanFeatures> registry;
+  /**
+   * Combines a plan's feature entitlements and pricing mode into a single transferable object.
+   * Used by the internal plans endpoint so consumers receive both in one response entry.
+   *
+   * @param planCode     unique plan identifier (e.g. {@code "pro-monthly"})
+   * @param features     typed feature set for entitlement checks and quota enforcement
+   * @param pricingModel pricing mode — {@link PricingModel#FLAT} or {@link PricingModel#PER_SEAT}
+   */
+  public record PlanCatalogEntry(String planCode, PlanFeatures features, PricingModel pricingModel) {
+  }
+
+  private final Map<String, PlanFeatures> featureRegistry;
+  private final Map<String, PricingModel> pricingRegistry;
 
   public PlanFeatureRegistry(final BillingConfigurationProperties props) {
-    this.registry = props.stripe().schema().products().values().stream()
+    this.featureRegistry = props.stripe().schema().products().values().stream()
         .filter(s -> s.planCode() != null)
         .collect(Collectors.toUnmodifiableMap(
             StripeProductSchema::planCode,
             s -> s.features() != null ? s.features() : PlanFeatures.NONE
+        ));
+    this.pricingRegistry = props.stripe().schema().products().values().stream()
+        .filter(s -> s.planCode() != null)
+        .collect(Collectors.toUnmodifiableMap(
+            StripeProductSchema::planCode,
+            StripeProductSchema::effectivePricingModel
         ));
   }
 
@@ -57,7 +76,21 @@ public class PlanFeatureRegistry {
     if (planCode == null || planCode.isBlank()) {
       return PlanFeatures.NONE;
     }
-    return registry.getOrDefault(planCode, PlanFeatures.NONE);
+    return featureRegistry.getOrDefault(planCode, PlanFeatures.NONE);
+  }
+
+  /**
+   * Returns the {@link PricingModel} for the given plan code.
+   * Falls back to {@link PricingModel#FLAT} when the plan code is unknown.
+   *
+   * @param planCode the plan code to look up
+   * @return the plan's pricing model, never {@code null}
+   */
+  public PricingModel pricingModelForPlan(final String planCode) {
+    if (planCode == null || planCode.isBlank()) {
+      return PricingModel.FLAT;
+    }
+    return pricingRegistry.getOrDefault(planCode, PricingModel.FLAT);
   }
 
   /**
@@ -66,16 +99,34 @@ public class PlanFeatureRegistry {
    * @return unmodifiable set of known plan codes
    */
   public Set<String> knownPlanCodes() {
-    return registry.keySet();
+    return featureRegistry.keySet();
   }
 
   /**
-   * Returns the full registry as an unmodifiable map.
-   * Used by the internal plans endpoint to serialize the catalog.
+   * Returns the full catalog as a map of {@code planCode → PlanFeatures}.
+   * Used internally where only feature data is needed.
    *
    * @return unmodifiable map of planCode to PlanFeatures
    */
   public Map<String, PlanFeatures> all() {
-    return registry;
+    return featureRegistry;
+  }
+
+  /**
+   * Returns the full catalog as a map of {@code planCode → PlanCatalogEntry}, bundling
+   * both features and pricing model. Used by the internal plans endpoint.
+   *
+   * @return unmodifiable map of planCode to PlanCatalogEntry
+   */
+  public Map<String, PlanCatalogEntry> allEntries() {
+    return featureRegistry.keySet().stream()
+        .collect(Collectors.toUnmodifiableMap(
+            planCode -> planCode,
+            planCode -> new PlanCatalogEntry(
+                planCode,
+                featureRegistry.get(planCode),
+                pricingRegistry.getOrDefault(planCode, PricingModel.FLAT)
+            )
+        ));
   }
 }

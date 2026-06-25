@@ -45,6 +45,7 @@ iqkv:
             scope: "TENANT"
             active: true
             trialPeriodDays: 0
+            pricingModel: "FLAT"
             features:
               maxUsers: 10
               maxProjects: 1
@@ -67,6 +68,7 @@ iqkv:
             scope: "TENANT"
             active: true
             trialPeriodDays: 14
+            pricingModel: "FLAT"
             features:
               maxUsers: 10
               maxProjects: 1
@@ -89,6 +91,7 @@ iqkv:
             scope: "TENANT"
             active: true
             trialPeriodDays: 3
+            pricingModel: "FLAT"
             features:
               maxUsers: 97
               maxProjects: 0
@@ -111,6 +114,7 @@ iqkv:
             scope: "TENANT"
             active: true
             trialPeriodDays: 14
+            pricingModel: "FLAT"
             features:
               maxUsers: 98
               maxProjects: 0
@@ -123,3 +127,30 @@ iqkv:
                   title: "Advanced Analytics"
                   value: "true"
                   description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
+          # ---------------------------------------------------------------------------
+          # PER_SEAT example — uncomment to test per-seat checkout in SIT.
+          # priceMinor is per seat per month; maxUsers is the seat ceiling.
+          # ---------------------------------------------------------------------------
+          # pro-monthly-per-seat:
+          #   planCode: "pro-monthly-per-seat"
+          #   displayName: "Pro Monthly (per seat)"
+          #   description: "Billed per active user seat. $5 per seat per month."
+          #   billingPeriod: "MONTHLY"
+          #   priceMinor: 500
+          #   currency: "USD"
+          #   scope: "TENANT"
+          #   active: true
+          #   trialPeriodDays: 14
+          #   pricingModel: "PER_SEAT"
+          #   features:
+          #     maxUsers: 200
+          #     maxProjects: 0
+          #     features:
+          #       priority_support:
+          #         title: "Priority Support"
+          #         value: "true"
+          #         description: "Access to priority support channel"
+          #       advanced_analytics:
+          #         title: "Advanced Analytics"
+          #         value: "true"
+          #         description: "Access to detailed analytics dashboard"

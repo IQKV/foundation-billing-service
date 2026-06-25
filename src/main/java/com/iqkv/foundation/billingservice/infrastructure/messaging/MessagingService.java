@@ -46,18 +46,21 @@ public class MessagingService {
         Instant.now(),
         "TENANT",
         tenantKey,
+        null,
         null
     );
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CREATED, event);
   }
 
   /**
-   * Publishes a subscription.created event with explicit subject scope and plan code.
+   * Publishes a subscription.created event with explicit subject scope, plan code, and seat count.
    * Prefer this overload when the subject type and key are known (e.g. from the Subscription entity).
+   *
+   * @param seatCount purchased seat count for PER_SEAT plans; {@code null} for FLAT plans
    */
   public void publishSubscriptionCreated(final String tenantKey, final String externalSubscriptionId,
                                          final String subjectType, final String subjectKey,
-                                         final String planCode) {
+                                         final String planCode, final Long seatCount) {
     final var event = new SubscriptionEvent(
         tenantKey,
         externalSubscriptionId,
@@ -65,18 +68,31 @@ public class MessagingService {
         Instant.now(),
         subjectType,
         subjectKey,
-        planCode
+        planCode,
+        seatCount
     );
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CREATED, event);
   }
 
   /**
-   * Publishes a subscription.updated event with explicit subject scope and plan code.
-   * Published when a subscription's plan or status changes.
+   * @deprecated Use {@link #publishSubscriptionCreated(String, String, String, String, String, Long)} instead.
+   */
+  @Deprecated
+  public void publishSubscriptionCreated(final String tenantKey, final String externalSubscriptionId,
+                                         final String subjectType, final String subjectKey,
+                                         final String planCode) {
+    publishSubscriptionCreated(tenantKey, externalSubscriptionId, subjectType, subjectKey, planCode, null);
+  }
+
+  /**
+   * Publishes a subscription.updated event with explicit subject scope, plan code, and seat count.
+   * Published when a subscription's plan, status, or seat count changes.
+   *
+   * @param seatCount purchased seat count for PER_SEAT plans; {@code null} for FLAT plans
    */
   public void publishSubscriptionUpdated(final String tenantKey, final String externalSubscriptionId,
                                          final String subjectType, final String subjectKey,
-                                         final String planCode) {
+                                         final String planCode, final Long seatCount) {
     final var event = new SubscriptionEvent(
         tenantKey,
         externalSubscriptionId,
@@ -84,9 +100,20 @@ public class MessagingService {
         Instant.now(),
         subjectType,
         subjectKey,
-        planCode
+        planCode,
+        seatCount
     );
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_UPDATED, event);
+  }
+
+  /**
+   * @deprecated Use {@link #publishSubscriptionUpdated(String, String, String, String, String, Long)} instead.
+   */
+  @Deprecated
+  public void publishSubscriptionUpdated(final String tenantKey, final String externalSubscriptionId,
+                                         final String subjectType, final String subjectKey,
+                                         final String planCode) {
+    publishSubscriptionUpdated(tenantKey, externalSubscriptionId, subjectType, subjectKey, planCode, null);
   }
 
   public void publishSubscriptionCancelled(final String tenantKey, final String externalSubscriptionId) {
@@ -97,6 +124,7 @@ public class MessagingService {
         Instant.now(),
         "TENANT",
         tenantKey,
+        null,
         null
     );
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CANCELLED, event);
@@ -115,6 +143,7 @@ public class MessagingService {
         Instant.now(),
         subjectType,
         subjectKey,
+        null,
         null
     );
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CANCELLED, event);

@@ -35,6 +35,7 @@ import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper;
+import com.iqkv.foundation.billingservice.plan.PlanFeatureRegistry;
 import com.iqkv.foundation.billingservice.settings.BillingSettings;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
@@ -73,6 +74,9 @@ class SubscriptionServiceTest {
   private PlanMapper planMapper;
 
   @Mock
+  private PlanFeatureRegistry planFeatureRegistry;
+
+  @Mock
   private MessagingService messagingService;
 
   private MeterRegistry meterRegistry;
@@ -90,6 +94,7 @@ class SubscriptionServiceTest {
         billingSettingsMapper,
         userBillingSettingsMapper,
         planMapper,
+        planFeatureRegistry,
         meterRegistry,
         messagingService
     );

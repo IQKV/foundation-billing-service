@@ -44,11 +44,14 @@ public class PlanInternalRestResource {
 
   /**
    * Response payload for a single plan entry in the internal catalog.
+   * Consumed by downstream services (IAM, Gateway) to populate their local
+   * {@code PlanCatalogCache} at startup and on periodic refresh.
    *
-   * @param planCode the plan code (e.g. {@code "pro-monthly"})
-   * @param features the typed feature set for this plan
+   * @param planCode     the plan code (e.g. {@code "pro-monthly"})
+   * @param features     the typed feature set for this plan
+   * @param pricingModel pricing mode — {@code FLAT} or {@code PER_SEAT}; never null
    */
-  public record PlanCatalogEntry(String planCode, PlanFeatures features) {
+  public record PlanCatalogEntry(String planCode, PlanFeatures features, PricingModel pricingModel) {
   }
 
   /**
@@ -58,11 +61,13 @@ public class PlanInternalRestResource {
    * @param displayName   human-readable plan name
    * @param description   plan description for checkout and pricing pages
    * @param billingPeriod billing frequency (MONTHLY or ANNUAL)
-   * @param priceMinor    price in minor currency units (e.g. cents for USD)
+   * @param priceMinor    price in minor currency units (e.g. cents for USD);
+   *                      for PER_SEAT plans this is the per-seat unit price
    * @param currency      ISO 4217 currency code
    * @param features      plan features
    * @param scope         plan scope (TENANT or USER)
    * @param active        whether the plan is visible
+   * @param pricingModel  pricing mode — {@code FLAT} or {@code PER_SEAT}; never null
    */
   public record PublicPlanEntry(
       String planCode,
@@ -73,7 +78,8 @@ public class PlanInternalRestResource {
       String currency,
       PlanFeatures features,
       String scope,
-      Boolean active
+      Boolean active,
+      PricingModel pricingModel
   ) {
   }
 
@@ -98,8 +104,8 @@ public class PlanInternalRestResource {
       @ApiResponse(responseCode = "200", description = "Plan catalog returned")
   })
   public ResponseEntity<List<PlanCatalogEntry>> listPlanCatalog() {
-    final List<PlanCatalogEntry> entries = planFeatureRegistry.all().entrySet().stream()
-        .map(e -> new PlanCatalogEntry(e.getKey(), e.getValue()))
+    final List<PlanCatalogEntry> entries = planFeatureRegistry.allEntries().values().stream()
+        .map(e -> new PlanCatalogEntry(e.planCode(), e.features(), e.pricingModel()))
         .sorted(Comparator.comparing(PlanCatalogEntry::planCode))
         .toList();
     return ResponseEntity.ok(entries);
@@ -125,7 +131,8 @@ public class PlanInternalRestResource {
             schema.currency(),
             schema.features() != null ? schema.features() : PlanFeatures.NONE,
             schema.scope(),
-            schema.active() != null ? schema.active() : Boolean.TRUE
+            schema.active() != null ? schema.active() : Boolean.TRUE,
+            schema.effectivePricingModel()
         ))
         .sorted(Comparator.comparing(PublicPlanEntry::planCode))
         .toList();

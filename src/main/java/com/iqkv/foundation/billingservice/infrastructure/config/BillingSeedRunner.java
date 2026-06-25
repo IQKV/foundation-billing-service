@@ -104,6 +104,7 @@ public class BillingSeedRunner implements ApplicationRunner {
     plan.setScope(schema.scope());
     plan.setActive(schema.active() != null ? schema.active() : Boolean.TRUE);
     plan.setTrialPeriodDays(schema.trialPeriodDays() != null && schema.trialPeriodDays() > 0 ? schema.trialPeriodDays() : null);
+    plan.setPricingModel(schema.effectivePricingModel().name());
 
     if (plan.getId() == null) {
       planMapper.insert(plan);
