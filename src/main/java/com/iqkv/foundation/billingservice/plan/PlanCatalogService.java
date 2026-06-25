@@ -19,6 +19,8 @@ package com.iqkv.foundation.billingservice.plan;
 import java.util.List;
 
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -26,6 +28,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class PlanCatalogService {
+
+  private static final Logger log = LoggerFactory.getLogger(PlanCatalogService.class);
 
   private final PlanMapper planMapper;
 
@@ -51,8 +55,12 @@ public class PlanCatalogService {
    */
   public void deactivatePlan(final String planCode) {
     final Plan plan = planMapper.findByPlanCode(planCode)
-        .orElseThrow(() -> new PlanNotFoundException(planCode));
+        .orElseThrow(() -> {
+          log.warn("Deactivate plan failed: plan not found for planCode={}", planCode);
+          return new PlanNotFoundException(planCode);
+        });
     plan.setActive(false);
     planMapper.update(plan);
+    log.info("Plan deactivated: planCode={}", planCode);
   }
 }

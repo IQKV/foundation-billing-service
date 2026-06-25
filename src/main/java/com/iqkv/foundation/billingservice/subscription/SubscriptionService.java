@@ -32,6 +32,8 @@ import com.iqkv.foundation.billingservice.plan.Plan;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -45,6 +47,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class SubscriptionService {
+
+  private static final Logger log = LoggerFactory.getLogger(SubscriptionService.class);
 
   private final SubscriptionMapper subscriptionMapper;
   private final RefundMapper refundMapper;
@@ -126,16 +130,24 @@ public class SubscriptionService {
       final String tenantKey,
       final SubscriptionDtos.CreateCheckoutSessionRequest request) {
     final var settings = billingSettingsMapper.findByTenantKey(tenantKey)
-        .orElseThrow(() -> new ResourceNotFoundException("Billing settings not found for tenant: " + tenantKey));
+        .orElseThrow(() -> {
+          log.warn("Create checkout session failed: billing settings not found for tenantKey={}", tenantKey);
+          return new ResourceNotFoundException("Billing settings not found for tenant: " + tenantKey);
+        });
 
     if (settings.getExternalCustomerId() == null) {
+      log.warn("Create checkout session failed: no external customer ID for tenantKey={}", tenantKey);
       throw new IllegalStateException("External customer ID not found for tenant: " + tenantKey);
     }
 
     final Plan plan = planMapper.findByPlanCode(request.planCode())
-        .orElseThrow(() -> new ResourceNotFoundException("Plan not found for planCode: " + request.planCode()));
+        .orElseThrow(() -> {
+          log.warn("Create checkout session failed: plan not found for planCode={}, tenantKey={}", request.planCode(), tenantKey);
+          return new ResourceNotFoundException("Plan not found for planCode: " + request.planCode());
+        });
 
     if (plan.getExternalPriceId() == null) {
+      log.warn("Create checkout session failed: plan {} has no externalPriceId, tenantKey={}", request.planCode(), tenantKey);
       throw new IllegalStateException("Plan " + request.planCode() + " has no externalPriceId (not synced with payment gateway yet)");
     }
 
@@ -152,6 +164,7 @@ public class SubscriptionService {
     );
 
     final String url = paymentGatewayPort.createCheckoutSession(command);
+    log.info("Created checkout session: tenantKey={}, planCode={}", tenantKey, request.planCode());
     meterRegistry.counter("billing_checkout_sessions_total", "plan_id", request.planCode()).increment();
     return new SubscriptionDtos.CheckoutSessionResponse(url);
   }
@@ -170,16 +183,24 @@ public class SubscriptionService {
     
     if (subject.type() == SubjectType.TENANT) {
       final var settings = billingSettingsMapper.findByTenantKey(subject.key())
-          .orElseThrow(() -> new ResourceNotFoundException("Billing settings not found for tenant: " + subject.key()));
+          .orElseThrow(() -> {
+            log.warn("Create checkout session for subject failed: billing settings not found, subjectKey={}", subject.key());
+            return new ResourceNotFoundException("Billing settings not found for tenant: " + subject.key());
+          });
       if (settings.getExternalCustomerId() == null) {
+        log.warn("Create checkout session for subject failed: no external customer ID, subjectKey={}", subject.key());
         throw new IllegalStateException("External customer ID not found for tenant: " + subject.key());
       }
       externalCustomerId = settings.getExternalCustomerId();
       metadata.put("tenantKey", subject.key());
     } else {
       final var settings = userBillingSettingsMapper.findByUserId(userId)
-          .orElseThrow(() -> new ResourceNotFoundException("User billing settings not found for user: " + userId));
+          .orElseThrow(() -> {
+            log.warn("Create checkout session for subject failed: user billing settings not found, userId={}", userId);
+            return new ResourceNotFoundException("User billing settings not found for user: " + userId);
+          });
       if (settings.getExternalCustomerId() == null) {
+        log.warn("Create checkout session for subject failed: no external customer ID, userId={}", userId);
         throw new IllegalStateException("External customer ID not found for user: " + userId);
       }
       externalCustomerId = settings.getExternalCustomerId();
@@ -187,9 +208,13 @@ public class SubscriptionService {
     }
 
     final Plan plan = planMapper.findByPlanCode(request.planCode())
-        .orElseThrow(() -> new ResourceNotFoundException("Plan not found for planCode: " + request.planCode()));
+        .orElseThrow(() -> {
+          log.warn("Create checkout session for subject failed: plan not found, planCode={}", request.planCode());
+          return new ResourceNotFoundException("Plan not found for planCode: " + request.planCode());
+        });
 
     if (plan.getExternalPriceId() == null) {
+      log.warn("Create checkout session for subject failed: plan {} has no externalPriceId", request.planCode());
       throw new IllegalStateException("Plan " + request.planCode() + " has no externalPriceId (not synced with payment gateway yet)");
     }
 
@@ -206,6 +231,8 @@ public class SubscriptionService {
     );
 
     final String url = paymentGatewayPort.createCheckoutSession(command);
+    log.info("Created checkout session for subject: subjectType={}, subjectKey={}, planCode={}",
+        subject.type(), subject.key(), request.planCode());
     meterRegistry.counter("billing_checkout_sessions_total", "plan_id", request.planCode()).increment();
     return new SubscriptionDtos.CheckoutSessionResponse(url);
   }
@@ -218,17 +245,26 @@ public class SubscriptionService {
       final String externalSubscriptionId,
       final SubscriptionDtos.UpdateSubscriptionRequest request) {
     final Subscription subscription = subscriptionMapper.findByExternalSubscriptionId(externalSubscriptionId)
-        .orElseThrow(() -> new ResourceNotFoundException("Subscription not found: " + externalSubscriptionId));
+        .orElseThrow(() -> {
+          log.warn("Update subscription failed: subscription not found, externalSubscriptionId={}", externalSubscriptionId);
+          return new ResourceNotFoundException("Subscription not found: " + externalSubscriptionId);
+        });
 
     if (!tenantKey.equals(subscription.getTenantKey())) {
+      log.warn("Update subscription failed: tenant mismatch, externalSubscriptionId={}, tenantKey={}",
+          externalSubscriptionId, tenantKey);
       throw new TenantContextMismatchException("Subscription " + externalSubscriptionId + " does not belong to tenant " + tenantKey);
     }
 
     String priceId = null;
     if (request.planCode() != null) {
       final Plan plan = planMapper.findByPlanCode(request.planCode())
-          .orElseThrow(() -> new ResourceNotFoundException("Plan not found for planCode: " + request.planCode()));
+          .orElseThrow(() -> {
+            log.warn("Update subscription failed: plan not found, planCode={}", request.planCode());
+            return new ResourceNotFoundException("Plan not found for planCode: " + request.planCode());
+          });
       if (plan.getExternalPriceId() == null) {
+        log.warn("Update subscription failed: plan {} has no externalPriceId", request.planCode());
         throw new IllegalStateException("Plan " + request.planCode() + " has no externalPriceId (not synced with payment gateway yet)");
       }
       priceId = plan.getExternalPriceId();
@@ -243,6 +279,7 @@ public class SubscriptionService {
     );
 
     paymentGatewayPort.updateSubscription(command);
+    log.info("Updated subscription: externalSubscriptionId={}, tenantKey={}", externalSubscriptionId, tenantKey);
     meterRegistry.counter("billing_subscription_updates_total", "plan_id", request.planCode()).increment();
   }
 
@@ -253,9 +290,13 @@ public class SubscriptionService {
       final String tenantKey,
       final SubscriptionDtos.CreateRefundRequest request) {
     final var settings = billingSettingsMapper.findByTenantKey(tenantKey)
-        .orElseThrow(() -> new ResourceNotFoundException("Billing settings not found for tenant: " + tenantKey));
+        .orElseThrow(() -> {
+          log.warn("Create refund failed: billing settings not found for tenantKey={}", tenantKey);
+          return new ResourceNotFoundException("Billing settings not found for tenant: " + tenantKey);
+        });
 
     if (settings.getExternalCustomerId() == null) {
+      log.warn("Create refund failed: no external customer ID for tenantKey={}", tenantKey);
       throw new IllegalStateException("External customer ID not found for tenant: " + tenantKey);
     }
 
@@ -268,6 +309,7 @@ public class SubscriptionService {
     );
 
     final String refundId = paymentGatewayPort.createRefund(command);
+    log.info("Created refund: tenantKey={}, paymentId={}", tenantKey, request.paymentId());
     meterRegistry.counter("billing_refunds_issued_total", "reason", request.reason() != null ? request.reason() : "unknown").increment();
     return new SubscriptionDtos.RefundResponse(refundId);
   }
@@ -286,16 +328,24 @@ public class SubscriptionService {
     
     if (subject.type() == SubjectType.TENANT) {
       final var settings = billingSettingsMapper.findByTenantKey(subject.key())
-          .orElseThrow(() -> new ResourceNotFoundException("Billing settings not found for tenant: " + subject.key()));
+          .orElseThrow(() -> {
+            log.warn("Create refund for subject failed: billing settings not found, subjectKey={}", subject.key());
+            return new ResourceNotFoundException("Billing settings not found for tenant: " + subject.key());
+          });
       if (settings.getExternalCustomerId() == null) {
+        log.warn("Create refund for subject failed: no external customer ID, subjectKey={}", subject.key());
         throw new IllegalStateException("External customer ID not found for tenant: " + subject.key());
       }
       externalCustomerId = settings.getExternalCustomerId();
       metadata.put("tenantKey", subject.key());
     } else {
       final var settings = userBillingSettingsMapper.findByUserId(userId)
-          .orElseThrow(() -> new ResourceNotFoundException("User billing settings not found for user: " + userId));
+          .orElseThrow(() -> {
+            log.warn("Create refund for subject failed: user billing settings not found, userId={}", userId);
+            return new ResourceNotFoundException("User billing settings not found for user: " + userId);
+          });
       if (settings.getExternalCustomerId() == null) {
+        log.warn("Create refund for subject failed: no external customer ID, userId={}", userId);
         throw new IllegalStateException("External customer ID not found for user: " + userId);
       }
       externalCustomerId = settings.getExternalCustomerId();
@@ -311,6 +361,8 @@ public class SubscriptionService {
     );
 
     final String refundId = paymentGatewayPort.createRefund(command);
+    log.info("Created refund for subject: subjectType={}, subjectKey={}, paymentId={}",
+        subject.type(), subject.key(), request.paymentId());
     meterRegistry.counter("billing_refunds_issued_total", "reason", request.reason() != null ? request.reason() : "unknown").increment();
     return new SubscriptionDtos.RefundResponse(refundId);
   }
