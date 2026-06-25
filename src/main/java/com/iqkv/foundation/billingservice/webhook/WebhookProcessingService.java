@@ -124,13 +124,8 @@ public class WebhookProcessingService {
     final String externalEventId = event.eventId();
     final String eventType = event.eventType();
 
-    if (webhookLogMapper.existsByExternalEventId(externalEventId)) {
-      log.debug("Duplicate webhook event received, skipping: {}", externalEventId);
-      meterRegistry.counter("billing_webhooks_total", "event_type", eventType, "status", "duplicate").increment();
-      return true;
-    }
-
-    webhookLogMapper.insert(new WebhookLog(
+    // First try to insert the event atomically using ON CONFLICT
+    final int inserted = webhookLogMapper.insertIfNotExists(new WebhookLog(
         UUID.randomUUID(),
         externalEventId,
         eventType,
@@ -139,6 +134,12 @@ public class WebhookProcessingService {
         Instant.now(),
         null
     ));
+
+    if (inserted == 0) {
+      log.debug("Duplicate webhook event received, skipping: {}", externalEventId);
+      meterRegistry.counter("billing_webhooks_total", "event_type", eventType, "status", "duplicate").increment();
+      return true;
+    }
 
     final Timer.Sample sample = Timer.start(meterRegistry);
     try {

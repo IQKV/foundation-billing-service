@@ -120,15 +120,16 @@ class WebhookProcessingServiceTest {
   void shouldReturnTrueWhenEventIsDuplicate() {
     // Arrange
     final GatewayWebhookEvent event = subscriptionCreatedEvent("evt_123", "tenant-abc");
-    when(webhookLogMapper.existsByExternalEventId("evt_123")).thenReturn(true);
+    when(webhookLogMapper.insertIfNotExists(any())).thenReturn(0);
 
     // Act
     final boolean result = webhookProcessingService.process(event);
 
     // Assert
     assertThat(result).isTrue();
-    verify(webhookLogMapper).existsByExternalEventId("evt_123");
-    verify(webhookLogMapper, never()).insert(any());
+    verify(webhookLogMapper).insertIfNotExists(argThat(log ->
+        log.getExternalEventId().equals("evt_123")
+    ));
   }
 
   @Test
@@ -137,7 +138,7 @@ class WebhookProcessingServiceTest {
     // Arrange
     final String tenantKey = "tenant-abc";
     final GatewayWebhookEvent event = subscriptionCreatedEvent("evt_456", tenantKey);
-    when(webhookLogMapper.existsByExternalEventId("evt_456")).thenReturn(false);
+    when(webhookLogMapper.insertIfNotExists(any())).thenReturn(1);
     when(subjectResolver.resolveSubject(eq(tenantKey), any()))
         .thenReturn(new SubscriptionSubject(SubjectType.TENANT, tenantKey));
     when(billingSettingsMapper.findByTenantKey(tenantKey)).thenReturn(Optional.empty());
@@ -147,7 +148,7 @@ class WebhookProcessingServiceTest {
 
     // Assert
     assertThat(result).isFalse();
-    verify(webhookLogMapper).insert(argThat(log ->
+    verify(webhookLogMapper).insertIfNotExists(argThat(log ->
         log.getExternalEventId().equals("evt_456")
             && log.getEventType().equals("customer.subscription.created")
             && log.getStatus().equals("RECEIVED")
@@ -166,7 +167,7 @@ class WebhookProcessingServiceTest {
     final String externalSubscriptionId = "sub_abc123";
     final GatewayWebhookEvent event = subscriptionCreatedEvent("evt_sub_created", tenantKey, externalSubscriptionId);
 
-    when(webhookLogMapper.existsByExternalEventId("evt_sub_created")).thenReturn(false);
+    when(webhookLogMapper.insertIfNotExists(any())).thenReturn(1);
     when(subjectResolver.resolveSubject(eq(tenantKey), any()))
         .thenReturn(new SubscriptionSubject(SubjectType.TENANT, tenantKey));
     when(billingSettingsMapper.findByTenantKey(tenantKey)).thenReturn(Optional.empty());
@@ -203,7 +204,7 @@ class WebhookProcessingServiceTest {
     );
     final BillingSettings settings = createBillingSettings(tenantKey, customerId);
 
-    when(webhookLogMapper.existsByExternalEventId("evt_inv_paid")).thenReturn(false);
+    when(webhookLogMapper.insertIfNotExists(any())).thenReturn(1);
     when(billingSettingsMapper.findByExternalCustomerId(customerId)).thenReturn(Optional.of(settings));
     when(subscriptionMapper.findByExternalSubscriptionId("sub_inv123")).thenReturn(Optional.empty());
     when(notificationProps.defaultLocale()).thenReturn("en");
@@ -236,7 +237,7 @@ class WebhookProcessingServiceTest {
     );
     final BillingSettings settings = createBillingSettings(tenantKey, customerId);
 
-    when(webhookLogMapper.existsByExternalEventId("evt_pay_failed")).thenReturn(false);
+    when(webhookLogMapper.insertIfNotExists(any())).thenReturn(1);
     when(billingSettingsMapper.findByExternalCustomerId(customerId)).thenReturn(Optional.of(settings));
     when(subscriptionMapper.findByExternalSubscriptionId("sub_fail123")).thenReturn(Optional.empty());
     when(notificationProps.defaultLocale()).thenReturn("en");
@@ -264,7 +265,7 @@ class WebhookProcessingServiceTest {
     final String tenantKey = "tenant-err";
     final GatewayWebhookEvent event = subscriptionCreatedEvent("evt_err", tenantKey);
 
-    when(webhookLogMapper.existsByExternalEventId("evt_err")).thenReturn(false);
+    when(webhookLogMapper.insertIfNotExists(any())).thenReturn(1);
     when(subjectResolver.resolveSubject(any(), any()))
         .thenThrow(new RuntimeException("Unexpected error"));
 
@@ -287,7 +288,7 @@ class WebhookProcessingServiceTest {
         "inv_x", "cus_unknown", null, 1000L, 1000L, "USD"
     );
 
-    when(webhookLogMapper.existsByExternalEventId("evt_no_settings")).thenReturn(false);
+    when(webhookLogMapper.insertIfNotExists(any())).thenReturn(1);
     when(billingSettingsMapper.findByExternalCustomerId("cus_unknown")).thenReturn(Optional.empty());
 
     // Act

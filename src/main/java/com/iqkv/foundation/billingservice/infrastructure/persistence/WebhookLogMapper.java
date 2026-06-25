@@ -25,7 +25,9 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface WebhookLogMapper {
 
-  void insert(WebhookLog log);
+  int insert(WebhookLog log);
+
+  int insertIfNotExists(WebhookLog log);
 
   boolean existsByExternalEventId(String externalEventId);
 
