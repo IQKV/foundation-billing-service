@@ -24,6 +24,7 @@ import com.iqkv.foundation.billingservice.gateway.command.CreateCheckoutSessionC
 import com.iqkv.foundation.billingservice.gateway.command.CreateRefundCommand;
 import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
+import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
@@ -58,15 +59,17 @@ public class SubscriptionService {
   private final com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper userBillingSettingsMapper;
   private final PlanMapper planMapper;
   private final MeterRegistry meterRegistry;
+  private final MessagingService messagingService;
 
   public SubscriptionService(final SubscriptionMapper subscriptionMapper,
-                             final RefundMapper refundMapper,
-                             final SubscriptionSubjectResolver subjectResolver,
-                             final PaymentGatewayPort paymentGatewayPort,
-                             final BillingSettingsMapper billingSettingsMapper,
-                             final com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper userBillingSettingsMapper,
-                             final PlanMapper planMapper,
-                             final MeterRegistry meterRegistry) {
+                              final RefundMapper refundMapper,
+                              final SubscriptionSubjectResolver subjectResolver,
+                              final PaymentGatewayPort paymentGatewayPort,
+                              final BillingSettingsMapper billingSettingsMapper,
+                              final com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper userBillingSettingsMapper,
+                              final PlanMapper planMapper,
+                              final MeterRegistry meterRegistry,
+                              final MessagingService messagingService) {
     this.subscriptionMapper = subscriptionMapper;
     this.refundMapper = refundMapper;
     this.subjectResolver = subjectResolver;
@@ -75,6 +78,7 @@ public class SubscriptionService {
     this.userBillingSettingsMapper = userBillingSettingsMapper;
     this.planMapper = planMapper;
     this.meterRegistry = meterRegistry;
+    this.messagingService = messagingService;
   }
 
   // ─── Self-service ──────────────────────────────────────────────────────────
@@ -506,6 +510,19 @@ public class SubscriptionService {
     subscription.setUpdatedAt(java.time.LocalDateTime.now());
     subscriptionMapper.update(subscription);
 
+    // Publish subscription updated event
+    final String tenantKey = subscription.getTenantKey();
+    if (tenantKey != null && !tenantKey.isBlank()) {
+      messagingService.publishSubscriptionUpdated(
+          tenantKey,
+          subscription.getExternalSubscriptionId(),
+          subscription.getSubjectType(),
+          subscription.getSubjectKey(),
+          resolvePlanCode(subscription.getPlanId())
+      );
+      log.info("Published subscription.updated for tenant={}, subscription={}", tenantKey, subscription.getExternalSubscriptionId());
+    }
+
     return SubscriptionDtoMapper.toAdminResponse(subscription);
   }
 
@@ -533,6 +550,18 @@ public class SubscriptionService {
     subscription.setUpdatedAt(java.time.LocalDateTime.now());
     subscriptionMapper.update(subscription);
 
+    // Publish subscription cancelled event
+    final String tenantKey = subscription.getTenantKey();
+    if (tenantKey != null && !tenantKey.isBlank()) {
+      messagingService.publishSubscriptionCancelled(
+          tenantKey,
+          subscription.getExternalSubscriptionId(),
+          subscription.getSubjectType(),
+          subscription.getSubjectKey()
+      );
+      log.info("Published subscription.cancelled for tenant={}, subscription={}", tenantKey, subscription.getExternalSubscriptionId());
+    }
+
     return SubscriptionDtoMapper.toAdminResponse(subscription);
   }
 
@@ -553,6 +582,19 @@ public class SubscriptionService {
     subscription.setUpdatedAt(java.time.LocalDateTime.now());
     subscriptionMapper.update(subscription);
 
+    // Publish subscription updated event
+    final String tenantKey = subscription.getTenantKey();
+    if (tenantKey != null && !tenantKey.isBlank()) {
+      messagingService.publishSubscriptionUpdated(
+          tenantKey,
+          subscription.getExternalSubscriptionId(),
+          subscription.getSubjectType(),
+          subscription.getSubjectKey(),
+          resolvePlanCode(subscription.getPlanId())
+      );
+      log.info("Published subscription.updated for tenant={}, subscription={}", tenantKey, subscription.getExternalSubscriptionId());
+    }
+
     return SubscriptionDtoMapper.toAdminResponse(subscription);
   }
 
@@ -572,6 +614,19 @@ public class SubscriptionService {
     subscription.setStatus("active");
     subscription.setUpdatedAt(java.time.LocalDateTime.now());
     subscriptionMapper.update(subscription);
+
+    // Publish subscription updated event
+    final String tenantKey = subscription.getTenantKey();
+    if (tenantKey != null && !tenantKey.isBlank()) {
+      messagingService.publishSubscriptionUpdated(
+          tenantKey,
+          subscription.getExternalSubscriptionId(),
+          subscription.getSubjectType(),
+          subscription.getSubjectKey(),
+          resolvePlanCode(subscription.getPlanId())
+      );
+      log.info("Published subscription.updated for tenant={}, subscription={}", tenantKey, subscription.getExternalSubscriptionId());
+    }
 
     return SubscriptionDtoMapper.toAdminResponse(subscription);
   }
@@ -612,6 +667,19 @@ public class SubscriptionService {
         total,
         (int) Math.ceil((double) total / limit)
     );
+  }
+
+  /**
+   * Resolves the human-readable planCode from the plan catalog for the given plan ID.
+   */
+  private String resolvePlanCode(final String planId) {
+    if (planId == null || planId.isBlank()) {
+      return null;
+    }
+    return planMapper.findByExternalPriceId(planId)
+        .or(() -> planMapper.findByPlanCode(planId))
+        .map(Plan::getPlanCode)
+        .orElse(planId);
   }
 
   /**

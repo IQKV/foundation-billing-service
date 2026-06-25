@@ -29,6 +29,7 @@ import java.util.UUID;
 
 import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
+import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
@@ -71,6 +72,9 @@ class SubscriptionServiceTest {
   @Mock
   private PlanMapper planMapper;
 
+  @Mock
+  private MessagingService messagingService;
+
   private MeterRegistry meterRegistry;
 
   private SubscriptionService subscriptionService;
@@ -86,7 +90,8 @@ class SubscriptionServiceTest {
         billingSettingsMapper,
         userBillingSettingsMapper,
         planMapper,
-        meterRegistry
+        meterRegistry,
+        messagingService
     );
   }
 
