@@ -19,6 +19,7 @@
         <result property="active" column="active"/>
         <result property="trialPeriodDays" column="trial_period_days"/>
         <result property="pricingModel" column="pricing_model"/>
+        <result property="gatewayType" column="gateway_type"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -26,7 +27,7 @@
     <select id="findById" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
-        pricing_model, created_at, updated_at
+        pricing_model, gateway_type, created_at, updated_at
         FROM plan_catalog
         WHERE id = #{id}::uuid
     </select>
@@ -34,7 +35,7 @@
     <select id="findByPlanCode" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
-        pricing_model, created_at, updated_at
+        pricing_model, gateway_type, created_at, updated_at
         FROM plan_catalog
         WHERE plan_code = #{planCode}
     </select>
@@ -42,7 +43,7 @@
     <select id="findByExternalPriceId" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
-        pricing_model, created_at, updated_at
+        pricing_model, gateway_type, created_at, updated_at
         FROM plan_catalog
         WHERE external_price_id = #{externalPriceId}
     </select>
@@ -50,7 +51,7 @@
     <select id="findAllActive" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
-        pricing_model, created_at, updated_at
+        pricing_model, gateway_type, created_at, updated_at
         FROM plan_catalog
         WHERE active = true
         ORDER BY plan_code ASC
@@ -59,7 +60,7 @@
     <select id="findAll" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
-        pricing_model, created_at, updated_at
+        pricing_model, gateway_type, created_at, updated_at
         FROM plan_catalog
         ORDER BY plan_code ASC
     </select>
@@ -68,7 +69,7 @@
         INSERT INTO plan_catalog
         (id, plan_code, display_name, description, billing_period, price_minor, currency,
         feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
-        pricing_model, created_at, updated_at)
+        pricing_model, gateway_type, created_at, updated_at)
         VALUES
         (COALESCE(#{id}::uuid, gen_random_uuid()),
         #{planCode}, #{displayName}, #{description}, #{billingPeriod}, #{priceMinor},
@@ -80,6 +81,7 @@
         COALESCE(#{active}, true),
         COALESCE(#{trialPeriodDays}, 0),
         COALESCE(#{pricingModel}, 'FLAT'),
+        COALESCE(#{gatewayType}, 'STRIPE'),
         COALESCE(#{createdAt}, now()),
         COALESCE(#{updatedAt}, now()))
     </insert>
@@ -98,6 +100,7 @@
         active = #{active},
         trial_period_days = COALESCE(#{trialPeriodDays}, 0),
         pricing_model = COALESCE(#{pricingModel}, 'FLAT'),
+        gateway_type = #{gatewayType},
         updated_at = now()
         WHERE plan_code = #{planCode}
     </update>

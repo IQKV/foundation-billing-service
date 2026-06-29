@@ -27,6 +27,7 @@ public record GatewayPaymentFailureEvent(
     String eventId,
     String eventType,
     Instant occurredAt,
+    String gatewayType,
     String externalInvoiceId,
     String externalCustomerId,
     String externalSubscriptionId,

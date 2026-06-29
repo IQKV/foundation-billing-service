@@ -28,6 +28,7 @@ public record GatewaySubscriptionEvent(
     String eventId,
     String eventType,
     Instant occurredAt,
+    String gatewayType,
     String externalSubscriptionId,
     String externalCustomerId,
     String status,

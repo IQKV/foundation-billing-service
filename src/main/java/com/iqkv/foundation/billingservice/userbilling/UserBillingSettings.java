@@ -39,6 +39,7 @@ public class UserBillingSettings {
   private String taxId;
   private String taxIdType;
   private String currency;            // default "USD"
+  private String gatewayType;         // STRIPE | LEMON_SQUEEZY
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -54,6 +55,7 @@ public class UserBillingSettings {
                              final String taxId,
                              final String taxIdType,
                              final String currency,
+                             final String gatewayType,
                              final LocalDateTime createdAt,
                              final LocalDateTime updatedAt) {
     this.id = id;
@@ -65,6 +67,7 @@ public class UserBillingSettings {
     this.taxId = taxId;
     this.taxIdType = taxIdType;
     this.currency = currency;
+    this.gatewayType = gatewayType;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -139,6 +142,14 @@ public class UserBillingSettings {
 
   public void setCurrency(String currency) {
     this.currency = currency;
+  }
+
+  public String getGatewayType() {
+    return gatewayType;
+  }
+
+  public void setGatewayType(String gatewayType) {
+    this.gatewayType = gatewayType;
   }
 
   public LocalDateTime getCreatedAt() {

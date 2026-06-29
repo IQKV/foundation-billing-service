@@ -20,6 +20,8 @@
         <result property="canceledAt" column="canceled_at"/>
         <result property="subjectType" column="subject_type"/>
         <result property="subjectKey" column="subject_key"/>
+        <result property="gatewayType" column="gateway_type"/>
+        <result property="externalOrderId" column="external_order_id"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -30,6 +32,7 @@
         current_period_start, current_period_end,
         cancel_at_period_end, canceled_at,
         subject_type, subject_key,
+        gateway_type, external_order_id,
         created_at, updated_at
     </sql>
 
@@ -40,6 +43,7 @@
         current_period_start, current_period_end,
         cancel_at_period_end, canceled_at,
         subject_type, subject_key,
+        gateway_type, external_order_id,
         created_at, updated_at)
         VALUES
         (COALESCE(#{id}::uuid, gen_random_uuid()),
@@ -49,6 +53,8 @@
         #{cancelAtPeriodEnd}, #{canceledAt},
         COALESCE(#{subjectType}, 'TENANT'),
         COALESCE(#{subjectKey}, #{tenantKey}),
+        COALESCE(#{gatewayType}, 'STRIPE'),
+        #{externalOrderId},
         COALESCE(#{createdAt}, now()),
         COALESCE(#{updatedAt}, now()))
         ON CONFLICT (external_subscription_id) DO UPDATE
@@ -63,6 +69,8 @@
         canceled_at = EXCLUDED.canceled_at,
         subject_type = EXCLUDED.subject_type,
         subject_key = EXCLUDED.subject_key,
+        gateway_type = EXCLUDED.gateway_type,
+        external_order_id = EXCLUDED.external_order_id,
         updated_at = now()
     </insert>
 
@@ -150,6 +158,8 @@
         current_period_end = #{currentPeriodEnd},
         cancel_at_period_end = #{cancelAtPeriodEnd},
         canceled_at = #{canceledAt},
+        gateway_type = #{gatewayType},
+        external_order_id = #{externalOrderId},
         updated_at = #{updatedAt}
         WHERE id = #{id}
     </update>

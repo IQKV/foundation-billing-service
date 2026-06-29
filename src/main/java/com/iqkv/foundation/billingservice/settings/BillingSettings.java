@@ -38,6 +38,7 @@ public class BillingSettings {
   private String taxIdType;
   private String currency;            // default "USD"
   private UUID profileOwnerId;        // nullable — soft ref to IAM users.id, no FK constraint
+  private String gatewayType;         // STRIPE | LEMON_SQUEEZY
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -54,6 +55,7 @@ public class BillingSettings {
                          final String taxIdType,
                          final String currency,
                          final UUID profileOwnerId,
+                         final String gatewayType,
                          final LocalDateTime createdAt,
                          final LocalDateTime updatedAt) {
     this.id = id;
@@ -66,6 +68,7 @@ public class BillingSettings {
     this.taxIdType = taxIdType;
     this.currency = currency;
     this.profileOwnerId = profileOwnerId;
+    this.gatewayType = gatewayType;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -148,6 +151,14 @@ public class BillingSettings {
 
   public void setProfileOwnerId(UUID profileOwnerId) {
     this.profileOwnerId = profileOwnerId;
+  }
+
+  public String getGatewayType() {
+    return gatewayType;
+  }
+
+  public void setGatewayType(String gatewayType) {
+    this.gatewayType = gatewayType;
   }
 
   public LocalDateTime getCreatedAt() {

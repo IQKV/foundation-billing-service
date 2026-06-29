@@ -27,9 +27,11 @@ public record GatewayInvoiceEvent(
     String eventId,
     String eventType,
     Instant occurredAt,
+    String gatewayType,
     String externalInvoiceId,
     String externalCustomerId,
     String externalSubscriptionId,
+    String externalOrderId,
     Long amountPaid,
     Long amountDue,
     String currency

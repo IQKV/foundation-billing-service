@@ -48,4 +48,11 @@ public sealed interface GatewayWebhookEvent
    * Timestamp when the event occurred.
    */
   Instant occurredAt();
+
+  /**
+   * Gateway type (e.g., "STRIPE", "LEMON_SQUEEZY") that generated this event.
+   */
+  default String gatewayType() {
+    return "UNKNOWN";
+  }
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="20260701000003" author="iqkv">
+        <comment>Add gateway_type column to plan_catalog for observability. Defaults to STRIPE
+            for all existing rows. Note: external_price_id semantics are gateway-dependent.</comment>
+
+        <addColumn tableName="plan_catalog">
+            <column name="gateway_type" type="VARCHAR(32)" defaultValue="STRIPE">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

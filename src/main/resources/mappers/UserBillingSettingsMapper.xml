@@ -14,13 +14,14 @@
         <result property="taxId" column="tax_id"/>
         <result property="taxIdType" column="tax_id_type"/>
         <result property="currency" column="currency"/>
+        <result property="gatewayType" column="gateway_type"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <select id="findByUserId" resultMap="userBillingSettingsResultMap">
         SELECT id, user_id, external_customer_id, billing_email, company_name,
-        billing_address, tax_id, tax_id_type, currency, created_at, updated_at
+        billing_address, tax_id, tax_id_type, currency, gateway_type, created_at, updated_at
         FROM user_billing_settings
         WHERE user_id = #{userId}::uuid
     </select>
@@ -32,7 +33,7 @@
     <insert id="insert" parameterType="com.iqkv.foundation.billingservice.userbilling.UserBillingSettings">
         INSERT INTO user_billing_settings
         (id, user_id, external_customer_id, billing_email, company_name,
-        billing_address, tax_id, tax_id_type, currency, created_at, updated_at)
+        billing_address, tax_id, tax_id_type, currency, gateway_type, created_at, updated_at)
         VALUES
         (COALESCE(#{id}::uuid, gen_random_uuid()),
         #{userId}::uuid,
@@ -43,6 +44,7 @@
         #{taxId},
         #{taxIdType},
         COALESCE(#{currency}, 'USD'),
+        COALESCE(#{gatewayType}, 'STRIPE'),
         COALESCE(#{createdAt}, now()),
         COALESCE(#{updatedAt}, now()))
     </insert>
@@ -56,6 +58,7 @@
         tax_id = #{taxId},
         tax_id_type = #{taxIdType},
         currency = #{currency},
+        gateway_type = #{gatewayType},
         updated_at = now()
         WHERE user_id = #{userId}::uuid
     </update>

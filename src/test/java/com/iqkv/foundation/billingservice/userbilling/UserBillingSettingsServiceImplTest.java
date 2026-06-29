@@ -157,6 +157,7 @@ class UserBillingSettingsServiceImplTest {
         "TAX456",
         "VAT",
         "USD",
+        "STRIPE",
         LocalDateTime.now(),
         LocalDateTime.now()
     );

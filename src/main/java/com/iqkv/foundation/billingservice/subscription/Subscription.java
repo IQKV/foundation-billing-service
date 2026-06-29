@@ -49,6 +49,8 @@ public class Subscription {
   private Instant canceledAt;             // nullable
   private String subjectType;             // TENANT | USER
   private String subjectKey;              // tenantKey or userId depending on subjectType
+  private String gatewayType;             // STRIPE | LEMON_SQUEEZY
+  private String externalOrderId;         // nullable — Lemon Squeezy order ID
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -70,6 +72,8 @@ public class Subscription {
                       final Instant canceledAt,
                       final String subjectType,
                       final String subjectKey,
+                      final String gatewayType,
+                      final String externalOrderId,
                       final LocalDateTime createdAt,
                       final LocalDateTime updatedAt) {
     this.id = id;
@@ -87,6 +91,8 @@ public class Subscription {
     this.canceledAt = canceledAt;
     this.subjectType = subjectType;
     this.subjectKey = subjectKey;
+    this.gatewayType = gatewayType;
+    this.externalOrderId = externalOrderId;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -209,6 +215,22 @@ public class Subscription {
 
   public void setSubjectKey(String subjectKey) {
     this.subjectKey = subjectKey;
+  }
+
+  public String getGatewayType() {
+    return gatewayType;
+  }
+
+  public void setGatewayType(String gatewayType) {
+    this.gatewayType = gatewayType;
+  }
+
+  public String getExternalOrderId() {
+    return externalOrderId;
+  }
+
+  public void setExternalOrderId(String externalOrderId) {
+    this.externalOrderId = externalOrderId;
   }
 
   public LocalDateTime getCreatedAt() {

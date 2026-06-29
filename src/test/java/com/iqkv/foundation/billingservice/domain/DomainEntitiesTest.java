@@ -48,7 +48,7 @@ class DomainEntitiesTest {
     final var settings = new BillingSettings(
         id, "tenant-123", "cus_ext123", "billing@example.com",
         "Acme Corp", "{\"street\":\"123 Main\"}", "TAX999", "VAT",
-        "USD", ownerId, now, now
+        "USD", ownerId, "STRIPE", now, now
     );
 
     // Assert
@@ -84,6 +84,7 @@ class DomainEntitiesTest {
     settings.setTaxIdType(null);
     settings.setCurrency("EUR");
     settings.setProfileOwnerId(null);
+    settings.setGatewayType("STRIPE");
     settings.setCreatedAt(LocalDateTime.now());
     settings.setUpdatedAt(LocalDateTime.now());
 
@@ -109,7 +110,7 @@ class DomainEntitiesTest {
         "Professional plan description",
         "MONTHLY", 2999, "USD",
         "{\"feature\":true}", "TENANT",
-        "prod_ext123", "price_ext456", true, 0, "FLAT", now, now
+        "prod_ext123", "price_ext456", true, 0, "FLAT", "STRIPE", now, now
     );
 
     // Assert
@@ -146,6 +147,9 @@ class DomainEntitiesTest {
     plan.setExternalProductId(null);
     plan.setExternalPriceId(null);
     plan.setActive(false);
+    plan.setTrialPeriodDays(0);
+    plan.setPricingModel("FLAT");
+    plan.setGatewayType("STRIPE");
     plan.setCreatedAt(LocalDateTime.now());
     plan.setUpdatedAt(LocalDateTime.now());
 
@@ -173,7 +177,9 @@ class DomainEntitiesTest {
         now, now.plusSeconds(604800),
         now, now.plusSeconds(2592000),
         false, null,
-        "TENANT", "tenant-123", created, created
+        "TENANT", "tenant-123",
+        "STRIPE", null,
+        created, created
     );
 
     // Assert
@@ -215,6 +221,8 @@ class DomainEntitiesTest {
     sub.setCanceledAt(null);
     sub.setSubjectType("USER");
     sub.setSubjectKey("user-s");
+    sub.setGatewayType("STRIPE");
+    sub.setExternalOrderId(null);
     sub.setCreatedAt(LocalDateTime.now());
     sub.setUpdatedAt(LocalDateTime.now());
 
@@ -340,7 +348,7 @@ class DomainEntitiesTest {
     final var settings = new UserBillingSettings(
         id, userId, "cus_ext123", "user@example.com",
         "User Corp", "{\"address\":\"456 User St\"}",
-        "USR999", "SSN", "USD", now, now
+        "USR999", "SSN", "USD", "STRIPE", now, now
     );
 
     // Assert
@@ -373,6 +381,7 @@ class DomainEntitiesTest {
     settings.setTaxId(null);
     settings.setTaxIdType(null);
     settings.setCurrency("JPY");
+    settings.setGatewayType("STRIPE");
     settings.setCreatedAt(LocalDateTime.now());
     settings.setUpdatedAt(LocalDateTime.now());
 

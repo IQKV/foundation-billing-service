@@ -27,6 +27,7 @@ public record GatewayRefundEvent(
     String eventId,
     String eventType,
     Instant occurredAt,
+    String gatewayType,
     String externalRefundId,
     String externalPaymentId,
     String externalCustomerId,

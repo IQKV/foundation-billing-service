@@ -199,8 +199,8 @@ class WebhookProcessingServiceTest {
     final String customerId = "cus_inv123";
     final String invoiceId = "inv_abc";
     final GatewayInvoiceEvent event = new GatewayInvoiceEvent(
-        "evt_inv_paid", "invoice.payment_succeeded", Instant.now(),
-        invoiceId, customerId, "sub_inv123", 9900L, 9900L, "USD"
+        "evt_inv_paid", "invoice.payment_succeeded", Instant.now(), "STRIPE",
+        invoiceId, customerId, "sub_inv123", null, 9900L, 9900L, "USD"
     );
     final BillingSettings settings = createBillingSettings(tenantKey, customerId);
 
@@ -232,7 +232,7 @@ class WebhookProcessingServiceTest {
     final String customerId = "cus_fail123";
     final String invoiceId = "inv_fail";
     final GatewayPaymentFailureEvent event = new GatewayPaymentFailureEvent(
-        "evt_pay_failed", "invoice.payment_failed", Instant.now(),
+        "evt_pay_failed", "invoice.payment_failed", Instant.now(), "STRIPE",
         invoiceId, customerId, "sub_fail123", 4900L, "USD", "Card declined"
     );
     final BillingSettings settings = createBillingSettings(tenantKey, customerId);
@@ -284,8 +284,8 @@ class WebhookProcessingServiceTest {
   void shouldSkipInvoicePaidWhenNoBillingSettingsFound() {
     // Arrange
     final GatewayInvoiceEvent event = new GatewayInvoiceEvent(
-        "evt_no_settings", "invoice.payment_succeeded", Instant.now(),
-        "inv_x", "cus_unknown", null, 1000L, 1000L, "USD"
+        "evt_no_settings", "invoice.payment_succeeded", Instant.now(), "STRIPE",
+        "inv_x", "cus_unknown", null, null, 1000L, 1000L, "USD"
     );
 
     when(webhookLogMapper.insertIfNotExists(any())).thenReturn(1);
@@ -314,6 +314,7 @@ class WebhookProcessingServiceTest {
         eventId,
         "customer.subscription.created",
         Instant.now(),
+        "STRIPE",
         subscriptionId,
         "cus_" + UUID.randomUUID(),
         "active",

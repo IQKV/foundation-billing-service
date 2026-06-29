@@ -98,7 +98,7 @@ class GatewayEventsTest {
 
     // Act
     final var event = new GatewaySubscriptionEvent(
-        "evt_sub_1", "customer.subscription.created", now,
+        "evt_sub_1", "customer.subscription.created", now, "STRIPE",
         "sub_ext123", "cus_ext456", "active", "price_789",
         2L, now, now.plusSeconds(604800), now, periodEnd,
         false, null, metadata
@@ -121,11 +121,11 @@ class GatewayEventsTest {
     // Arrange
     final var now = Instant.now();
     final var e1 = new GatewaySubscriptionEvent(
-        "evt_1", "type", now, "sub_1", "cus_1", "active", "price_1",
+        "evt_1", "type", now, "STRIPE", "sub_1", "cus_1", "active", "price_1",
         1L, null, null, now, now, false, null, Map.of()
     );
     final var e2 = new GatewaySubscriptionEvent(
-        "evt_1", "type", now, "sub_1", "cus_1", "active", "price_1",
+        "evt_1", "type", now, "STRIPE", "sub_1", "cus_1", "active", "price_1",
         1L, null, null, now, now, false, null, Map.of()
     );
 
@@ -144,8 +144,8 @@ class GatewayEventsTest {
 
     // Act
     final var event = new GatewayInvoiceEvent(
-        "evt_inv_1", "invoice.payment_succeeded", now,
-        "in_ext123", "cus_ext456", "sub_ext789",
+        "evt_inv_1", "invoice.payment_succeeded", now, "STRIPE",
+        "in_ext123", "cus_ext456", "sub_ext789", null,
         5000L, 5000L, "usd"
     );
 
@@ -166,8 +166,8 @@ class GatewayEventsTest {
   void shouldImplementGatewayWebhookEvent() {
     // Arrange
     final var event = new GatewayInvoiceEvent(
-        "evt_1", "invoice.paid", Instant.now(),
-        "in_1", "cus_1", "sub_1", 1000L, 1000L, "usd"
+        "evt_1", "invoice.paid", Instant.now(), "STRIPE",
+        "in_1", "cus_1", "sub_1", null, 1000L, 1000L, "usd"
     );
 
     // Assert
@@ -184,7 +184,7 @@ class GatewayEventsTest {
 
     // Act
     final var event = new GatewayRefundEvent(
-        "evt_re_1", "charge.refunded", now,
+        "evt_re_1", "charge.refunded", now, "STRIPE",
         "re_ext123", "ch_ext456", "cus_ext789",
         1500L, "usd", "succeeded"
     );
@@ -205,7 +205,7 @@ class GatewayEventsTest {
   void shouldRefundImplementGatewayWebhookEvent() {
     // Arrange
     final var event = new GatewayRefundEvent(
-        "evt_1", "charge.refunded", Instant.now(),
+        "evt_1", "charge.refunded", Instant.now(), "STRIPE",
         "re_1", "ch_1", "cus_1", 500L, "eur", "succeeded"
     );
 
@@ -223,7 +223,7 @@ class GatewayEventsTest {
 
     // Act
     final var event = new GatewayPaymentFailureEvent(
-        "evt_pf_1", "invoice.payment_failed", now,
+        "evt_pf_1", "invoice.payment_failed", now, "STRIPE",
         "in_ext123", "cus_ext456", "sub_ext789",
         2000L, "usd", "insufficient_funds"
     );
@@ -244,7 +244,7 @@ class GatewayEventsTest {
   void shouldPaymentFailureImplementGatewayWebhookEvent() {
     // Arrange
     final var event = new GatewayPaymentFailureEvent(
-        "evt_1", "invoice.payment_failed", Instant.now(),
+        "evt_1", "invoice.payment_failed", Instant.now(), "STRIPE",
         "in_1", "cus_1", "sub_1", 1000L, "usd", "card_declined"
     );
 
@@ -263,7 +263,7 @@ class GatewayEventsTest {
                                                         final Instant occurredAt) {
     final var now = Instant.now();
     return new GatewaySubscriptionEvent(
-        eventId, eventType, occurredAt,
+        eventId, eventType, occurredAt, "STRIPE",
         "sub_ext", "cus_ext", "active", "price_1",
         1L, null, null, now, now.plusSeconds(2592000),
         false, null, Map.of()

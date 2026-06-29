@@ -114,7 +114,7 @@ public class TenantEventConsumer {
     final LocalDateTime now = LocalDateTime.now();
     billingSettingsMapper.insert(new BillingSettings(
         UUID.randomUUID(), tenantKey, externalCustomerId, resolvedEmail, tenantName,
-        null, null, null, "USD", null, now, now));
+        null, null, null, "USD", null, "STRIPE", now, now));
     log.info("BillingSettings created: tenantKey={}, externalCustomerId={}", tenantKey, externalCustomerId);
   }
 

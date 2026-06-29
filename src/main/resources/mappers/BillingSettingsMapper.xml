@@ -15,6 +15,7 @@
         <result property="taxIdType" column="tax_id_type"/>
         <result property="currency" column="currency"/>
         <result property="profileOwnerId" column="profile_owner_id"/>
+        <result property="gatewayType" column="gateway_type"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -23,13 +24,14 @@
         INSERT INTO billing_settings
         (id, tenant_key, external_customer_id, billing_email, company_name,
         billing_address, tax_id, tax_id_type, currency, profile_owner_id,
-        created_at, updated_at)
+        gateway_type, created_at, updated_at)
         VALUES
         (COALESCE(#{id}::uuid, gen_random_uuid()),
         #{tenantKey}, #{externalCustomerId}, #{billingEmail}, #{companyName},
         #{billingAddress}::jsonb, #{taxId}, #{taxIdType},
         COALESCE(#{currency}, 'USD'),
         #{profileOwnerId},
+        COALESCE(#{gatewayType}, 'STRIPE'),
         COALESCE(#{createdAt}, now()),
         COALESCE(#{updatedAt}, now()))
     </insert>
@@ -37,7 +39,7 @@
     <select id="findByTenantKey" resultMap="billingSettingsResultMap">
         SELECT id, tenant_key, external_customer_id, billing_email, company_name,
         billing_address, tax_id, tax_id_type, currency, profile_owner_id,
-        created_at, updated_at
+        gateway_type, created_at, updated_at
         FROM billing_settings
         WHERE tenant_key = #{tenantKey}
     </select>
@@ -45,7 +47,7 @@
     <select id="findByExternalCustomerId" resultMap="billingSettingsResultMap">
         SELECT id, tenant_key, external_customer_id, billing_email, company_name,
         billing_address, tax_id, tax_id_type, currency, profile_owner_id,
-        created_at, updated_at
+        gateway_type, created_at, updated_at
         FROM billing_settings
         WHERE external_customer_id = #{externalCustomerId}
     </select>
@@ -71,6 +73,7 @@
         tax_id_type = #{taxIdType},
         currency = #{currency},
         profile_owner_id = #{profileOwnerId},
+        gateway_type = #{gatewayType},
         updated_at = now()
         WHERE tenant_key = #{tenantKey}
     </update>

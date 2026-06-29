@@ -16,6 +16,11 @@
     <include file="db/changelog/changes/20260617120000-add-plan-description.xml"/>
     <include file="db/changelog/changes/20260620120000-add-trial-period-days.xml"/>
     <include file="db/changelog/changes/20260625120000-add-pricing-model-to-plan-catalog.xml"/>
+    <include file="db/changelog/changes/20260701000000-add-gateway-type-to-billing-settings.xml"/>
+    <include file="db/changelog/changes/20260701000001-add-gateway-type-to-subscriptions.xml"/>
+    <include file="db/changelog/changes/20260701000002-add-order-id-to-subscriptions.xml"/>
+    <include file="db/changelog/changes/20260701000003-add-gateway-type-to-plan-catalog.xml"/>
+    <include file="db/changelog/changes/20260701000004-add-gateway-type-to-user-billing-settings.xml"/>
 
     <!-- Demo data (Liquibase context: demo); enable with iqkv.liquibase.contexts=demo -->
     <include file="db/changelog/demo/master.xml"/>

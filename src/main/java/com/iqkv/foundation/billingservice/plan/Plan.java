@@ -46,6 +46,7 @@ public class Plan {
   private Boolean active;         // default true
   private Integer trialPeriodDays; // 0 means no trial, > 0 means number of days
   private String pricingModel;    // FLAT (default) | PER_SEAT
+  private String gatewayType;     // STRIPE | LEMON_SQUEEZY
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -66,6 +67,7 @@ public class Plan {
               final Boolean active,
               final Integer trialPeriodDays,
               final String pricingModel,
+              final String gatewayType,
               final LocalDateTime createdAt,
               final LocalDateTime updatedAt) {
     this.id = id;
@@ -82,6 +84,7 @@ public class Plan {
     this.active = active;
     this.trialPeriodDays = trialPeriodDays;
     this.pricingModel = pricingModel;
+    this.gatewayType = gatewayType;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
@@ -197,6 +200,14 @@ public class Plan {
 
   public void setPricingModel(String pricingModel) {
     this.pricingModel = pricingModel;
+  }
+
+  public String getGatewayType() {
+    return gatewayType;
+  }
+
+  public void setGatewayType(String gatewayType) {
+    this.gatewayType = gatewayType;
   }
 
   public LocalDateTime getCreatedAt() {
