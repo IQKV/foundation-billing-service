@@ -76,6 +76,8 @@ public class SecurityConfig {
             .requestMatchers("/swagger-ui.html").permitAll()
             .requestMatchers("/api/v1/billing/webhooks/stripe").permitAll()
             .requestMatchers("/api/v1/billing/webhooks/stripe/").permitAll()
+            .requestMatchers("/api/v1/billing/webhooks/lemon-squeezy").permitAll()
+            .requestMatchers("/api/v1/billing/webhooks/lemon-squeezy/").permitAll()
             .requestMatchers("/api/v1/billing/internal/plans").permitAll()
             .requestMatchers("/api/v1/billing/internal/plans/public").permitAll()
             .requestMatchers("/api/v1/billing/admin/**").hasAuthority("PLATFORM_ADMIN")

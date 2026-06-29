@@ -88,6 +88,8 @@ public interface SubscriptionMapper {
    */
   void update(Subscription subscription);
 
+  void updateExternalOrderId(String externalSubscriptionId, String externalOrderId);
+
   /**
    * Permanently deletes a subscription by ID.
    */

@@ -346,6 +346,11 @@ public class WebhookProcessingService {
     final var subjectContext = resolveSubjectFromSubscription(event.externalSubscriptionId(), tenantKey);
     final String currency = billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD";
 
+    // Update external order ID if present
+    if (event.externalOrderId() != null && !event.externalOrderId().isBlank()) {
+      subscriptionMapper.updateExternalOrderId(event.externalSubscriptionId(), event.externalOrderId());
+    }
+
     switch (event.eventType()) {
       case "invoice.payment_succeeded" -> {
         meterRegistry.counter("billing_payments_total", "status", "success", "currency", currency).increment();
@@ -604,6 +609,7 @@ public class WebhookProcessingService {
     sub.setCancelAtPeriodEnd(event.cancelAtPeriodEnd());
     sub.setCanceledAt(event.canceledAt());
     sub.setTenantKey(event.metadata().get("tenantKey"));
+    sub.setGatewayType(event.gatewayType());
     return sub;
   }
 

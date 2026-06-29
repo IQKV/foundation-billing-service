@@ -164,6 +164,13 @@
         WHERE id = #{id}
     </update>
 
+    <update id="updateExternalOrderId">
+        UPDATE subscriptions
+        SET external_order_id = #{externalOrderId},
+        updated_at = now()
+        WHERE external_subscription_id = #{externalSubscriptionId}
+    </update>
+
     <delete id="deleteById">
         DELETE FROM subscriptions WHERE id = #{id}
     </delete>
