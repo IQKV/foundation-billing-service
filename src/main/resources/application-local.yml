@@ -2,7 +2,8 @@
 # Spring Boot configuration for the "local" profile.
 # Overrides base: enables Liquibase with demo data, relaxes actuator,
 # enables debug logging, uses MailHog for email.
-# Plan catalog is config-driven — BillingSeedRunner seeds plan_catalog and syncs with Stripe on startup.
+# Plan catalog is config-driven — BillingSeedRunner seeds plan_catalog and syncs with the
+# active payment gateway on startup.
 # Run infrastructure with: docker compose up postgres-billing rabbitmq-billing mailhog iam-service
 # ===================================================================
 
@@ -38,78 +39,77 @@ iqkv:
   mail:
     port: ${MAIL_PORT:1025}
   billing:
-    stripe:
-      schema:
-        products:
-          basic-monthly:
-            planCode: "basic-monthly"
-            displayName: "Basic Monthly (Local)"
-            description: "Entry-level plan for small teams."
-            billingPeriod: "MONTHLY"
-            priceMinor: 500
-            currency: "USD"
-            scope: "TENANT"
-            active: true
-            trialPeriodDays: 14
-            pricingModel: "FLAT"
+    plan-catalog:
+      products:
+        basic-monthly:
+          planCode: "basic-monthly"
+          displayName: "Basic Monthly (Local)"
+          description: "Entry-level plan for small teams."
+          billingPeriod: "MONTHLY"
+          priceMinor: 500
+          currency: "USD"
+          scope: "TENANT"
+          active: true
+          trialPeriodDays: 14
+          pricingModel: "FLAT"
+          features:
+            maxUsers: 5
+            maxProjects: 3
             features:
-              maxUsers: 5
-              maxProjects: 3
-              features:
-                priority_support:
-                  title: "Priority Support"
-                  value: "false"
-                  description: "Access to priority support channel"
-                advanced_analytics:
-                  title: "Advanced Analytics"
-                  value: "false"
-                  description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
-          pro-monthly:
-            planCode: "pro-monthly"
-            displayName: "Pro Monthly (Local)"
-            description: "Pro plan for larger teams with priority support."
-            billingPeriod: "MONTHLY"
-            priceMinor: 1500
-            currency: "USD"
-            scope: "TENANT"
-            active: true
-            pricingModel: "FLAT"
+              priority_support:
+                title: "Priority Support"
+                value: "false"
+                description: "Access to priority support channel"
+              advanced_analytics:
+                title: "Advanced Analytics"
+                value: "false"
+                description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
+        pro-monthly:
+          planCode: "pro-monthly"
+          displayName: "Pro Monthly (Local)"
+          description: "Pro plan for larger teams with priority support."
+          billingPeriod: "MONTHLY"
+          priceMinor: 1500
+          currency: "USD"
+          scope: "TENANT"
+          active: true
+          pricingModel: "FLAT"
+          features:
+            maxUsers: 50
+            maxProjects: 0
             features:
-              maxUsers: 50
-              maxProjects: 0
-              features:
-                priority_support:
-                  title: "Priority Support"
-                  value: "true"
-                  description: "Access to priority support channel"
-                advanced_analytics:
-                  title: "Advanced Analytics"
-                  value: "true"
-                  description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
-          # ---------------------------------------------------------------------------
-          # PER_SEAT example — uncomment to test per-seat checkout locally.
-          # priceMinor is per seat per month; maxUsers is the seat ceiling.
-          # ---------------------------------------------------------------------------
-          # pro-monthly-per-seat:
-          #   planCode: "pro-monthly-per-seat"
-          #   displayName: "Pro Monthly (per seat)"
-          #   description: "Billed per active user seat. $5 per seat per month."
-          #   billingPeriod: "MONTHLY"
-          #   priceMinor: 500
-          #   currency: "USD"
-          #   scope: "TENANT"
-          #   active: true
-          #   trialPeriodDays: 14
-          #   pricingModel: "PER_SEAT"
-          #   features:
-          #     maxUsers: 200
-          #     maxProjects: 0
-          #     features:
-          #       priority_support:
-          #         title: "Priority Support"
-          #         value: "true"
-          #         description: "Access to priority support channel"
-          #       advanced_analytics:
-          #         title: "Advanced Analytics"
-          #         value: "true"
-          #         description: "Access to detailed analytics dashboard"
+              priority_support:
+                title: "Priority Support"
+                value: "true"
+                description: "Access to priority support channel"
+              advanced_analytics:
+                title: "Advanced Analytics"
+                value: "true"
+                description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
+        # ---------------------------------------------------------------------------
+        # PER_SEAT example — uncomment to test per-seat checkout locally.
+        # priceMinor is per seat per month; maxUsers is the seat ceiling.
+        # ---------------------------------------------------------------------------
+        # pro-monthly-per-seat:
+        #   planCode: "pro-monthly-per-seat"
+        #   displayName: "Pro Monthly (per seat)"
+        #   description: "Billed per active user seat. $5 per seat per month."
+        #   billingPeriod: "MONTHLY"
+        #   priceMinor: 500
+        #   currency: "USD"
+        #   scope: "TENANT"
+        #   active: true
+        #   trialPeriodDays: 14
+        #   pricingModel: "PER_SEAT"
+        #   features:
+        #     maxUsers: 200
+        #     maxProjects: 0
+        #     features:
+        #       priority_support:
+        #         title: "Priority Support"
+        #         value: "true"
+        #         description: "Access to priority support channel"
+        #       advanced_analytics:
+        #         title: "Advanced Analytics"
+        #         value: "true"
+        #         description: "Access to detailed analytics dashboard"

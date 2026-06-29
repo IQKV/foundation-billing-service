@@ -26,36 +26,37 @@ import org.springframework.validation.annotation.Validated;
 
 /**
  * Configuration properties for billing-specific settings.
- * Provides fallback values used in single-tenant mode where tenant owner fields may be absent.
+ *
+ * <p>The plan catalog is now bound from {@code iqkv.billing.plan-catalog.products}
+ * (gateway-neutral path, renamed from the former {@code iqkv.billing.stripe.schema.products}).
+ *
+ * <p>Provides fallback values used in single-tenant mode where tenant owner fields may be absent.
  */
 @Validated
 @ConfigurationProperties(prefix = "iqkv.billing")
 public record BillingConfigurationProperties(
     /*
      * Fallback billing contact email used in single-tenant mode when the tenant.created event
-     * does not carry an ownerEmail. Optional — if null, Stripe customer creation proceeds
-     * without an email address.
+     * does not carry an ownerEmail.
+     * Required when gateway type is LEMON_SQUEEZY in SINGLE_TENANT mode (LS requires an email).
+     * Optional for Stripe — Stripe allows customer creation without an email address.
      */
     @Email(message = "defaultContactEmail must be a valid email address") String defaultContactEmail,
 
-    @Valid StripeProperties stripe
+    @Valid PlanCatalogProperties planCatalog
 ) {
   public BillingConfigurationProperties {
-    if (stripe == null) {
-      stripe = new StripeProperties(new SchemaProperties(Collections.emptyMap()));
+    if (planCatalog == null) {
+      planCatalog = new PlanCatalogProperties(Collections.emptyMap());
     }
   }
 
-  public record StripeProperties(@Valid SchemaProperties schema) {
-    public StripeProperties {
-      if (schema == null) {
-        schema = new SchemaProperties(Collections.emptyMap());
-      }
-    }
-  }
-
-  public record SchemaProperties(@Valid Map<String, StripeProductSchema> products) {
-    public SchemaProperties {
+  /**
+   * Gateway-neutral plan catalog properties.
+   * Bound from {@code iqkv.billing.plan-catalog}.
+   */
+  public record PlanCatalogProperties(@Valid Map<String, ProductSchema> products) {
+    public PlanCatalogProperties {
       if (products == null) {
         products = Collections.emptyMap();
       }

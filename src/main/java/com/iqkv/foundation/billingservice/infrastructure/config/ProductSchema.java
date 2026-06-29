@@ -24,14 +24,21 @@ import com.iqkv.foundation.billingservice.plan.PlanFeatures;
 import com.iqkv.foundation.billingservice.plan.PricingModel;
 
 /**
- * Configuration for a single product in the Stripe catalog schema.
+ * Gateway-neutral configuration for a single product entry in the plan catalog.
  *
- * <p>Bound from {@code iqkv.billing.stripe.schema.products.<key>} in YAML.
+ * <p>Bound from {@code iqkv.billing.plan-catalog.products.<key>} in YAML.
  * {@code features} is optional — {@link PlanFeatures#NONE} is used when absent.
  * {@code pricingModel} is optional — defaults to {@link PricingModel#FLAT} when absent,
  * preserving backward compatibility for all existing plan definitions.
+ *
+ * <p>Gateway-specific fields:
+ * <ul>
+ *   <li>{@code externalVariantId} — Lemon Squeezy variant ID.  Operators must pre-create
+ *       products/variants in the LS dashboard and configure the variant ID here before
+ *       deployment.  Ignored by the Stripe adapter.</li>
+ * </ul>
  */
-public record StripeProductSchema(
+public record ProductSchema(
     @NotBlank String planCode,
     @NotBlank String displayName,
     String description,
@@ -42,7 +49,16 @@ public record StripeProductSchema(
     @NotBlank String scope,
     Boolean active,
     Integer trialPeriodDays,
-    PricingModel pricingModel
+    PricingModel pricingModel,
+    /**
+     * Lemon Squeezy variant ID.
+     * Populated by LS operators in {@code iqkv.billing.plan-catalog.products.<key>.externalVariantId}.
+     * {@link com.iqkv.foundation.billingservice.infrastructure.config.BillingSeedRunner} writes this
+     * value to {@code plan_catalog.external_price_id} before calling
+     * {@link com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort#syncProduct}.
+     * Stripe adapter ignores this field entirely.
+     */
+    String externalVariantId
 ) {
   /**
    * Returns the effective pricing model, defaulting to {@link PricingModel#FLAT} when absent.

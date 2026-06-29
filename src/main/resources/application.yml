@@ -85,12 +85,22 @@ iqkv:
       enabled: ${MESSAGING_ENABLED:true}
   payment:
     gateway:
-      # Active payment gateway: STRIPE (default). Reserved: PAYPAL
+      # Active payment gateway: STRIPE (default) | LEMON_SQUEEZY
       type: ${PAYMENT_GATEWAY_TYPE:STRIPE}
+
+  # --- Active when payment.gateway.type=STRIPE ---
   stripe:
     secret-key: ${STRIPE_SECRET_KEY:sk_test_placeholder}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_placeholder}
     portal-return-url: ${STRIPE_PORTAL_RETURN_URL:http://localhost:3000/billing}
+
+  # --- Active when payment.gateway.type=LEMON_SQUEEZY ---
+  lemon-squeezy:
+    api-key: ${LEMON_SQUEEZY_API_KEY:}
+    store-id: ${LEMON_SQUEEZY_STORE_ID:}
+    webhook-secret: ${LEMON_SQUEEZY_WEBHOOK_SECRET:}
+    portal-return-url: ${LEMON_SQUEEZY_PORTAL_RETURN_URL:http://localhost:3000/billing}
+
   notification:
     default-locale: en
     base-url: ${APP_BASE_URL:http://localhost:3000}
@@ -112,95 +122,87 @@ iqkv:
     # SINGLE_TENANT: Subscriptions are scoped per user; owner fields optional in tenant.created events
     rollout-mode: ${ROLLOUT_MODE:MULTI_TENANT}
   billing:
-    # Fallback billing contact email for SINGLE_TENANT mode
-    # Used when tenant.created event has no ownerEmail (bootstrap events have no owner)
-    # Fallback chain: (1) ownerEmail from event → (2) this value → (3) null (Stripe allows no email)
-    default-contact-email: ${DEFAULT_BILLING_EMAIL:}  # Fallback email for single-tenant mode (optional)
-    stripe:
-      schema:
-        # Config-driven plan catalog — the single source of truth for plan definitions.
-        # BillingSeedRunner reads this map at startup, upserts rows into plan_catalog,
-        # and synchronizes products/prices with the Stripe API.
-        # PlanFeatureRegistry loads the features block into memory for zero-latency
-        # entitlement evaluation and the /internal/plans endpoint consumed by IAM and Gateway.
-        #
-        # Fields per product:
-        #   planCode      — unique identifier used in JWT plan_code claim and API responses
-        #   displayName   — human-readable name shown in UI and pricing pages
-        #   description   — optional; shown on checkout and public pricing pages
-        #   billingPeriod — MONTHLY | ANNUAL
-        #   priceMinor    — price in smallest currency unit (e.g. cents for USD)
-        #                   For FLAT plans: total price per period.
-        #                   For PER_SEAT plans: price per seat per period.
-        #   currency      — ISO 4217 code (e.g. USD)
-        #   scope         — TENANT (multi-tenant) | USER (single-tenant B2C)
-        #   active        — false hides the plan from pricing pages and blocks new subscriptions
-        #   trialPeriodDays — 0 (default) = no trial, > 0 = number of days for free trial
-        #   pricingModel  — FLAT (default) | PER_SEAT
-        #                   FLAT:     Stripe line item always uses quantity=1; priceMinor is the full period price.
-        #                   PER_SEAT: Stripe line item uses quantity=seatCount; invoice = priceMinor × seats.
-        #                             maxUsers acts as the seat ceiling (0 = unlimited).
-        #                   Omitting this field defaults to FLAT — all existing plans are unaffected.
-        #   features:
-        #     maxUsers        — max members per tenant/user (0 = unlimited); enforced at signup and invite.
-        #                       For PER_SEAT plans also acts as the maximum purchasable seat count.
-        #     maxProjects     — max projects (0 = unlimited); enforced at project creation
-        #     features        — open list of named feature entries; extensible without recompilation
-        #       - code:        machine-readable key (e.g. "priority_support", "custom_domain")
-        #         title:       human-readable label shown on pricing pages
-        #         value:       "true"/"false" for boolean flags; a number string for limits
-        #         description: optional tooltip / subtitle on pricing pages
-        #
-        # Example (FLAT plan):
-        # products:
-        #   basic-monthly:
-        #     planCode: "basic-monthly"
-        #     displayName: "Basic Monthly"
-        #     description: "Entry-level plan for small teams."
-        #     billingPeriod: "MONTHLY"
-        #     priceMinor: 1000
-        #     currency: "USD"
-        #     scope: "TENANT"
-        #     active: true
-        #     trialPeriodDays: 0
-        #     pricingModel: "FLAT"
-        #     features:
-        #       maxUsers: 5
-        #       maxProjects: 3
-        #       features:
-        #         priority_support:
-        #           title: "Priority Support"
-        #           value: "false"
-        #           description: "Access to priority support channel"
-        #         advanced_analytics:
-        #           title: "Advanced Analytics"
-        #           value: "false"
-        #           description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
-        #
-        # Example (PER_SEAT plan — $5/seat/month, up to 200 seats):
-        #   pro-monthly-per-seat:
-        #     planCode: "pro-monthly-per-seat"
-        #     displayName: "Pro Monthly (per seat)"
-        #     description: "Billed per active user seat. $5 per seat per month."
-        #     billingPeriod: "MONTHLY"
-        #     priceMinor: 500
-        #     currency: "USD"
-        #     scope: "TENANT"
-        #     active: true
-        #     trialPeriodDays: 14
-        #     pricingModel: "PER_SEAT"
-        #     features:
-        #       maxUsers: 200
-        #       maxProjects: 0
-        #       features:
-        #         priority_support:
-        #           title: "Priority Support"
-        #           value: "true"
-        #           description: "Access to priority support channel"
-        #         advanced_analytics:
-        #           title: "Advanced Analytics"
-        #           value: "true"
-        #           description: "Access to detailed analytics dashboard"
+    # Fallback billing contact email for SINGLE_TENANT mode.
+    # Fallback chain: (1) ownerEmail from event → (2) this value → (3) null
+    # NOTE: Required when gateway.type=LEMON_SQUEEZY and platform.rollout-mode=SINGLE_TENANT,
+    #       because Lemon Squeezy mandates a customer email address.
+    default-contact-email: ${DEFAULT_BILLING_EMAIL:}
+    plan-catalog:
+      # Config-driven plan catalog — the single source of truth for plan definitions.
+      # BillingSeedRunner reads this map at startup, upserts rows into plan_catalog,
+      # and synchronizes products/prices with the active payment gateway.
+      # PlanFeatureRegistry loads the features block into memory for zero-latency
+      # entitlement evaluation and the /internal/plans endpoint consumed by IAM and Gateway.
+      #
+      # Fields per product:
+      #   planCode         — unique identifier used in JWT plan_code claim and API responses
+      #   displayName      — human-readable name shown in UI and pricing pages
+      #   description      — optional; shown on checkout and public pricing pages
+      #   billingPeriod    — MONTHLY | ANNUAL
+      #   priceMinor       — price in smallest currency unit (e.g. cents for USD)
+      #                      For FLAT plans: total price per period.
+      #                      For PER_SEAT plans: price per seat per period.
+      #   currency         — ISO 4217 code (e.g. USD)
+      #   scope            — TENANT (multi-tenant) | USER (single-tenant B2C)
+      #   active           — false hides the plan from pricing pages and blocks new subscriptions
+      #   trialPeriodDays  — 0 (default) = no trial, > 0 = number of days for free trial
+      #   pricingModel     — FLAT (default) | PER_SEAT
+      #                      FLAT:     gateway line item always uses quantity=1.
+      #                      PER_SEAT: line item uses quantity=seatCount; invoice = priceMinor × seats.
+      #                                maxUsers acts as the seat ceiling (0 = unlimited).
+      #                      Omitting this field defaults to FLAT.
+      #   externalVariantId — Lemon Squeezy variant ID (integer string).
+      #                       Operators must pre-create products/variants in the LS dashboard and
+      #                       enter the variant ID here before deployment. Ignored by Stripe.
+      #   features:
+      #     maxUsers        — max members per tenant/user (0 = unlimited)
+      #     maxProjects     — max projects (0 = unlimited)
+      #     features        — open list of named feature entries
+      #       - code:        machine-readable key (e.g. "priority_support", "custom_domain")
+      #         title:       human-readable label shown on pricing pages
+      #         value:       "true"/"false" for boolean flags; a number string for limits
+      #         description: optional tooltip / subtitle on pricing pages
+      #
+      # Example (FLAT plan, Stripe):
+      # products:
+      #   basic-monthly:
+      #     planCode: "basic-monthly"
+      #     displayName: "Basic Monthly"
+      #     description: "Entry-level plan for small teams."
+      #     billingPeriod: "MONTHLY"
+      #     priceMinor: 1000
+      #     currency: "USD"
+      #     scope: "TENANT"
+      #     active: true
+      #     trialPeriodDays: 0
+      #     pricingModel: "FLAT"
+      #     features:
+      #       maxUsers: 5
+      #       maxProjects: 3
+      #       features:
+      #         priority_support:
+      #           title: "Priority Support"
+      #           value: "false"
+      #           description: "Access to priority support channel"
+      #         advanced_analytics:
+      #           title: "Advanced Analytics"
+      #           value: "false"
+      #           description: "Detailed analytics dashboard"
+      #
+      # Example (Lemon Squeezy — variant ID required):
+      #   basic-monthly:
+      #     planCode: "basic-monthly"
+      #     displayName: "Basic Monthly"
+      #     billingPeriod: "MONTHLY"
+      #     priceMinor: 1000
+      #     currency: "USD"
+      #     scope: "TENANT"
+      #     active: true
+      #     externalVariantId: "123456"  # LS variant ID — configure before deployment
+      #     features:
+      #       maxUsers: 5
+      #       maxProjects: 3
+      products:
   auth:
     jwt:
       public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public.pem}

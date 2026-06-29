@@ -2,7 +2,8 @@
 # Spring Boot configuration for the "prd" profile.
 # Overrides base: all secrets via env vars (no defaults), hardens
 # actuator/swagger, disables suffix pattern matching.
-# Plan catalog is config-driven — BillingSeedRunner seeds plan_catalog and syncs with Stripe on startup.
+# Plan catalog is config-driven — BillingSeedRunner seeds plan_catalog and syncs with the
+# active payment gateway on startup.
 # ===================================================================
 
 spring:
@@ -43,50 +44,49 @@ iqkv:
     secret-key: ${STRIPE_SECRET_KEY}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET}
   billing:
-    stripe:
-      schema:
-        products:
-          basic-monthly:
-            planCode: "basic-monthly"
-            displayName: "Basic Monthly"
-            billingPeriod: "MONTHLY"
-            priceMinor: 1000
-            currency: "USD"
-            scope: "TENANT"
-            active: true
-            trialPeriodDays: 0
-            pricingModel: "FLAT"
+    plan-catalog:
+      products:
+        basic-monthly:
+          planCode: "basic-monthly"
+          displayName: "Basic Monthly"
+          billingPeriod: "MONTHLY"
+          priceMinor: 1000
+          currency: "USD"
+          scope: "TENANT"
+          active: true
+          trialPeriodDays: 0
+          pricingModel: "FLAT"
+          features:
+            maxUsers: 5
+            maxProjects: 3
             features:
-              maxUsers: 5
-              maxProjects: 3
-              features:
-                priority_support:
-                  title: "Priority Support"
-                  value: "false"
-                  description: "Access to priority support channel"
-                advanced_analytics:
-                  title: "Advanced Analytics"
-                  value: "false"
-                  description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
-          pro-monthly:
-            planCode: "pro-monthly"
-            displayName: "Pro Monthly"
-            billingPeriod: "MONTHLY"
-            priceMinor: 3000
-            currency: "USD"
-            scope: "TENANT"
-            active: true
-            trialPeriodDays: 0
-            pricingModel: "FLAT"
+              priority_support:
+                title: "Priority Support"
+                value: "false"
+                description: "Access to priority support channel"
+              advanced_analytics:
+                title: "Advanced Analytics"
+                value: "false"
+                description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
+        pro-monthly:
+          planCode: "pro-monthly"
+          displayName: "Pro Monthly"
+          billingPeriod: "MONTHLY"
+          priceMinor: 3000
+          currency: "USD"
+          scope: "TENANT"
+          active: true
+          trialPeriodDays: 0
+          pricingModel: "FLAT"
+          features:
+            maxUsers: 50
+            maxProjects: 0
             features:
-              maxUsers: 50
-              maxProjects: 0
-              features:
-                priority_support:
-                  title: "Priority Support"
-                  value: "true"
-                  description: "Access to priority support channel"
-                advanced_analytics:
-                  title: "Advanced Analytics"
-                  value: "true"
-                  description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"
+              priority_support:
+                title: "Priority Support"
+                value: "true"
+                description: "Access to priority support channel"
+              advanced_analytics:
+                title: "Advanced Analytics"
+                value: "true"
+                description: "Access to detailed user registration graphs, retention charts, activity reports and more on the tenant dashboard"

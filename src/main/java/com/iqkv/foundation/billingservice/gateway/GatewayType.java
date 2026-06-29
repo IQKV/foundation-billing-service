@@ -19,14 +19,22 @@ package com.iqkv.foundation.billingservice.gateway;
 /**
  * Enumeration of supported payment gateway types.
  *
- * <p>Currently only {@code STRIPE} is implemented. Additional gateways
- * (e.g., {@code PAYPAL}) are reserved for future implementation.
+ * <p>Active gateway is selected via {@code iqkv.payment.gateway.type}.
+ * Exactly one adapter bean is registered at startup based on this value.
  */
 public enum GatewayType {
   /**
    * Stripe payment gateway (implemented).
+   * Products and prices are created programmatically via the Stripe SDK.
    */
-  STRIPE
+  STRIPE,
+
+  /**
+   * Lemon Squeezy payment gateway (implemented).
+   * Products and variants are managed in the LS dashboard; variant IDs are
+   * configured via {@code iqkv.billing.plan-catalog.products.<key>.externalVariantId}.
+   */
+  LEMON_SQUEEZY
 
   // Reserved for future implementation:
   // PAYPAL,
