@@ -32,6 +32,7 @@ import com.iqkv.foundation.billingservice.gateway.event.GatewayRefundEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewaySubscriptionEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
+import com.iqkv.foundation.billingservice.infrastructure.config.ConditionalOnGateway;
 import com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties;
 import com.iqkv.foundation.billingservice.plan.Plan;
 import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException;
@@ -80,6 +81,7 @@ import org.springframework.stereotype.Component;
  * </ul>
  */
 @Component
+@ConditionalOnGateway(GatewayType.STRIPE)
 public class StripeGatewayAdapter implements PaymentGatewayPort {
 
   private static final Logger log = LoggerFactory.getLogger(StripeGatewayAdapter.class);

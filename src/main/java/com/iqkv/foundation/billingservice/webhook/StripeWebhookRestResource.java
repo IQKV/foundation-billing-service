@@ -16,7 +16,9 @@
 
 package com.iqkv.foundation.billingservice.webhook;
 
+import com.iqkv.foundation.billingservice.gateway.GatewayType;
 import com.iqkv.foundation.billingservice.gateway.adapter.stripe.StripeGatewayAdapter;
+import com.iqkv.foundation.billingservice.infrastructure.config.ConditionalOnGateway;
 import com.iqkv.foundation.billingservice.shared.exception.WebhookProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -59,6 +61,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/billing/webhooks")
 @Tag(name = "Webhooks", description = "Inbound payment gateway webhook event receivers")
+@ConditionalOnGateway(GatewayType.STRIPE)
 public class StripeWebhookRestResource {
 
   private static final Logger log = LoggerFactory.getLogger(StripeWebhookRestResource.class);

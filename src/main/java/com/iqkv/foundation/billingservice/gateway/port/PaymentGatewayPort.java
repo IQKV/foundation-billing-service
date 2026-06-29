@@ -30,10 +30,22 @@ import com.iqkv.foundation.billingservice.plan.Plan;
  * Port interface for payment gateway operations (Strategy pattern).
  *
  * <p>Defines the contract for interacting with payment gateways in a gateway-agnostic manner.
- * Implementations provide gateway-specific logic for Stripe, PayPal, etc.
+ * Implementations provide gateway-specific logic for Stripe, Lemon Squeezy, etc.
  *
  * <p>This interface follows the Hexagonal Architecture pattern, where the domain layer
  * defines ports (interfaces) and the infrastructure layer provides adapters (implementations).
+ *
+ * <p><b>Lemon Squeezy Behavior Notes:</b>
+ * <ul>
+ *   <li>{@code createCustomer}: LS requires an email address; throws exception if email is missing</li>
+ *   <li>{@code createCheckoutSession}: Uses LS variant ID (configured in plan catalog) as price ID</li>
+ *   <li>{@code cancelSubscription(id, false)}: LS maps to DELETE subscription (immediate)</li>
+ *   <li>{@code cancelSubscription(id, true)}: LS maps to PATCH with cancelled=true</li>
+ *   <li>{@code pauseSubscription}: LS maps to PATCH with pause mode VOID</li>
+ *   <li>{@code reactivateSubscription}: LS maps to PATCH with pause=null</li>
+ *   <li>{@code syncProduct}: LS products/variants are managed in dashboard; this method only verifies existence</li>
+ *   <li>{@code createPortalSession}: LS uses customer portal sessions API</li>
+ * </ul>
  */
 public interface PaymentGatewayPort {
 
