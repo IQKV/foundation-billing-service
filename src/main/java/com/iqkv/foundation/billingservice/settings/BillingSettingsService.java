@@ -167,6 +167,7 @@ public class BillingSettingsService {
     settings.setTaxId(request.taxId());
     settings.setTaxIdType(request.taxIdType());
     settings.setCurrency(request.currency());
+    settings.setGatewayType(paymentGatewayPort.getGatewayType().name());
     settings.setCreatedAt(now);
     settings.setUpdatedAt(now);
     billingSettingsMapper.insert(settings);
@@ -196,6 +197,7 @@ public class BillingSettingsService {
     settings.setTaxIdType(request.taxIdType());
     settings.setCurrency(request.currency());
     settings.setProfileOwnerId(request.profileOwnerId());
+    settings.setGatewayType(paymentGatewayPort.getGatewayType().name());
     settings.setCreatedAt(now);
     settings.setUpdatedAt(now);
     billingSettingsMapper.insert(settings);

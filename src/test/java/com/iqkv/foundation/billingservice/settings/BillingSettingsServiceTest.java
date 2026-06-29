@@ -27,6 +27,9 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.gateway.GatewayType;
+import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
+import com.iqkv.foundation.billingservice.infrastructure.config.StripeConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEvent;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
@@ -49,6 +52,12 @@ class BillingSettingsServiceTest {
 
   @Mock
   private MessagingService messagingService;
+
+  @Mock
+  private PaymentGatewayPort paymentGatewayPort;
+
+  @Mock
+  private StripeConfigurationProperties stripeConfig;
 
   @InjectMocks
   private BillingSettingsService billingSettingsService;
@@ -182,6 +191,7 @@ class BillingSettingsServiceTest {
   @DisplayName("Should create billing settings for platform admin")
   void shouldCreateForPlatformAdmin() {
     when(billingSettingsMapper.existsByTenantKey("abcd1234")).thenReturn(false);
+    when(paymentGatewayPort.getGatewayType()).thenReturn(GatewayType.STRIPE);
 
     final var request = new BillingSettingsDtos.AdminCreateBillingSettingsRequest(
         "cus_new", "ops@example.com", "Co", null, null, null, "USD", null);

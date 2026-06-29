@@ -16,6 +16,7 @@
 
 package com.iqkv.foundation.billingservice.infrastructure.config;
 
+import com.iqkv.foundation.billingservice.gateway.GatewayType;
 import com.iqkv.foundation.billingservice.shared.exception.InvalidPlatformModeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,13 +41,16 @@ public class PlatformModeValidatorImpl implements PlatformModeValidator, Applica
 
   private final PlatformConfigurationProperties platformConfig;
   private final BillingConfigurationProperties billingConfig;
+  private final PaymentGatewayConfigurationProperties paymentGatewayConfig;
   private RolloutMode validatedMode;
 
   public PlatformModeValidatorImpl(
       final PlatformConfigurationProperties platformConfig,
-      final BillingConfigurationProperties billingConfig) {
+      final BillingConfigurationProperties billingConfig,
+      final PaymentGatewayConfigurationProperties paymentGatewayConfig) {
     this.platformConfig = platformConfig;
     this.billingConfig = billingConfig;
+    this.paymentGatewayConfig = paymentGatewayConfig;
   }
 
   @Override
@@ -82,16 +86,21 @@ public class PlatformModeValidatorImpl implements PlatformModeValidator, Applica
 
   /**
    * Validates billing-specific configuration required in SINGLE_TENANT mode.
-   * Logs a warning if {@code iqkv.billing.default-contact-email} is absent, since Stripe
-   * allows customer creation without an email but operators should be aware of the omission.
+   * Logs a warning if {@code iqkv.billing.default-contact-email} is absent for STRIPE,
+   * throws an exception if absent for LEMON_SQUEEZY (since LS requires email).
    */
   private void validateSingleTenantConfig() {
     final String defaultEmail = billingConfig != null ? billingConfig.defaultContactEmail() : null;
     if (defaultEmail == null || defaultEmail.isBlank()) {
+      if (paymentGatewayConfig.type() == GatewayType.LEMON_SQUEEZY) {
+        final String message = "Single-tenant mode with LEMON_SQUEEZY requires 'iqkv.billing.default-contact-email' to be configured.";
+        log.error(message);
+        throw new com.iqkv.foundation.billingservice.shared.exception.InvalidPlatformModeException(message);
+      }
       log.warn(
           "Single-tenant mode is active but 'iqkv.billing.default-contact-email' is not configured. "
-          + "Stripe customers created from bootstrap events will have no email address. "
-          + "Set 'iqkv.billing.default-contact-email' to suppress this warning.");
+              + "Stripe customers created from bootstrap events will have no email address. "
+              + "Set 'iqkv.billing.default-contact-email' to suppress this warning.");
     } else {
       log.info("Billing default contact email configured for single-tenant mode: {}", defaultEmail);
     }
