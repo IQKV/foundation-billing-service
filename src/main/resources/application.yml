@@ -202,7 +202,7 @@ iqkv:
       #     features:
       #       maxUsers: 5
       #       maxProjects: 3
-      products:
+
   auth:
     jwt:
       public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public.pem}

@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.iqkv.foundation.billingservice.infrastructure.config.BillingConfigurationProperties;
-import com.iqkv.foundation.billingservice.infrastructure.config.StripeProductSchema;
+import com.iqkv.foundation.billingservice.infrastructure.config.ProductSchema;
 import org.springframework.stereotype.Component;
 
 /**
@@ -51,17 +51,17 @@ public class PlanFeatureRegistry {
   private final Map<String, PricingModel> pricingRegistry;
 
   public PlanFeatureRegistry(final BillingConfigurationProperties props) {
-    this.featureRegistry = props.stripe().schema().products().values().stream()
+    this.featureRegistry = props.planCatalog().products().values().stream()
         .filter(s -> s.planCode() != null)
         .collect(Collectors.toUnmodifiableMap(
-            StripeProductSchema::planCode,
+            ProductSchema::planCode,
             s -> s.features() != null ? s.features() : PlanFeatures.NONE
         ));
-    this.pricingRegistry = props.stripe().schema().products().values().stream()
+    this.pricingRegistry = props.planCatalog().products().values().stream()
         .filter(s -> s.planCode() != null)
         .collect(Collectors.toUnmodifiableMap(
-            StripeProductSchema::planCode,
-            StripeProductSchema::effectivePricingModel
+            ProductSchema::planCode,
+            ProductSchema::effectivePricingModel
         ));
   }
 

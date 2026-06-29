@@ -16,7 +16,6 @@
 
 package com.iqkv.foundation.billingservice.infrastructure.config;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import java.util.Collections;
 import java.util.Map;
@@ -43,7 +42,7 @@ public record BillingConfigurationProperties(
      */
     @Email(message = "defaultContactEmail must be a valid email address") String defaultContactEmail,
 
-    @Valid PlanCatalogProperties planCatalog
+    PlanCatalogProperties planCatalog
 ) {
   public BillingConfigurationProperties {
     if (planCatalog == null) {
@@ -55,7 +54,7 @@ public record BillingConfigurationProperties(
    * Gateway-neutral plan catalog properties.
    * Bound from {@code iqkv.billing.plan-catalog}.
    */
-  public record PlanCatalogProperties(@Valid Map<String, ProductSchema> products) {
+  public record PlanCatalogProperties(Map<String, ProductSchema> products) {
     public PlanCatalogProperties {
       if (products == null) {
         products = Collections.emptyMap();

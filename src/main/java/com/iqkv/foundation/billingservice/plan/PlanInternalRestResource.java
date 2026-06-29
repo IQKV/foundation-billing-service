@@ -120,7 +120,7 @@ public class PlanInternalRestResource {
       @ApiResponse(responseCode = "200", description = "Public plan list returned")
   })
   public ResponseEntity<List<PublicPlanEntry>> listPublicPlans() {
-    final List<PublicPlanEntry> entries = billingProps.stripe().schema().products().values().stream()
+    final List<PublicPlanEntry> entries = billingProps.planCatalog().products().values().stream()
         .filter(schema -> schema.active() == null || schema.active())
         .map(schema -> new PublicPlanEntry(
             schema.planCode(),

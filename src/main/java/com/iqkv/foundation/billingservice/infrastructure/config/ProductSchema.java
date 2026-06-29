@@ -31,12 +31,12 @@ import com.iqkv.foundation.billingservice.plan.PricingModel;
  * {@code pricingModel} is optional — defaults to {@link PricingModel#FLAT} when absent,
  * preserving backward compatibility for all existing plan definitions.
  *
- * <p>Gateway-specific fields:
- * <ul>
- *   <li>{@code externalVariantId} — Lemon Squeezy variant ID.  Operators must pre-create
- *       products/variants in the LS dashboard and configure the variant ID here before
- *       deployment.  Ignored by the Stripe adapter.</li>
- * </ul>
+ * <p>The {@code externalVariantId} component holds a Lemon Squeezy variant ID.
+ * Operators must pre-create products/variants in the LS dashboard and set this value
+ * before deployment. {@link BillingSeedRunner} writes it to
+ * {@code plan_catalog.external_price_id} before calling
+ * {@link com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort#syncProduct}.
+ * The Stripe adapter ignores this field entirely.
  */
 public record ProductSchema(
     @NotBlank String planCode,
@@ -50,14 +50,7 @@ public record ProductSchema(
     Boolean active,
     Integer trialPeriodDays,
     PricingModel pricingModel,
-    /**
-     * Lemon Squeezy variant ID.
-     * Populated by LS operators in {@code iqkv.billing.plan-catalog.products.<key>.externalVariantId}.
-     * {@link com.iqkv.foundation.billingservice.infrastructure.config.BillingSeedRunner} writes this
-     * value to {@code plan_catalog.external_price_id} before calling
-     * {@link com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort#syncProduct}.
-     * Stripe adapter ignores this field entirely.
-     */
+    // Lemon Squeezy variant ID (integer string). Ignored by the Stripe adapter.
     String externalVariantId
 ) {
   /**

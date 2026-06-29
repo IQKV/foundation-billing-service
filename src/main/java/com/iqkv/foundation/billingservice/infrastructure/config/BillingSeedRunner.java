@@ -32,11 +32,16 @@ import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Seeds the plan catalog and synchronizes it with the payment gateway on startup.
+ * Seeds the plan catalog and synchronizes it with the active payment gateway on startup.
  *
- * <p>Iterates over products defined in {@code iqkv.billing.stripe.schema.products},
+ * <p>Iterates over products defined in {@code iqkv.billing.plan-catalog.products},
  * ensuring they exist in the local database (source of truth) and are synchronized
- * with the active payment gateway (Stripe).
+ * with the active payment gateway.
+ *
+ * <p>For Stripe: creates/updates products and prices programmatically via the Stripe SDK.
+ * For Lemon Squeezy: performs a read-only variant verification; the {@code externalVariantId}
+ * field from YAML is pre-populated into {@code plan.externalPriceId} before the call so
+ * the LS adapter can look up the variant without creating anything.
  *
  * <p>The typed {@link PlanFeatures} from each product schema is serialized to JSON
  * and stored in the {@code feature_set} column for observability. It is never read
@@ -67,7 +72,7 @@ public class BillingSeedRunner implements ApplicationRunner {
   @Override
   @Transactional
   public void run(final ApplicationArguments args) {
-    final Collection<StripeProductSchema> products = billingProps.stripe().schema().products().values();
+    final Collection<ProductSchema> products = billingProps.planCatalog().products().values();
     if (products.isEmpty()) {
       log.debug("No products found in configuration for seeding");
       return;
@@ -75,7 +80,7 @@ public class BillingSeedRunner implements ApplicationRunner {
 
     log.info("Seeding {} products from configuration to plan catalog", products.size());
 
-    for (final StripeProductSchema schema : products) {
+    for (final ProductSchema schema : products) {
       try {
         syncProduct(schema);
       } catch (final Exception e) {
@@ -84,7 +89,7 @@ public class BillingSeedRunner implements ApplicationRunner {
     }
   }
 
-  private void syncProduct(final StripeProductSchema schema) {
+  private void syncProduct(final ProductSchema schema) {
     final Plan plan = planMapper.findByPlanCode(schema.planCode())
         .orElseGet(() -> {
           final Plan newPlan = new Plan();
@@ -103,21 +108,52 @@ public class BillingSeedRunner implements ApplicationRunner {
     plan.setFeatureSet(serializeFeatures(features, schema.planCode()));
     plan.setScope(schema.scope());
     plan.setActive(schema.active() != null ? schema.active() : Boolean.TRUE);
-    plan.setTrialPeriodDays(schema.trialPeriodDays() != null && schema.trialPeriodDays() > 0 ? schema.trialPeriodDays() : null);
+    plan.setTrialPeriodDays(schema.trialPeriodDays() != null && schema.trialPeriodDays() > 0
+        ? schema.trialPeriodDays() : null);
     plan.setPricingModel(schema.effectivePricingModel().name());
 
-    if (plan.getId() == null) {
+    // For Lemon Squeezy: pre-populate externalPriceId from the YAML-configured variant ID
+    // so the LS adapter can verify it without creating a new variant.
+    // For Stripe: externalPriceId is managed by the adapter itself (set to null here if blank).
+    if (schema.externalVariantId() != null && !schema.externalVariantId().isBlank()
+        && (plan.getExternalPriceId() == null || plan.getExternalPriceId().isBlank())) {
+      plan.setExternalPriceId(schema.externalVariantId());
+      log.debug("Pre-populated externalPriceId from externalVariantId for plan {}", schema.planCode());
+    }
+
+    final boolean isNew = plan.getId() == null;
+    if (isNew) {
       planMapper.insert(plan);
     } else {
       planMapper.update(plan);
     }
 
-    // Sync with Stripe via SDK
-    log.debug("Synchronizing plan {} with Stripe", plan.getPlanCode());
+    // Capture state before sync to detect changes made by the gateway adapter
+    final String priceIdBefore = plan.getExternalPriceId();
+    final String productIdBefore = plan.getExternalProductId();
+
+    log.debug("Synchronizing plan {} with payment gateway", plan.getPlanCode());
     paymentGatewayPort.syncProduct(plan);
 
-    // Persist external IDs returned by Stripe
-    planMapper.update(plan);
+    // Only persist if the adapter actually changed the external IDs (avoids spurious UPDATE).
+    // For LS the read-only adapter returns the existing IDs unchanged — no UPDATE issued.
+    final boolean externalIdsChanged =
+        !java.util.Objects.equals(plan.getExternalPriceId(), priceIdBefore)
+        || !java.util.Objects.equals(plan.getExternalProductId(), productIdBefore);
+
+    if (externalIdsChanged) {
+      planMapper.update(plan);
+      log.debug("Persisted updated external IDs for plan {}", plan.getPlanCode());
+    }
+
+    // Warn when LS gateway is active and a plan still has no variant ID configured
+    if (plan.getExternalPriceId() == null || plan.getExternalPriceId().isBlank()) {
+      log.warn("Plan '{}' has no externalPriceId after gateway sync. "
+               + "If using Lemon Squeezy, set 'externalVariantId' in "
+               + "iqkv.billing.plan-catalog.products.{} before going live.",
+          plan.getPlanCode(), schema.planCode());
+    }
+
     log.info("Successfully seeded and synchronized plan: {}", plan.getPlanCode());
   }
 
