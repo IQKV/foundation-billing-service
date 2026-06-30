@@ -36,6 +36,7 @@ public final class SubscriptionDtoMapper {
         subscription.getId(),
         subscription.getTenantKey(),
         subscription.getExternalSubscriptionId(),
+        subscription.getExternalCustomerId(),
         subscription.getStatus(),
         subscription.getPlanId(),
         subscription.getQuantity(),
@@ -46,7 +47,9 @@ public final class SubscriptionDtoMapper {
         subscription.getCurrentPeriodStart(),
         subscription.getCurrentPeriodEnd(),
         subscription.isCancelAtPeriodEnd(),
-        subscription.getCanceledAt());
+        subscription.getCanceledAt(),
+        subscription.getGatewayType(),
+        subscription.getExternalOrderId());
   }
 
   /**
@@ -58,6 +61,7 @@ public final class SubscriptionDtoMapper {
         subscription.getId(),
         subscription.getTenantKey(),
         subscription.getExternalSubscriptionId(),
+        subscription.getExternalCustomerId(),
         subscription.getStatus(),
         subscription.getPlanId(),
         subscription.getQuantity(),
@@ -71,6 +75,8 @@ public final class SubscriptionDtoMapper {
         subscription.getCanceledAt(),
         subscription.getSubjectType(),
         subscription.getSubjectKey(),
+        subscription.getGatewayType(),
+        subscription.getExternalOrderId(),
         subscription.getCreatedAt(),
         subscription.getUpdatedAt());
   }

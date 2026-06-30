@@ -39,6 +39,7 @@ public final class SubscriptionDtos {
       UUID id,
       String tenantKey,
       String externalSubscriptionId,
+      String externalCustomerId,
       String status,
       String planId,
       Long quantity,
@@ -49,7 +50,9 @@ public final class SubscriptionDtos {
       Instant currentPeriodStart,
       Instant currentPeriodEnd,
       boolean cancelAtPeriodEnd,
-      Instant canceledAt) {
+      Instant canceledAt,
+      String gatewayType,
+      String externalOrderId) {
   }
 
   /**
@@ -172,6 +175,7 @@ public final class SubscriptionDtos {
       UUID id,
       String tenantKey,
       String externalSubscriptionId,
+      String externalCustomerId,
       String status,
       String planId,
       Long quantity,
@@ -185,6 +189,8 @@ public final class SubscriptionDtos {
       Instant canceledAt,
       String subjectType,
       String subjectKey,
+      String gatewayType,
+      String externalOrderId,
       LocalDateTime createdAt,
       LocalDateTime updatedAt) {
   }

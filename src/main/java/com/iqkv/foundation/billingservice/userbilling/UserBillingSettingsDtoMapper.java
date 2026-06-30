@@ -36,6 +36,7 @@ public final class UserBillingSettingsDtoMapper {
         settings.getTaxId(),
         settings.getTaxIdType(),
         settings.getCurrency(),
+        settings.getGatewayType(),
         settings.getCreatedAt() != null ? settings.getCreatedAt().toInstant(java.time.ZoneOffset.UTC) : null,
         settings.getUpdatedAt() != null ? settings.getUpdatedAt().toInstant(java.time.ZoneOffset.UTC) : null
     );

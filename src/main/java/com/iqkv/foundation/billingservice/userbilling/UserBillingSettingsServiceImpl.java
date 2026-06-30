@@ -112,7 +112,7 @@ public class UserBillingSettingsServiceImpl implements UserBillingSettingsServic
         request.taxId(),
         request.taxIdType(),
         request.currency(),
-        "STRIPE",
+        paymentGatewayPort.getGatewayType().name(),
         now,
         now
     );
@@ -196,7 +196,7 @@ public class UserBillingSettingsServiceImpl implements UserBillingSettingsServic
         null,   // taxId
         null,   // taxIdType
         "USD",
-        "STRIPE",
+        paymentGatewayPort.getGatewayType().name(),
         now,
         now
     );

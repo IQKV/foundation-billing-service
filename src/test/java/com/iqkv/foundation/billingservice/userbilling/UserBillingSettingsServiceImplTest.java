@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.gateway.GatewayType;
 import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper;
@@ -79,6 +80,7 @@ class UserBillingSettingsServiceImplTest {
     final String externalCustomerId = "cus_new123";
 
     when(userBillingSettingsMapper.findByUserId(userId)).thenReturn(Optional.empty());
+    when(paymentGatewayPort.getGatewayType()).thenReturn(GatewayType.STRIPE);
     when(paymentGatewayPort.createCustomer(any(CreateCustomerCommand.class))).thenReturn(externalCustomerId);
 
     // Act
@@ -128,6 +130,7 @@ class UserBillingSettingsServiceImplTest {
     final String externalCustomerId = "cus_metadata123";
 
     when(userBillingSettingsMapper.findByUserId(userId)).thenReturn(Optional.empty());
+    when(paymentGatewayPort.getGatewayType()).thenReturn(GatewayType.STRIPE);
     when(paymentGatewayPort.createCustomer(any(CreateCustomerCommand.class))).thenReturn(externalCustomerId);
 
     // Act

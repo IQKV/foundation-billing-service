@@ -45,15 +45,16 @@ class SubscriptionDtosTest {
 
     // Act
     final var response = new SubscriptionDtos.SubscriptionResponse(
-        id, tenantKey, externalSubscriptionId, status, planId,
+        id, tenantKey, externalSubscriptionId, "cus_123", status, planId,
         quantity, trialStart, trialEnd, false, null,
-        periodStart, periodEnd, true, canceledAt
+        periodStart, periodEnd, true, canceledAt, "STRIPE", "order_123"
     );
 
     // Assert
     assertThat(response.id()).isEqualTo(id);
     assertThat(response.tenantKey()).isEqualTo(tenantKey);
     assertThat(response.externalSubscriptionId()).isEqualTo(externalSubscriptionId);
+    assertThat(response.externalCustomerId()).isEqualTo("cus_123");
     assertThat(response.status()).isEqualTo(status);
     assertThat(response.planId()).isEqualTo(planId);
     assertThat(response.quantity()).isEqualTo(quantity);
@@ -63,6 +64,8 @@ class SubscriptionDtosTest {
     assertThat(response.currentPeriodEnd()).isEqualTo(periodEnd);
     assertThat(response.cancelAtPeriodEnd()).isTrue();
     assertThat(response.canceledAt()).isEqualTo(canceledAt);
+    assertThat(response.gatewayType()).isEqualTo("STRIPE");
+    assertThat(response.externalOrderId()).isEqualTo("order_123");
   }
 
   @Test
@@ -70,9 +73,9 @@ class SubscriptionDtosTest {
   void shouldCreateSubscriptionResponseWithNullOptionalFields() {
     // Arrange & Act
     final var response = new SubscriptionDtos.SubscriptionResponse(
-        UUID.randomUUID(), "tenant-123", "sub_abc", "active", "price_123",
+        UUID.randomUUID(), "tenant-123", "sub_abc", null, "active", "price_123",
         null, null, null, false, null,
-        Instant.now(), Instant.now().plusSeconds(2592000), false, null
+        Instant.now(), Instant.now().plusSeconds(2592000), false, null, null, null
     );
 
     // Assert
@@ -81,6 +84,9 @@ class SubscriptionDtosTest {
     assertThat(response.trialEnd()).isNull();
     assertThat(response.cancelAtPeriodEnd()).isFalse();
     assertThat(response.canceledAt()).isNull();
+    assertThat(response.externalCustomerId()).isNull();
+    assertThat(response.gatewayType()).isNull();
+    assertThat(response.externalOrderId()).isNull();
   }
 
   @Test
@@ -90,14 +96,14 @@ class SubscriptionDtosTest {
     final UUID id = UUID.randomUUID();
     final Instant now = Instant.now();
     final var response1 = new SubscriptionDtos.SubscriptionResponse(
-        id, "tenant-123", "sub_abc", "active", "price_123",
+        id, "tenant-123", "sub_abc", null, "active", "price_123",
         5L, null, null, false, null,
-        now, now.plusSeconds(2592000), false, null
+        now, now.plusSeconds(2592000), false, null, null, null
     );
     final var response2 = new SubscriptionDtos.SubscriptionResponse(
-        id, "tenant-123", "sub_abc", "active", "price_123",
+        id, "tenant-123", "sub_abc", null, "active", "price_123",
         5L, null, null, false, null,
-        now, now.plusSeconds(2592000), false, null
+        now, now.plusSeconds(2592000), false, null, null, null
     );
 
     // Assert
@@ -110,9 +116,9 @@ class SubscriptionDtosTest {
   void shouldHaveMeaningfulToString() {
     // Arrange
     final var response = new SubscriptionDtos.SubscriptionResponse(
-        UUID.randomUUID(), "tenant-123", "sub_abc", "active", "price_123",
+        UUID.randomUUID(), "tenant-123", "sub_abc", null, "active", "price_123",
         1L, null, null, false, null,
-        Instant.now(), Instant.now().plusSeconds(2592000), false, null
+        Instant.now(), Instant.now().plusSeconds(2592000), false, null, null, null
     );
 
     // Act
@@ -277,15 +283,18 @@ class SubscriptionDtosTest {
 
     // Act
     final var response = new SubscriptionDtos.AdminSubscriptionResponse(
-        id, "tenant-123", "sub_ext123", "active", "price_123", 2L,
+        id, "tenant-123", "sub_ext123", "cus_ext123", "active", "price_123", 2L,
         null, null, false, null, now, now.plusSeconds(2592000), false, null,
-        "TENANT", "tenant-123", created, created
+        "TENANT", "tenant-123", "STRIPE", "order_123", created, created
     );
 
     // Assert
     assertThat(response.id()).isEqualTo(id);
     assertThat(response.subjectType()).isEqualTo("TENANT");
     assertThat(response.subjectKey()).isEqualTo("tenant-123");
+    assertThat(response.externalCustomerId()).isEqualTo("cus_ext123");
+    assertThat(response.gatewayType()).isEqualTo("STRIPE");
+    assertThat(response.externalOrderId()).isEqualTo("order_123");
   }
 
   @Test
@@ -318,9 +327,9 @@ class SubscriptionDtosTest {
   void shouldCreatePagedSubscriptionResponse() {
     // Arrange
     final var subscription = new SubscriptionDtos.AdminSubscriptionResponse(
-        UUID.randomUUID(), "tenant-123", "sub_1", "active", "price_1", 1L,
+        UUID.randomUUID(), "tenant-123", "sub_1", null, "active", "price_1", 1L,
         null, null, false, null, Instant.now(), Instant.now(), false, null,
-        "TENANT", "tenant-123", java.time.LocalDateTime.now(), java.time.LocalDateTime.now()
+        "TENANT", "tenant-123", null, null, java.time.LocalDateTime.now(), java.time.LocalDateTime.now()
     );
     final var content = java.util.List.of(subscription);
 

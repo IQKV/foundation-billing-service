@@ -78,7 +78,7 @@ class BillingSettingsDtosTest {
     final var response = new BillingSettingsDtos.BillingSettingsResponse(
         id, "tenant-123", "billing@example.com", "Test Company",
         "{\"street\": \"123 Main St\"}", "TAX123", "VAT", "USD",
-        createdAt, updatedAt
+        "STRIPE", createdAt, updatedAt
     );
 
     // Assert
@@ -90,6 +90,7 @@ class BillingSettingsDtosTest {
     assertThat(response.taxId()).isEqualTo("TAX123");
     assertThat(response.taxIdType()).isEqualTo("VAT");
     assertThat(response.currency()).isEqualTo("USD");
+    assertThat(response.gatewayType()).isEqualTo("STRIPE");
     assertThat(response.createdAt()).isEqualTo(createdAt);
     assertThat(response.updatedAt()).isEqualTo(updatedAt);
   }
@@ -117,10 +118,12 @@ class BillingSettingsDtosTest {
     final UUID id = UUID.randomUUID();
     final Instant now = Instant.now();
     final var response1 = new BillingSettingsDtos.BillingSettingsResponse(
-        id, "tenant-123", "billing@example.com", "Company", null, null, null, "USD", now, now
+        id, "tenant-123", "billing@example.com", "Company", null, null, null, "USD",
+        "STRIPE", now, now
     );
     final var response2 = new BillingSettingsDtos.BillingSettingsResponse(
-        id, "tenant-123", "billing@example.com", "Company", null, null, null, "USD", now, now
+        id, "tenant-123", "billing@example.com", "Company", null, null, null, "USD",
+        "STRIPE", now, now
     );
 
     // Assert
@@ -170,7 +173,7 @@ class BillingSettingsDtosTest {
     final var response = new BillingSettingsDtos.AdminBillingSettingsResponse(
         id, "tenant-123", "cus_ext123", "admin@example.com", "Admin Company",
         "{\"street\": \"456 Admin St\"}", "ADM789", "EIN", "EUR", ownerId,
-        createdAt, updatedAt
+        "STRIPE", createdAt, updatedAt
     );
 
     // Assert
@@ -179,6 +182,7 @@ class BillingSettingsDtosTest {
     assertThat(response.externalCustomerId()).isEqualTo("cus_ext123");
     assertThat(response.billingEmail()).isEqualTo("admin@example.com");
     assertThat(response.profileOwnerId()).isEqualTo(ownerId);
+    assertThat(response.gatewayType()).isEqualTo("STRIPE");
   }
 
   @Test

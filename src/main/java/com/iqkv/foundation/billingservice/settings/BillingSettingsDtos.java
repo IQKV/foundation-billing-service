@@ -93,6 +93,7 @@ public final class BillingSettingsDtos {
       String taxId,
       String taxIdType,
       String currency,
+      String gatewayType,
       Instant createdAt,
       Instant updatedAt
   ) {
@@ -122,6 +123,7 @@ public final class BillingSettingsDtos {
       String taxIdType,
       String currency,
       UUID profileOwnerId,
+      String gatewayType,
       Instant createdAt,
       Instant updatedAt
   ) {
