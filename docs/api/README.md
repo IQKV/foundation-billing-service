@@ -297,12 +297,12 @@ Not exposed via a public gateway route — internal network access only.
 
 ### Webhooks
 
-| Method | Path               | Auth             | Description                  |
-| ------ | ------------------ | ---------------- | ---------------------------- |
-| `POST` | `/webhooks/stripe` | Stripe signature | Ingest Stripe webhook events |
+| Method | Path                      | Auth                    | Description                         |
+| ------ | ------------------------- | ----------------------- | ----------------------------------- |
+| `POST` | `/webhooks/stripe`        | Stripe signature        | Ingest Stripe webhook events        |
+| `POST` | `/webhooks/lemon-squeezy` | Lemon Squeezy signature | Ingest Lemon Squeezy webhook events |
 
-No JWT required. Secured by Stripe signature verification (`Stripe-Signature` header).
-Always returns `200 OK` after the idempotency check to prevent Stripe retries on business logic failures.
+No JWT required. Secured by gateway-specific signature verification (`Stripe-Signature` for Stripe, `X-Signature` for Lemon Squeezy). Always returns `200 OK` after the idempotency check to prevent retries on business logic failures.
 
 ---
 

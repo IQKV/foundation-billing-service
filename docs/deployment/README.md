@@ -9,7 +9,7 @@ The Foundation Billing Service is deployed using Helm charts and automated CI/CD
 - Kubernetes 1.19+
 - Helm 3.2.0+
 - External infrastructure services (PostgreSQL, RabbitMQ)
-- Stripe account (test keys for SIT, live keys for production)
+- Payment gateway account: Stripe (test keys for SIT, live keys for production) **or** Lemon Squeezy (store ID + API key + webhook secret); controlled by `config.paymentGatewayType`
 
 ### Environments
 
@@ -44,23 +44,32 @@ The service uses Drone CI/CD pipeline with 10 stages:
 <details>
 <summary>🔐 Required Drone Secrets</summary>
 
-| Secret Name                       | Purpose                           | Used In                                    |
-| --------------------------------- | --------------------------------- | ------------------------------------------ |
-| `NEXUS_DEPLOYER_USERNAME`         | Nexus repository authentication   | Artifact publishing, dependency resolution |
-| `NEXUS_DEPLOYER_PASSWORD`         | Nexus repository authentication   | Artifact publishing, dependency resolution |
-| `SONAR_HOST`                      | SonarQube server URL              | Static code analysis                       |
-| `SONAR_TOKEN`                     | SonarQube authentication token    | Static code analysis                       |
-| `SLACK_WEBHOOK`                   | Slack notifications webhook URL   | Build status notifications                 |
-| `GITHUB_API_ACCESS_TOKEN`         | GitHub API access for releases    | Release creation, changelog generation     |
-| `SVC_CONTAINER_REGISTRY_USERNAME` | Container registry authentication | Docker image publishing                    |
-| `SVC_CONTAINER_REGISTRY_PASSWORD` | Container registry authentication | Docker image publishing                    |
-| `HELM_CHARTS_REPOSITORY`          | Helm charts repository URL        | Kubernetes deployments                     |
-| `INFRA_POSTGRESQL_PASSWORD`       | PostgreSQL database password      | Application configuration                  |
-| `INFRA_RABBITMQ_PASSWORD`         | RabbitMQ message broker password  | Application configuration                  |
-| `SMTP_USERNAME`                   | Email service username            | Email notifications                        |
-| `SMTP_PASSWORD`                   | Email service password            | Email notifications                        |
+| Secret Name                       | Purpose                                    | Used In                                    |
+| --------------------------------- | ------------------------------------------ | ------------------------------------------ |
+| `NEXUS_DEPLOYER_USERNAME`         | Nexus repository authentication            | Artifact publishing, dependency resolution |
+| `NEXUS_DEPLOYER_PASSWORD`         | Nexus repository authentication            | Artifact publishing, dependency resolution |
+| `SONAR_HOST`                      | SonarQube server URL                       | Static code analysis                       |
+| `SONAR_TOKEN`                     | SonarQube authentication token             | Static code analysis                       |
+| `SLACK_WEBHOOK`                   | Slack notifications webhook URL            | Build status notifications                 |
+| `GITHUB_API_ACCESS_TOKEN`         | GitHub API access for releases             | Release creation, changelog generation     |
+| `SVC_CONTAINER_REGISTRY_USERNAME` | Container registry authentication          | Docker image publishing                    |
+| `SVC_CONTAINER_REGISTRY_PASSWORD` | Container registry authentication          | Docker image publishing                    |
+| `HELM_CHARTS_REPOSITORY`          | Helm charts repository URL                 | Kubernetes deployments                     |
+| `INFRA_POSTGRESQL_PASSWORD`       | PostgreSQL database password               | Application configuration                  |
+| `INFRA_RABBITMQ_PASSWORD`         | RabbitMQ message broker password           | Application configuration                  |
+| `SMTP_USERNAME`                   | Email service username                     | Email notifications                        |
+| `SMTP_PASSWORD`                   | Email service password                     | Email notifications                        |
+| `STRIPE_SECRET_KEY`               | Stripe API secret key                      | Payment gateway (Stripe)                   |
+| `STRIPE_WEBHOOK_SECRET`           | Stripe webhook signing secret              | Payment gateway (Stripe)                   |
+| `LEMON_SQUEEZY_API_KEY`           | Lemon Squeezy API key                      | Payment gateway (Lemon Squeezy)            |
+| `LEMON_SQUEEZY_STORE_ID`          | Lemon Squeezy store ID (public identifier) | Payment gateway (Lemon Squeezy)            |
+| `LEMON_SQUEEZY_WEBHOOK_SECRET`    | Lemon Squeezy webhook signing secret       | Payment gateway (Lemon Squeezy)            |
 
-> **Stripe keys** (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PORTAL_RETURN_URL`) are not injected by the pipeline. SIT uses hardcoded dummy test values from `values-sit.yaml`. For UAT/PRD, override via `--set config.stripe.secretKey`, `--set config.stripe.webhookSecret`, and `--set config.stripe.portalReturnUrl` manually or extend the pipeline.
+> **Payment gateway selector**: `config.paymentGatewayType` controls which gateway is active (`STRIPE` or `LEMON_SQUEEZY`). Both sets of secrets are always injected by the pipeline so the chart renders cleanly regardless of the active gateway. Switching gateways requires only changing `paymentGatewayType` in the relevant values file — no pipeline changes needed.
+>
+> **Stripe**: SIT uses hardcoded dummy test values from `values-sit.yaml`. For UAT/PRD, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are injected from Drone secrets; `portalReturnUrl` defaults from values files.
+>
+> **Lemon Squeezy**: SIT uses empty placeholders from `values-sit.yaml`. For UAT/PRD, `LEMON_SQUEEZY_API_KEY`, `LEMON_SQUEEZY_STORE_ID`, and `LEMON_SQUEEZY_WEBHOOK_SECRET` are injected from Drone secrets; `portalReturnUrl` defaults from values files. Operators must pre-create products/variants in the LS dashboard and set `externalVariantId` per plan in `billing.plan-catalog` before switching the gateway.
 
 </details>
 
@@ -89,6 +98,11 @@ helm upgrade --install --atomic --wait --timeout 5m foundation-billing-service .
   --set infraServices.rabbitmq.password=${INFRA_RABBITMQ_PASSWORD} \
   --set config.mail.username=${SMTP_USERNAME} \
   --set config.mail.password=${SMTP_PASSWORD} \
+  --set-string config.stripe.secretKey=${STRIPE_SECRET_KEY} \
+  --set-string config.stripe.webhookSecret=${STRIPE_WEBHOOK_SECRET} \
+  --set-string config.lemonSqueezy.apiKey=${LEMON_SQUEEZY_API_KEY} \
+  --set-string config.lemonSqueezy.storeId=${LEMON_SQUEEZY_STORE_ID} \
+  --set-string config.lemonSqueezy.webhookSecret=${LEMON_SQUEEZY_WEBHOOK_SECRET} \
   --namespace iqkv-sit-env \
   --create-namespace
 
@@ -101,8 +115,11 @@ helm upgrade --install --atomic --wait --timeout 5m foundation-billing-service .
   --set infraServices.rabbitmq.password=${INFRA_RABBITMQ_PASSWORD} \
   --set config.mail.username=${SMTP_USERNAME} \
   --set config.mail.password=${SMTP_PASSWORD} \
-  --set config.stripe.secretKey=${STRIPE_SECRET_KEY} \
-  --set config.stripe.webhookSecret=${STRIPE_WEBHOOK_SECRET} \
+  --set-string config.stripe.secretKey=${STRIPE_SECRET_KEY} \
+  --set-string config.stripe.webhookSecret=${STRIPE_WEBHOOK_SECRET} \
+  --set-string config.lemonSqueezy.apiKey=${LEMON_SQUEEZY_API_KEY} \
+  --set-string config.lemonSqueezy.storeId=${LEMON_SQUEEZY_STORE_ID} \
+  --set-string config.lemonSqueezy.webhookSecret=${LEMON_SQUEEZY_WEBHOOK_SECRET} \
   --namespace iqkv-prd-env \
   --create-namespace
 ```
@@ -143,6 +160,12 @@ drone secret add --repository IQKV/foundation-billing-service --name SMTP_PASSWO
 # Stripe secrets (UAT/PRD only — SIT uses dummy values from values-sit.yaml)
 drone secret add --repository IQKV/foundation-billing-service --name STRIPE_SECRET_KEY --data "sk_live_..."
 drone secret add --repository IQKV/foundation-billing-service --name STRIPE_WEBHOOK_SECRET --data "whsec_..."
+
+# Lemon Squeezy secrets (UAT/PRD only — SIT uses empty placeholders from values-sit.yaml)
+# Required when config.paymentGatewayType=LEMON_SQUEEZY; injected but ignored when using Stripe
+drone secret add --repository IQKV/foundation-billing-service --name LEMON_SQUEEZY_API_KEY --data "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+drone secret add --repository IQKV/foundation-billing-service --name LEMON_SQUEEZY_STORE_ID --data "12345"
+drone secret add --repository IQKV/foundation-billing-service --name LEMON_SQUEEZY_WEBHOOK_SECRET --data "your-ls-webhook-secret"
 ```
 
 #### External Services
@@ -155,7 +178,7 @@ The service connects to these external infrastructure components:
 - **Stripe**: Payment processing and subscription management (Connect wrapper)
 
 > **SIT/UAT**: SMTP is handled by an in-cluster MailHog instance. Production uses `smtp.iqkv.site`.  
-> **SIT**: Stripe uses hardcoded dummy test credentials — no real charges or webhooks are processed.
+> **SIT**: Stripe uses hardcoded dummy test credentials — no real charges or webhooks are processed. Lemon Squeezy credentials are empty; populate Drone secrets and set `config.paymentGatewayType=LEMON_SQUEEZY` in `values-sit.yaml` to test the LS flow.
 
 #### Service Configuration
 
@@ -265,6 +288,7 @@ helm uninstall foundation-billing-service -n iqkv-prd-env
 - All sensitive values injected via `--set` flags from Drone secrets (never stored in chart)
 - JWT verification uses RS256 public key only; production key loaded from `file:/run/secrets/`
 - Stripe keys stored in Kubernetes Secret (`stripe-secret-key`, `stripe-webhook-secret`)
+- Lemon Squeezy credentials stored in Kubernetes Secret (`lemon-squeezy-api-key`, `lemon-squeezy-webhook-secret`); store ID stored in ConfigMap
 - TLS configurable via cert-manager in production ingress
 - Network policies restrict pod communication in production
 - Non-root container execution (UID 1001)

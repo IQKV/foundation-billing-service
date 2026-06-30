@@ -7,7 +7,7 @@ Billing and subscription management microservice for the Key Value Platform. Pro
 The Billing service owns the payment gateway integration layer for the platform:
 
 - **Automatic customer provisioning** — listens for `tenant.created` and `tenant.provisioned` events on RabbitMQ and creates a payment gateway customer per tenant; the `external_customer_id` is stored in `billing_settings`
-- **Multi-gateway strategy** — `PaymentGatewayPort` interface (Strategy pattern + Hexagonal Architecture) decouples business logic from gateway SDKs; Stripe is the active implementation, additional gateways are reserved
+- **Multi-gateway strategy** — `PaymentGatewayPort` interface (Strategy pattern + Hexagonal Architecture) decouples business logic from gateway SDKs; Stripe and Lemon Squeezy are implemented, additional gateways are reserved
 - **Plan catalog** — plan definitions with typed `PlanFeatures` (scoped to `MULTI_TENANT` or `SINGLE_TENANT` mode); quota fields (`maxUsers`, `maxProjects`) are typed `int` fields; `trialPeriodDays` to define free trial length in days (0 means no trial); display features (e.g. `priority_support`) are held in an extensible `Map<String, PlanFeature>` keyed by feature code — adding a new feature requires only a YAML change. Each plan carries a `pricingModel` field — `FLAT` (fixed price per period, default) or `PER_SEAT` (price multiplied by seat count; `maxUsers` acts as the seat ceiling; checkout validates and routes quantity automatically). `BillingSeedRunner` synchronizes plans with the Stripe catalog (external Product and Price ID creation) at application startup. Plan management is config-driven — there is no REST API for creating, updating, or deactivating plans. The static feature registry is loaded into the in-memory `PlanFeatureRegistry` at startup and served via a public internal endpoint for gateway and downstream service caching; **entitlement evaluation is tightly coupled with plan features** — the entitlements endpoint returns complete feature data enabling client-side access control; `PlanEligibilityPolicy` validates scope against active rollout mode
 - **Billing settings** — each tenant has a 1:1 `billing_settings` record that is the single source of truth for payment gateway customer metadata; decoupled from IAM users by design
 - **Billing email** — a separate `billing_email` field allows finance teams to receive invoices without a system account
@@ -223,11 +223,12 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 
 ### Webhooks — `/api/v1/billing/webhooks`
 
-| Method | Path               | Auth             | Description                               |
-| ------ | ------------------ | ---------------- | ----------------------------------------- |
-| `POST` | `/webhooks/stripe` | Stripe signature | Receive and process Stripe webhook events |
+| Method | Path                      | Auth                    | Description                                      |
+| ------ | ------------------------- | ----------------------- | ------------------------------------------------ |
+| `POST` | `/webhooks/stripe`        | Stripe signature        | Receive and process Stripe webhook events        |
+| `POST` | `/webhooks/lemon-squeezy` | Lemon Squeezy signature | Receive and process Lemon Squeezy webhook events |
 
-> Auth legend: `JWT` = valid Bearer token; `JWT ROLE` = JWT with that authority; `X-Tenant-ID` = 8-char tenantKey header; Stripe signature = `Stripe-Signature` header verified against webhook secret.
+> Auth legend: `JWT` = valid Bearer token; `JWT ROLE` = JWT with that authority; `X-Tenant-ID` = 8-char tenantKey header; Stripe signature = `Stripe-Signature` header; Lemon Squeezy signature = `X-Signature` header (both verified against webhook secret).
 
 ## Events
 
@@ -314,29 +315,32 @@ docker compose up -d
 
 ## Environment Variables
 
-| Variable                   | Default                         | Description                                                     |
-| -------------------------- | ------------------------------- | --------------------------------------------------------------- |
-| `PAYMENT_GATEWAY_TYPE`     | `STRIPE`                        | Active payment gateway adapter (`STRIPE`)                       |
-| `ROLLOUT_MODE`             | `MULTI_TENANT`                  | Platform mode: `MULTI_TENANT` or `SINGLE_TENANT`                |
-| `DB_HOST`                  | `localhost`                     | PostgreSQL host                                                 |
-| `DB_PORT`                  | `5432`                          | PostgreSQL port                                                 |
-| `DB_NAME`                  | `billing`                       | Database name                                                   |
-| `DB_USERNAME`              | `billing`                       | Database user                                                   |
-| `DB_PASSWORD`              | `billing`                       | Database password                                               |
-| `RABBITMQ_HOST`            | `localhost`                     | RabbitMQ host                                                   |
-| `RABBITMQ_PORT`            | `5672`                          | RabbitMQ AMQP port                                              |
-| `RABBITMQ_USERNAME`        | `billing`                       | RabbitMQ user                                                   |
-| `RABBITMQ_PASSWORD`        | `billing`                       | RabbitMQ password                                               |
-| `STRIPE_SECRET_KEY`        | `sk_test_placeholder`           | Stripe secret key (required when `PAYMENT_GATEWAY_TYPE=STRIPE`) |
-| `STRIPE_WEBHOOK_SECRET`    | `whsec_placeholder`             | Stripe webhook signing secret                                   |
-| `STRIPE_PORTAL_RETURN_URL` | `http://localhost:3000/billing` | Stripe portal return URL                                        |
-| `JWT_PUBLIC_KEY_PATH`      | `classpath:keys/public.pem`     | RS256 public key (from IAM)                                     |
-| `MAIL_HOST`                | `localhost`                     | SMTP host                                                       |
-| `MAIL_PORT`                | `587`                           | SMTP port                                                       |
-| `MAIL_FROM`                | `noreply@iqkv.com`              | Sender address                                                  |
-| `APP_BASE_URL`             | `http://localhost:3000`         | Frontend base URL (used in email links)                         |
-| `DEFAULT_BILLING_EMAIL`    | _(empty)_                       | Fallback billing contact for single-tenant mode                 |
-| `MESSAGING_ENABLED`        | `true`                          | Toggle RabbitMQ publishing (set `false` for local dev)          |
+| Variable                       | Default                         | Description                                                                 |
+| ------------------------------ | ------------------------------- | --------------------------------------------------------------------------- |
+| `PAYMENT_GATEWAY_TYPE`         | `STRIPE`                        | Active payment gateway adapter (`STRIPE` or `LEMON_SQUEEZY`)                |
+| `ROLLOUT_MODE`                 | `MULTI_TENANT`                  | Platform mode: `MULTI_TENANT` or `SINGLE_TENANT`                            |
+| `DB_HOST`                      | `localhost`                     | PostgreSQL host                                                             |
+| `DB_PORT`                      | `5432`                          | PostgreSQL port                                                             |
+| `DB_NAME`                      | `billing`                       | Database name                                                               |
+| `DB_USERNAME`                  | `billing`                       | Database user                                                               |
+| `DB_PASSWORD`                  | `billing`                       | Database password                                                           |
+| `RABBITMQ_HOST`                | `localhost`                     | RabbitMQ host                                                               |
+| `RABBITMQ_PORT`                | `5672`                          | RabbitMQ AMQP port                                                          |
+| `RABBITMQ_USERNAME`            | `billing`                       | RabbitMQ user                                                               |
+| `RABBITMQ_PASSWORD`            | `billing`                       | RabbitMQ password                                                           |
+| `STRIPE_SECRET_KEY`            | `sk_test_placeholder`           | Stripe secret key (required when `PAYMENT_GATEWAY_TYPE=STRIPE`)             |
+| `STRIPE_WEBHOOK_SECRET`        | `whsec_placeholder`             | Stripe webhook signing secret                                               |
+| `STRIPE_PORTAL_RETURN_URL`     | `http://localhost:3000/billing` | Stripe portal return URL                                                    |
+| `LEMON_SQUEEZY_API_KEY`        | `ls_test_placeholder`           | Lemon Squeezy API key (required when `PAYMENT_GATEWAY_TYPE=LEMON_SQUEEZY`)  |
+| `LEMON_SQUEEZY_WEBHOOK_SECRET` | `whsec_placeholder`             | Lemon Squeezy webhook signing secret                                        |
+| `LEMON_SQUEEZY_STORE_ID`       | `12345`                         | Lemon Squeezy store ID (required when `PAYMENT_GATEWAY_TYPE=LEMON_SQUEEZY`) |
+| `JWT_PUBLIC_KEY_PATH`          | `classpath:keys/public.pem`     | RS256 public key (from IAM)                                                 |
+| `MAIL_HOST`                    | `localhost`                     | SMTP host                                                                   |
+| `MAIL_PORT`                    | `587`                           | SMTP port                                                                   |
+| `MAIL_FROM`                    | `noreply@iqkv.com`              | Sender address                                                              |
+| `APP_BASE_URL`                 | `http://localhost:3000`         | Frontend base URL (used in email links)                                     |
+| `DEFAULT_BILLING_EMAIL`        | _(empty)_                       | Fallback billing contact for single-tenant mode                             |
+| `MESSAGING_ENABLED`            | `true`                          | Toggle RabbitMQ publishing (set `false` for local dev)                      |
 
 > Copy `.env.example` to `.env.local` / `.env.uat` / `.env.prd` and fill in values per environment.
 
@@ -397,7 +401,9 @@ src/main/java/com/iqkv/foundation/billingservice/
 │   ├── port/           # PaymentGatewayPort interface
 │   ├── event/          # Gateway-agnostic webhook event models (sealed interface)
 │   ├── command/        # Gateway-agnostic command models
-│   └── adapter/stripe/ # Stripe implementation of PaymentGatewayPort
+│   └── adapter/        # Gateway implementations
+│       ├── stripe/     # Stripe implementation of PaymentGatewayPort
+│       └── lemon-squeezy/ # Lemon Squeezy implementation of PaymentGatewayPort
 ├── plan/               # Plan catalog — CRUD, eligibility policy, scope validation
 ├── subscription/       # Subscription queries, subject resolution, entitlement evaluation
 ├── settings/           # Tenant billing settings (contact email, tax ID, external customer ID)
