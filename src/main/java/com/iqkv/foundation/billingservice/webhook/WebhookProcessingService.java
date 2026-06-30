@@ -449,6 +449,7 @@ public class WebhookProcessingService {
         event.currency(),
         event.status(),
         event.occurredAt(),
+        event.gatewayType(),
         SubjectType.TENANT.name(),
         tenantKey,
         null,

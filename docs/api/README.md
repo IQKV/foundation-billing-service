@@ -140,6 +140,14 @@ The `{tenantKey}` is validated against the authenticated tenant's JWT `tenant_id
 
 ---
 
+### Gateway Configuration (platform admin)
+
+| Method | Path             | Auth                 | Description                              |
+| ------ | ---------------- | -------------------- | ---------------------------------------- |
+| `GET`  | `/admin/gateway` | JWT `PLATFORM_ADMIN` | Get active payment gateway configuration |
+
+---
+
 ### Plan Catalog
 
 | Method | Path                | Auth                    | Description           |

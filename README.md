@@ -96,6 +96,12 @@ Base path: `/api/v1/billing`
 | `GET`  | `/admin/refunds`      | JWT `PLATFORM_ADMIN` | List all refunds (paginated, filtered) |
 | `GET`  | `/admin/refunds/{id}` | JWT `PLATFORM_ADMIN` | Get refund by ID                       |
 
+### Gateway Configuration (platform admin)
+
+| Method | Path             | Auth                 | Description                              |
+| ------ | ---------------- | -------------------- | ---------------------------------------- |
+| `GET`  | `/admin/gateway` | JWT `PLATFORM_ADMIN` | Get active payment gateway configuration |
+
 ### Plan Catalog
 
 | Method | Path                | Auth                    | Description           |
