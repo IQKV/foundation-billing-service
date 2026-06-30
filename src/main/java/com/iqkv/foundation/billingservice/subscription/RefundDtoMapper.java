@@ -39,6 +39,7 @@ public final class RefundDtoMapper {
         refund.getCurrency(),
         refund.getStatus(),
         refund.getOccurredAt(),
+        refund.getGatewayType(),
         refund.getCreatedAt(),
         refund.getUpdatedAt()
     );

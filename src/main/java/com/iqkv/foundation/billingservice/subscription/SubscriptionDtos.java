@@ -128,6 +128,7 @@ public final class SubscriptionDtos {
       String currency,
       String status,
       Instant occurredAt,
+      String gatewayType,
       java.time.LocalDateTime createdAt,
       java.time.LocalDateTime updatedAt
   ) {

@@ -34,6 +34,7 @@ public class Refund {
   private String currency;
   private String status;
   private Instant occurredAt;
+  private String gatewayType;             // STRIPE | LEMON_SQUEEZY
   private String subjectType;             // TENANT | USER
   private String subjectKey;              // tenantKey or userId depending on subjectType
   private LocalDateTime createdAt;
@@ -51,6 +52,7 @@ public class Refund {
                 final String currency,
                 final String status,
                 final Instant occurredAt,
+                final String gatewayType,
                 final String subjectType,
                 final String subjectKey,
                 final LocalDateTime createdAt,
@@ -64,6 +66,7 @@ public class Refund {
     this.currency = currency;
     this.status = status;
     this.occurredAt = occurredAt;
+    this.gatewayType = gatewayType;
     this.subjectType = subjectType;
     this.subjectKey = subjectKey;
     this.createdAt = createdAt;
@@ -140,6 +143,14 @@ public class Refund {
 
   public void setOccurredAt(Instant occurredAt) {
     this.occurredAt = occurredAt;
+  }
+
+  public String getGatewayType() {
+    return gatewayType;
+  }
+
+  public void setGatewayType(String gatewayType) {
+    this.gatewayType = gatewayType;
   }
 
   public LocalDateTime getCreatedAt() {
