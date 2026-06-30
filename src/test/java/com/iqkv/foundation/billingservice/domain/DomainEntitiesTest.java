@@ -246,7 +246,7 @@ class DomainEntitiesTest {
     // Act
     final var refund = new Refund(
         id, "tenant-123", "re_ext123", "ch_ext456", "cus_ext789",
-        1500L, "usd", "succeeded", now, "TENANT", "tenant-123", created, created
+        1500L, "usd", "succeeded", now, "STRIPE", "TENANT", "tenant-123", created, created
     );
 
     // Assert

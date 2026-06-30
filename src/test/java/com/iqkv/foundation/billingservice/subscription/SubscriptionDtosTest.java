@@ -209,7 +209,7 @@ class SubscriptionDtosTest {
     // Act
     final var response = new SubscriptionDtos.AdminRefundResponse(
         id, "tenant-123", "re_ext123", "ch_ext456", "cus_ext789",
-        1500L, "usd", "succeeded", occurredAt, createdAt, updatedAt
+        1500L, "usd", "succeeded", occurredAt, "STRIPE", "TENANT", "tenant-123", createdAt, updatedAt
     );
 
     // Assert
@@ -230,6 +230,7 @@ class SubscriptionDtosTest {
     final var refund1 = new SubscriptionDtos.AdminRefundResponse(
         UUID.randomUUID(), "tenant-123", "re_1", "ch_1", "cus_1",
         1000L, "usd", "succeeded", Instant.now(),
+        "STRIPE", "TENANT", "tenant-123",
         java.time.LocalDateTime.now(), java.time.LocalDateTime.now()
     );
     final var content = java.util.List.of(refund1);

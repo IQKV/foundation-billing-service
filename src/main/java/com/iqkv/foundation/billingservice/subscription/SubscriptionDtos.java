@@ -129,6 +129,8 @@ public final class SubscriptionDtos {
       String status,
       Instant occurredAt,
       String gatewayType,
+      String subjectType,
+      String subjectKey,
       java.time.LocalDateTime createdAt,
       java.time.LocalDateTime updatedAt
   ) {
