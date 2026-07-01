@@ -327,13 +327,13 @@ docker compose up -d
 | `ROLLOUT_MODE`                 | `MULTI_TENANT`                  | Platform mode: `MULTI_TENANT` or `SINGLE_TENANT`                            |
 | `DB_HOST`                      | `localhost`                     | PostgreSQL host                                                             |
 | `DB_PORT`                      | `5432`                          | PostgreSQL port                                                             |
-| `DB_NAME`                      | `billing`                       | Database name                                                               |
-| `DB_USERNAME`                  | `billing`                       | Database user                                                               |
-| `DB_PASSWORD`                  | `billing`                       | Database password                                                           |
+| `DB_NAME`                      | `billingservice`                | Database name                                                               |
+| `DB_USERNAME`                  | `svc_billing_dba`               | Database user                                                               |
+| `DB_PASSWORD`                  | `svc_billing_dba`               | Database password                                                           |
 | `RABBITMQ_HOST`                | `localhost`                     | RabbitMQ host                                                               |
 | `RABBITMQ_PORT`                | `5672`                          | RabbitMQ AMQP port                                                          |
-| `RABBITMQ_USERNAME`            | `billing`                       | RabbitMQ user                                                               |
-| `RABBITMQ_PASSWORD`            | `billing`                       | RabbitMQ password                                                           |
+| `RABBITMQ_USERNAME`            | `svc_billing_rmq`               | RabbitMQ user                                                               |
+| `RABBITMQ_PASSWORD`            | `svc_billing_rmq`               | RabbitMQ password                                                           |
 | `STRIPE_SECRET_KEY`            | `sk_test_placeholder`           | Stripe secret key (required when `PAYMENT_GATEWAY_TYPE=STRIPE`)             |
 | `STRIPE_WEBHOOK_SECRET`        | `whsec_placeholder`             | Stripe webhook signing secret                                               |
 | `STRIPE_PORTAL_RETURN_URL`     | `http://localhost:3000/billing` | Stripe portal return URL                                                    |
