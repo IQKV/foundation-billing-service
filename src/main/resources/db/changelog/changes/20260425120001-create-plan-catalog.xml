@@ -57,6 +57,20 @@
             ON plan_catalog (active)
             WHERE active = true;
         </sql>
+        <rollback>
+            <sql>
+                DROP INDEX IF EXISTS idx_plan_catalog_active;
+            </sql>
+            <sql>
+                ALTER TABLE plan_catalog
+                DROP CONSTRAINT IF EXISTS chk_plan_catalog_scope;
+            </sql>
+            <sql>
+                ALTER TABLE plan_catalog
+                DROP CONSTRAINT IF EXISTS chk_plan_catalog_billing_period;
+            </sql>
+            <dropTable tableName="plan_catalog" schemaName="public"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

@@ -33,6 +33,10 @@
         <createIndex indexName="idx_user_billing_settings_user_id" tableName="user_billing_settings" schemaName="public">
             <column name="user_id"/>
         </createIndex>
+        <rollback>
+            <dropIndex indexName="idx_user_billing_settings_user_id" tableName="user_billing_settings" schemaName="public"/>
+            <dropTable tableName="user_billing_settings" schemaName="public"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

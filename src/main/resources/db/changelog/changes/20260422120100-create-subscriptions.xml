@@ -44,6 +44,10 @@
         <createIndex indexName="idx_subscriptions_tenant_key" tableName="subscriptions" schemaName="public">
             <column name="tenant_key"/>
         </createIndex>
+        <rollback>
+            <dropIndex indexName="idx_subscriptions_tenant_key" tableName="subscriptions" schemaName="public"/>
+            <dropTable tableName="subscriptions" schemaName="public"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

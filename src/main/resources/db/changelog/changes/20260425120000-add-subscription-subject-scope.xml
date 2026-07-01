@@ -12,6 +12,9 @@
                 <constraints nullable="false"/>
             </column>
         </addColumn>
+        <rollback>
+            <dropColumn tableName="subscriptions" schemaName="public" columnName="subject_type"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="20260425120000-add-subscription-subject-scope-2" author="iqkv">
@@ -19,6 +22,9 @@
         <addColumn tableName="subscriptions" schemaName="public">
             <column name="subject_key" type="VARCHAR(255)"/>
         </addColumn>
+        <rollback>
+            <dropColumn tableName="subscriptions" schemaName="public" columnName="subject_key"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="20260425120000-add-subscription-subject-scope-3" author="iqkv">
@@ -28,12 +34,22 @@
             SET subject_key = tenant_key
             WHERE subject_key IS NULL;
         </sql>
+        <rollback>
+            <sql>
+                UPDATE subscriptions
+                SET subject_key = NULL;
+            </sql>
+        </rollback>
     </changeSet>
 
     <changeSet id="20260425120000-add-subscription-subject-scope-4" author="iqkv">
         <!-- Step 4: Now enforce NOT NULL on subject_key -->
         <addNotNullConstraint tableName="subscriptions" schemaName="public"
                               columnName="subject_key" columnDataType="VARCHAR(255)"/>
+        <rollback>
+            <dropNotNullConstraint tableName="subscriptions" schemaName="public"
+                                   columnName="subject_key" columnDataType="VARCHAR(255)"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="20260425120000-add-subscription-subject-scope-5" author="iqkv" dbms="postgresql">
@@ -43,6 +59,12 @@
             ADD CONSTRAINT chk_subscriptions_subject_type
             CHECK (subject_type IN ('TENANT', 'USER'));
         </sql>
+        <rollback>
+            <sql>
+                ALTER TABLE subscriptions
+                DROP CONSTRAINT chk_subscriptions_subject_type;
+            </sql>
+        </rollback>
     </changeSet>
 
     <changeSet id="20260425120000-add-subscription-subject-scope-6" author="iqkv" dbms="postgresql">
@@ -52,6 +74,11 @@
             ON subscriptions (subject_type, subject_key)
             WHERE status = 'ACTIVE';
         </sql>
+        <rollback>
+            <sql>
+                DROP INDEX IF EXISTS idx_subscriptions_subject_active_unique;
+            </sql>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

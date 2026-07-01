@@ -17,6 +17,13 @@
             ADD CONSTRAINT chk_plan_catalog_pricing_model
             CHECK (pricing_model IN ('FLAT', 'PER_SEAT'));
         </sql>
+        <rollback>
+            <sql>
+                ALTER TABLE plan_catalog
+                DROP CONSTRAINT chk_plan_catalog_pricing_model;
+            </sql>
+            <dropColumn tableName="plan_catalog" schemaName="public" columnName="pricing_model"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

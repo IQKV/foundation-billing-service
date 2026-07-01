@@ -9,6 +9,9 @@
         <addColumn tableName="plan_catalog" schemaName="public">
             <column name="description" type="TEXT"/>
         </addColumn>
+        <rollback>
+            <dropColumn tableName="plan_catalog" schemaName="public" columnName="description"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

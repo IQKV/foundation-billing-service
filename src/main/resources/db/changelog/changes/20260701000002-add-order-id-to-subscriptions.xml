@@ -12,6 +12,9 @@
         <addColumn tableName="subscriptions">
             <column name="external_order_id" type="VARCHAR(255)"/>
         </addColumn>
+        <rollback>
+            <dropColumn tableName="subscriptions" columnName="external_order_id"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

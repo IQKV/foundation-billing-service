@@ -25,6 +25,9 @@
             </column>
             <column name="processed_at" type="TIMESTAMP"/>
         </createTable>
+        <rollback>
+            <dropTable tableName="webhook_log" schemaName="public"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

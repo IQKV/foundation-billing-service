@@ -11,6 +11,11 @@
             <column name="trial_start" type="TIMESTAMP"/>
             <column name="trial_end" type="TIMESTAMP"/>
         </addColumn>
+        <rollback>
+            <dropColumn tableName="subscriptions" schemaName="public" columnName="quantity"/>
+            <dropColumn tableName="subscriptions" schemaName="public" columnName="trial_start"/>
+            <dropColumn tableName="subscriptions" schemaName="public" columnName="trial_end"/>
+        </rollback>
     </changeSet>
 
     <changeSet id="20260519120001-create-refunds" author="iqkv">
@@ -51,6 +56,10 @@
         <createIndex indexName="idx_refunds_tenant_key" tableName="refunds" schemaName="public">
             <column name="tenant_key"/>
         </createIndex>
+        <rollback>
+            <dropIndex indexName="idx_refunds_tenant_key" tableName="refunds" schemaName="public"/>
+            <dropTable tableName="refunds" schemaName="public"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

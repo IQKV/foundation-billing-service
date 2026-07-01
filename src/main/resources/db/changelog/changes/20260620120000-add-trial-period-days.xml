@@ -11,6 +11,9 @@
                 <constraints nullable="false"/>
             </column>
         </addColumn>
+        <rollback>
+            <dropColumn tableName="plan_catalog" schemaName="public" columnName="trial_period_days"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

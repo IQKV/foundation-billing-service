@@ -10,6 +10,10 @@
             <column name="external_product_id" type="VARCHAR(255)"/>
             <column name="external_price_id" type="VARCHAR(255)"/>
         </addColumn>
+        <rollback>
+            <dropColumn tableName="plan_catalog" schemaName="public" columnName="external_product_id"/>
+            <dropColumn tableName="plan_catalog" schemaName="public" columnName="external_price_id"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>
