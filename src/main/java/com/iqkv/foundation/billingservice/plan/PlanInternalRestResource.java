@@ -54,35 +54,6 @@ public class PlanInternalRestResource {
   public record PlanCatalogEntry(String planCode, PlanEntitlement features, PricingModel pricingModel) {
   }
 
-  /**
-   * Response payload for a single plan with full details for pricing pages.
-   *
-   * @param planCode      unique plan identifier
-   * @param displayName   human-readable plan name
-   * @param description   plan description for checkout and pricing pages
-   * @param billingPeriod billing frequency (MONTHLY or ANNUAL)
-   * @param priceMinor    price in minor currency units (e.g. cents for USD);
-   *                      for PER_SEAT plans this is the per-seat unit price
-   * @param currency      ISO 4217 currency code
-   * @param features      plan features
-   * @param scope         plan scope (TENANT or USER)
-   * @param active        whether the plan is visible
-   * @param pricingModel  pricing mode — {@code FLAT} or {@code PER_SEAT}; never null
-   */
-  public record PublicPlanEntry(
-      String planCode,
-      String displayName,
-      String description,
-      String billingPeriod,
-      Integer priceMinor,
-      String currency,
-      PlanEntitlement features,
-      String scope,
-      Boolean active,
-      PricingModel pricingModel
-  ) {
-  }
-
   private final PlanFeatureRegistry planFeatureRegistry;
   private final BillingConfigurationProperties billingProps;
 
@@ -97,7 +68,7 @@ public class PlanInternalRestResource {
   @GetMapping
   @Operation(
       summary = "List plan feature catalog",
-      description = "Returns the full plan feature catalog as a list of planCode → features entries. "
+      description = "Returns the full plan feature catalog as a list of planCode → entitlement entries. "
                     + "Intended for service-to-service use by the gateway and downstream services. "
                     + "No authentication required — response contains only non-sensitive plan feature data.")
   @ApiResponses({
@@ -114,7 +85,7 @@ public class PlanInternalRestResource {
   @GetMapping("/public")
   @Operation(
       summary = "List plans for pricing page",
-      description = "Returns all active plans with full details (names, descriptions, prices, features) for public pricing pages. "
+      description = "Returns all active plans with full details (names, descriptions, prices, entitlement) for public pricing pages. "
                     + "No authentication required — response contains only non-sensitive, public plan data.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Public plan list returned")
@@ -129,9 +100,9 @@ public class PlanInternalRestResource {
             schema.billingPeriod(),
             schema.priceMinor(),
             schema.currency(),
-            schema.features() != null ? schema.features() : PlanEntitlement.NONE,
+            schema.entitlement() != null ? schema.entitlement() : PlanEntitlement.NONE,
             schema.scope(),
-            schema.active() != null ? schema.active() : Boolean.TRUE,
+            true,
             schema.effectivePricingModel()
         ))
         .sorted(Comparator.comparing(PublicPlanEntry::planCode))

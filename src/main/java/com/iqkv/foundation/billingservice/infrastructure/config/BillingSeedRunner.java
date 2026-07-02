@@ -98,7 +98,7 @@ public class BillingSeedRunner implements ApplicationRunner {
           return newPlan;
         });
 
-    final PlanEntitlement features = schema.features() != null ? schema.features() : PlanEntitlement.NONE;
+    final PlanEntitlement features = schema.entitlement() != null ? schema.entitlement() : PlanEntitlement.NONE;
 
     plan.setDisplayName(schema.displayName());
     plan.setDescription(schema.description());

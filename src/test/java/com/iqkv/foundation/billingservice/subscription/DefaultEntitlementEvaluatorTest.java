@@ -69,7 +69,7 @@ class DefaultEntitlementEvaluatorTest {
   }
 
   @Test
-  @DisplayName("Should return entitlements with typed features when active subscription and known plan exist")
+  @DisplayName("Should return entitlements with typed entitlement when active subscription and known plan exist")
   void shouldReturnEntitlementsWithTypedFeaturesWhenPlanFound() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Subscription subscription = createSubscription("price_pro123", "active");
@@ -96,7 +96,7 @@ class DefaultEntitlementEvaluatorTest {
   }
 
   @Test
-  @DisplayName("Should fall back to NONE features when plan not in registry")
+  @DisplayName("Should fall back to NONE entitlement when plan not in registry")
   void shouldFallBackToNoneFeaturesWhenPlanNotInRegistry() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.USER, "user-456");
     final Subscription subscription = createSubscription("price_legacy", "active");
@@ -132,7 +132,7 @@ class DefaultEntitlementEvaluatorTest {
   }
 
   @Test
-  @DisplayName("Should return NONE features when planId is null")
+  @DisplayName("Should return NONE entitlement when planId is null")
   void shouldReturnNoneFeaturesWhenPlanIdIsNull() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Subscription subscription = createSubscription(null, "trialing");

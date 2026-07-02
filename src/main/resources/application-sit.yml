@@ -46,7 +46,7 @@ iqkv:
           active: true
           trialPeriodDays: 0
           pricingModel: "FLAT"
-          features:
+          entitlement:
             maxUsers: 10
             maxProjects: 1
             features:
@@ -69,7 +69,7 @@ iqkv:
           active: true
           trialPeriodDays: 14
           pricingModel: "FLAT"
-          features:
+          entitlement:
             maxUsers: 10
             maxProjects: 1
             features:
@@ -92,7 +92,7 @@ iqkv:
           active: true
           trialPeriodDays: 3
           pricingModel: "FLAT"
-          features:
+          entitlement:
             maxUsers: 97
             maxProjects: 0
             features:
@@ -115,7 +115,7 @@ iqkv:
           active: true
           trialPeriodDays: 14
           pricingModel: "FLAT"
-          features:
+          entitlement:
             maxUsers: 98
             maxProjects: 0
             features:
@@ -142,7 +142,7 @@ iqkv:
         #   active: true
         #   trialPeriodDays: 14
         #   pricingModel: "PER_SEAT"
-        #   features:
+        #   entitlement:
         #     maxUsers: 200
         #     maxProjects: 0
         #     features:

@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
  * populated at startup from {@link BillingConfigurationProperties}. Read-only after
  * initialization — O(1) lookups with no DB or network calls.
  *
- * <p>This is the single in-process authority on what features and pricing model each plan
+ * <p>This is the single in-process authority on what entitlement and pricing model each plan
  * includes. It is also the backing store for
  * {@code GET /api/v1/billing/internal/plans} consumed by IAM and Gateway.
  */
@@ -55,7 +55,7 @@ public class PlanFeatureRegistry {
         .filter(s -> s.planCode() != null)
         .collect(Collectors.toUnmodifiableMap(
             ProductSchema::planCode,
-            s -> s.features() != null ? s.features() : PlanEntitlement.NONE
+            s -> s.entitlement() != null ? s.entitlement() : PlanEntitlement.NONE
         ));
     this.pricingRegistry = props.planCatalog().products().values().stream()
         .filter(s -> s.planCode() != null)
@@ -70,7 +70,7 @@ public class PlanFeatureRegistry {
    * Falls back to {@link PlanEntitlement#NONE} when the plan code is unknown.
    *
    * @param planCode the plan code to look up (e.g. {@code "pro-monthly"})
-   * @return the plan's features, never {@code null}
+   * @return the plan's entitlement, never {@code null}
    */
   public PlanEntitlement resolveEntitlement(final String planCode) {
     if (planCode == null || planCode.isBlank()) {
@@ -114,7 +114,7 @@ public class PlanFeatureRegistry {
 
   /**
    * Returns the full catalog as a map of {@code planCode → PlanCatalogEntry}, bundling
-   * both features and pricing model. Used by the internal plans endpoint.
+   * both entitlement and pricing model. Used by the internal plans endpoint.
    *
    * @return unmodifiable map of planCode to PlanCatalogEntry
    */

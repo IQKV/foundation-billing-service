@@ -56,7 +56,7 @@ iqkv:
           active: true
           trialPeriodDays: 0
           pricingModel: "FLAT"
-          features:
+          entitlement:
             maxUsers: 5
             maxProjects: 3
             features:
@@ -78,7 +78,7 @@ iqkv:
           active: true
           trialPeriodDays: 0
           pricingModel: "FLAT"
-          features:
+          entitlement:
             maxUsers: 50
             maxProjects: 0
             features:

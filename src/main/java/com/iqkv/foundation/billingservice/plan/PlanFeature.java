@@ -22,13 +22,13 @@ package com.iqkv.foundation.billingservice.plan;
  * <p>The feature code (e.g. {@code "priority_support"}) is also the map key on
  * {@link PlanEntitlement#features()}, so it is carried here as well to make the object
  * self-contained when iterating the map or serialising individual entries (e.g. REST
- * responses, pricing-page DTOs). New features are added purely in YAML; no Java change required.
+ * responses, pricing-page DTOs). New entitlement are added purely in YAML; no Java change required.
  *
  * @param code        machine-readable identifier, matches the map key
  *                    (e.g. {@code "priority_support"})
  * @param title       human-readable label shown on pricing pages (e.g. {@code "Priority Support"})
  * @param value       feature value as a string — {@code "true"}/{@code "false"} for boolean
- *                    features, a number string for limits (e.g. {@code "10"})
+ *                    entitlement, a number string for limits (e.g. {@code "10"})
  * @param description optional longer description shown as a tooltip or subtitle on pricing pages
  */
 public record PlanFeature(

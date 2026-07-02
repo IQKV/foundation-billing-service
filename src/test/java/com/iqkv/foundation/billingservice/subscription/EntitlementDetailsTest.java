@@ -52,7 +52,7 @@ class EntitlementDetailsTest {
   }
 
   @Test
-  @DisplayName("Should use NONE features as fallback")
+  @DisplayName("Should use NONE entitlement as fallback")
   void shouldUseNoneFeaturesAsFallback() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.USER, "user-456");
     final Instant periodEnd = Instant.now().plusSeconds(2592000);

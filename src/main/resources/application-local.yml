@@ -52,7 +52,7 @@ iqkv:
           active: true
           trialPeriodDays: 14
           pricingModel: "FLAT"
-          features:
+          entitlement:
             maxUsers: 5
             maxProjects: 3
             features:
@@ -74,7 +74,7 @@ iqkv:
           scope: "TENANT"
           active: true
           pricingModel: "FLAT"
-          features:
+          entitlement:
             maxUsers: 50
             maxProjects: 0
             features:
@@ -101,7 +101,7 @@ iqkv:
         #   active: true
         #   trialPeriodDays: 14
         #   pricingModel: "PER_SEAT"
-        #   features:
+        #   entitlement:
         #     maxUsers: 200
         #     maxProjects: 0
         #     features:

@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
  * JWT ({@code plan_code} claim); this guard resolves the feature set from the local
  * {@link PlanFeatureRegistry} — no remote call is made at check time.
  *
- * <p>A feature is considered <em>enabled</em> when its entry exists in the plan's features
+ * <p>A feature is considered <em>enabled</em> when its entry exists in the plan's entitlement
  * map <strong>and</strong> its {@code value} is {@code "true"} (case-insensitive).
  * Missing entries and {@code "false"} values are both treated as disabled.
  *
@@ -82,7 +82,7 @@ public class PlanFeatureGuard {
    * the service, with the {@code planCode} sourced from the caller's JWT {@code plan_code} claim.
    *
    * @param planCode    the caller's active plan code; {@code null} or blank resolves to
-   *                    {@link PlanEntitlement#NONE} (all features disabled)
+   *                    {@link PlanEntitlement#NONE} (all entitlement disabled)
    * @param featureCode the feature that must be enabled (e.g. {@code "advanced_analytics"})
    * @throws PlanFeatureNotAvailableException if the feature is not enabled for this plan
    */

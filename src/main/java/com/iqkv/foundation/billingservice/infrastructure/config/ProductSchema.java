@@ -27,7 +27,7 @@ import com.iqkv.foundation.billingservice.plan.PricingModel;
  * Gateway-neutral configuration for a single product entry in the plan catalog.
  *
  * <p>Bound from {@code iqkv.billing.plan-catalog.products.<key>} in YAML.
- * {@code features} is optional — {@link PlanEntitlement#NONE} is used when absent.
+ * {@code entitlement} is optional — {@link PlanEntitlement#NONE} is used when absent.
  * {@code pricingModel} is optional — defaults to {@link PricingModel#FLAT} when absent,
  * preserving backward compatibility for all existing plan definitions.
  *
@@ -45,7 +45,7 @@ public record ProductSchema(
     @NotBlank String billingPeriod,
     @NotNull @Positive Integer priceMinor,
     @NotBlank String currency,
-    PlanEntitlement features,
+    PlanEntitlement entitlement,
     @NotBlank String scope,
     Boolean active,
     Integer trialPeriodDays,

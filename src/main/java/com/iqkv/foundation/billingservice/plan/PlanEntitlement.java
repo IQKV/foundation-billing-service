@@ -35,9 +35,9 @@ import java.util.Map;
  *       YAML change — no recompilation of any service.</li>
  * </ul>
  *
- * <p>Bound from {@code iqkv.billing.stripe.schema.products.<planCode>.features} in YAML.
+ * <p>Bound from {@code iqkv.billing.stripe.schema.products.<planCode>.entitlement} in YAML.
  * Absent quota fields default to the most restrictive value ({@code 1}).
- * An absent or empty {@code features} map is treated as an empty map.
+ * An absent or empty {@code entitlement} map is treated as an empty map.
  *
  * <p>{@link #NONE} is the safe fallback — most restrictive quotas, empty feature map.
  *
@@ -50,7 +50,7 @@ public record PlanEntitlement(
 ) {
 
   /**
-   * Safe fallback: most restrictive quotas, no display features.
+   * Safe fallback: most restrictive quotas, no display entitlement.
    */
   public static final PlanEntitlement NONE = new PlanEntitlement(1, 1, Collections.emptyMap());
 
@@ -68,7 +68,7 @@ public record PlanEntitlement(
    * Returns {@code true} if the feature map contains an entry for the given code
    * whose value is {@code "true"} (case-insensitive). O(1) lookup.
    *
-   * <p>Use this for display-only boolean features. For quota enforcement, use the
+   * <p>Use this for display-only boolean entitlement. For quota enforcement, use the
    * typed fields {@link #maxUsers()} and {@link #maxProjects()} directly.
    *
    * @param code the feature code (e.g. {@code "priority_support"})

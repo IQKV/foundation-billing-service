@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * <p>{@code scope} determines whether the plan is applicable to a tenant ({@code TENANT})
  * or a user ({@code USER}), matching the active rollout mode's subject scope.
  *
- * <p>{@code featureSet} is a JSON string describing the features included in the plan.
+ * <p>{@code featureSet} is a JSON string describing the entitlement included in the plan.
  * {@code priceMinor} is the price in the smallest currency unit (e.g. cents for USD).
  */
 public class Plan {

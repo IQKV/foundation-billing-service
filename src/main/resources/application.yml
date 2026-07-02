@@ -131,7 +131,7 @@ iqkv:
       # Config-driven plan catalog — the single source of truth for plan definitions.
       # BillingSeedRunner reads this map at startup, upserts rows into plan_catalog,
       # and synchronizes products/prices with the active payment gateway.
-      # PlanFeatureRegistry loads the features block into memory for zero-latency
+      # PlanFeatureRegistry loads the entitlement block into memory for zero-latency
       # entitlement evaluation and the /internal/plans endpoint consumed by IAM and Gateway.
       #
       # Fields per product:
@@ -154,7 +154,7 @@ iqkv:
       #   externalVariantId — Lemon Squeezy variant ID (integer string).
       #                       Operators must pre-create products/variants in the LS dashboard and
       #                       enter the variant ID here before deployment. Ignored by Stripe.
-      #   features:
+      #   entitlement:
       #     maxUsers        — max members per tenant/user (0 = unlimited)
       #     maxProjects     — max projects (0 = unlimited)
       #     features        — open list of named feature entries
@@ -176,7 +176,7 @@ iqkv:
       #     active: true
       #     trialPeriodDays: 0
       #     pricingModel: "FLAT"
-      #     features:
+      #     entitlement:
       #       maxUsers: 5
       #       maxProjects: 3
       #       features:
