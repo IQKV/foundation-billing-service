@@ -99,8 +99,8 @@ public class PlatformModeValidatorImpl implements PlatformModeValidator, Applica
       }
       log.warn(
           "Single-tenant mode is active but 'iqkv.billing.default-contact-email' is not configured. "
-              + "Stripe customers created from bootstrap events will have no email address. "
-              + "Set 'iqkv.billing.default-contact-email' to suppress this warning.");
+          + "Stripe customers created from bootstrap events will have no email address. "
+          + "Set 'iqkv.billing.default-contact-email' to suppress this warning.");
     } else {
       log.info("Billing default contact email configured for single-tenant mode: {}", defaultEmail);
     }

@@ -53,9 +53,9 @@ public class LemonSqueezyWebhookRestResource {
 
   @PostMapping("/lemon-squeezy")
   @Operation(summary = "Receive Lemon Squeezy webhook",
-      description = "Verifies X-Signature header and processes the event idempotently.")
+             description = "Verifies X-Signature header and processes the event idempotently.")
   @Parameter(name = "X-Signature", in = ParameterIn.HEADER, required = true,
-      description = "HMAC-SHA256 hex digest of the raw payload body")
+             description = "HMAC-SHA256 hex digest of the raw payload body")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Event received and processed"),
       @ApiResponse(responseCode = "400", description = "Invalid signature")

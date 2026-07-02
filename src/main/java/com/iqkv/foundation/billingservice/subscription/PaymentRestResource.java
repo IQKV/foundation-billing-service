@@ -105,7 +105,7 @@ public class PaymentRestResource {
   @Operation(
       summary = "Create refund for current subject",
       description = "Creates a refund for a payment for the current subject (tenant or user depending on mode). "
-          + "Requires TENANT_OWNER or ADMIN authority.")
+                    + "Requires TENANT_OWNER or ADMIN authority.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Refund created"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -124,7 +124,7 @@ public class PaymentRestResource {
   @Operation(
       summary = "List refunds for current subject",
       description = "Returns all refunds for the current subject (tenant or user depending on mode), "
-          + "ordered by occurred_at DESC. Requires TENANT_OWNER or ADMIN authority.")
+                    + "ordered by occurred_at DESC. Requires TENANT_OWNER or ADMIN authority.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Refund list returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),

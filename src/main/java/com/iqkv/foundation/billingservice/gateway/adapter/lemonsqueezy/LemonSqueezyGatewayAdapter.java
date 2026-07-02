@@ -274,22 +274,14 @@ public class LemonSqueezyGatewayAdapter implements PaymentGatewayPort {
     final Instant now = Instant.now();
 
     return switch (eventName) {
-      case LS_SUBSCRIPTION_CREATED ->
-          Optional.of(toSubscriptionEvent(root, eventId, "subscription.created", now));
-      case LS_SUBSCRIPTION_UPDATED, LS_SUBSCRIPTION_RESUMED ->
-          Optional.of(toSubscriptionEvent(root, eventId, "subscription.updated", now));
-      case LS_SUBSCRIPTION_CANCELLED, LS_SUBSCRIPTION_EXPIRED ->
-          Optional.of(toSubscriptionEvent(root, eventId, "subscription.deleted", now));
-      case LS_SUBSCRIPTION_PAUSED ->
-          Optional.of(toSubscriptionEventWithStatus(root, eventId, now, "paused"));
-      case LS_SUBSCRIPTION_UNPAUSED ->
-          Optional.of(toSubscriptionEventWithStatus(root, eventId, now, "active"));
-      case LS_PAYMENT_SUCCESS, LS_PAYMENT_RECOVERED ->
-          Optional.of(toInvoiceEvent(root, eventId, "invoice.payment_succeeded", now));
-      case LS_PAYMENT_FAILED ->
-          Optional.of(toPaymentFailureEvent(root, eventId, now));
-      case LS_ORDER_REFUNDED ->
-          Optional.of(toRefundEvent(root, eventId, now));
+      case LS_SUBSCRIPTION_CREATED -> Optional.of(toSubscriptionEvent(root, eventId, "subscription.created", now));
+      case LS_SUBSCRIPTION_UPDATED, LS_SUBSCRIPTION_RESUMED -> Optional.of(toSubscriptionEvent(root, eventId, "subscription.updated", now));
+      case LS_SUBSCRIPTION_CANCELLED, LS_SUBSCRIPTION_EXPIRED -> Optional.of(toSubscriptionEvent(root, eventId, "subscription.deleted", now));
+      case LS_SUBSCRIPTION_PAUSED -> Optional.of(toSubscriptionEventWithStatus(root, eventId, now, "paused"));
+      case LS_SUBSCRIPTION_UNPAUSED -> Optional.of(toSubscriptionEventWithStatus(root, eventId, now, "active"));
+      case LS_PAYMENT_SUCCESS, LS_PAYMENT_RECOVERED -> Optional.of(toInvoiceEvent(root, eventId, "invoice.payment_succeeded", now));
+      case LS_PAYMENT_FAILED -> Optional.of(toPaymentFailureEvent(root, eventId, now));
+      case LS_ORDER_REFUNDED -> Optional.of(toRefundEvent(root, eventId, now));
       default -> {
         log.debug("Unhandled LS event type: {}", eventName);
         yield Optional.empty();

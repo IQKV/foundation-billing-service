@@ -75,7 +75,7 @@ public class UserBillingSettingsRestResource {
   @Operation(
       summary = "Create billing settings",
       description = "Creates billing settings for the authenticated user. Billing email and currency are required. "
-          + "Returns 409 if settings already exist. Only active in SINGLE_TENANT mode.")
+                    + "Returns 409 if settings already exist. Only active in SINGLE_TENANT mode.")
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Billing settings created"),
       @ApiResponse(responseCode = "400", description = "Validation error"),
@@ -95,7 +95,7 @@ public class UserBillingSettingsRestResource {
   @Operation(
       summary = "Update billing settings",
       description = "Partially updates billing settings. Only non-null fields are applied. "
-          + "Only active in SINGLE_TENANT mode.")
+                    + "Only active in SINGLE_TENANT mode.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Billing settings updated"),
       @ApiResponse(responseCode = "400", description = "Validation error"),
@@ -114,7 +114,7 @@ public class UserBillingSettingsRestResource {
   @Operation(
       summary = "Create customer portal session",
       description = "Creates a Stripe Customer Portal session for the authenticated user and returns the URL for redirection. "
-          + "Only active in SINGLE_TENANT mode.")
+                    + "Only active in SINGLE_TENANT mode.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Portal session created"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),

@@ -66,15 +66,15 @@ public class SubscriptionService {
   private final MessagingService messagingService;
 
   public SubscriptionService(final SubscriptionMapper subscriptionMapper,
-                              final RefundMapper refundMapper,
-                              final SubscriptionSubjectResolver subjectResolver,
-                              final PaymentGatewayPort paymentGatewayPort,
-                              final BillingSettingsMapper billingSettingsMapper,
-                              final com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper userBillingSettingsMapper,
-                              final PlanMapper planMapper,
-                              final PlanFeatureRegistry planFeatureRegistry,
-                              final MeterRegistry meterRegistry,
-                              final MessagingService messagingService) {
+                             final RefundMapper refundMapper,
+                             final SubscriptionSubjectResolver subjectResolver,
+                             final PaymentGatewayPort paymentGatewayPort,
+                             final BillingSettingsMapper billingSettingsMapper,
+                             final com.iqkv.foundation.billingservice.infrastructure.persistence.UserBillingSettingsMapper userBillingSettingsMapper,
+                             final PlanMapper planMapper,
+                             final PlanFeatureRegistry planFeatureRegistry,
+                             final MeterRegistry meterRegistry,
+                             final MessagingService messagingService) {
     this.subscriptionMapper = subscriptionMapper;
     this.refundMapper = refundMapper;
     this.subjectResolver = subjectResolver;
@@ -225,10 +225,10 @@ public class SubscriptionService {
       final UUID userId,
       final SubscriptionDtos.CreateCheckoutSessionRequest request) {
     final SubscriptionSubject subject = subjectResolver.resolveSubject(tenantKey, userId);
-    
+
     String externalCustomerId;
     final Map<String, String> metadata = new java.util.HashMap<>();
-    
+
     if (subject.type() == SubjectType.TENANT) {
       final var settings = billingSettingsMapper.findByTenantKey(subject.key())
           .orElseThrow(() -> {
@@ -342,8 +342,8 @@ public class SubscriptionService {
    * delegating to the payment gateway. The gateway webhook will write the updated
    * {@code quantity} back to the local {@code subscriptions} cache automatically.
    *
-   * @throws IllegalStateException      if the subscription's plan is not {@code PER_SEAT}
-   * @throws SeatLimitExceededException if the requested seat count exceeds {@code maxUsers}
+   * @throws IllegalStateException          if the subscription's plan is not {@code PER_SEAT}
+   * @throws SeatLimitExceededException     if the requested seat count exceeds {@code maxUsers}
    * @throws TenantContextMismatchException if {@code tenantKey} does not own the subscription
    */
   public void adjustSeats(
@@ -435,10 +435,10 @@ public class SubscriptionService {
       final UUID userId,
       final SubscriptionDtos.CreateRefundRequest request) {
     final var subject = subjectResolver.resolveSubject(tenantKey, userId);
-    
+
     String externalCustomerId;
     final java.util.Map<String, String> metadata = new java.util.HashMap<>();
-    
+
     if (subject.type() == SubjectType.TENANT) {
       final var settings = billingSettingsMapper.findByTenantKey(subject.key())
           .orElseThrow(() -> {

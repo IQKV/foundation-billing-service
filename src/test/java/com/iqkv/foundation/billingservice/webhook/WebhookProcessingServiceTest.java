@@ -150,8 +150,8 @@ class WebhookProcessingServiceTest {
     assertThat(result).isFalse();
     verify(webhookLogMapper).insertIfNotExists(argThat(log ->
         log.getExternalEventId().equals("evt_456")
-            && log.getEventType().equals("customer.subscription.created")
-            && log.getStatus().equals("RECEIVED")
+        && log.getEventType().equals("customer.subscription.created")
+        && log.getStatus().equals("RECEIVED")
     ));
   }
 
@@ -178,7 +178,7 @@ class WebhookProcessingServiceTest {
     // Assert
     verify(subscriptionMapper).upsert(argThat(sub ->
         sub.getExternalSubscriptionId().equals(externalSubscriptionId)
-            && sub.getTenantKey().equals(tenantKey)
+        && sub.getTenantKey().equals(tenantKey)
     ));
     verify(messagingService).publishSubscriptionCreated(
         eq(tenantKey), eq(externalSubscriptionId),

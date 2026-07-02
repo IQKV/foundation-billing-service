@@ -95,13 +95,13 @@ class UserBillingSettingsServiceImplTest {
     verify(userBillingSettingsMapper).findByUserId(userId);
     verify(paymentGatewayPort).createCustomer(argThat(cmd ->
         cmd.name().equals("user:" + userId)
-            && cmd.email() == null
-            && cmd.metadata().get("userId").equals(userId.toString())
+        && cmd.email() == null
+        && cmd.metadata().get("userId").equals(userId.toString())
     ));
     verify(userBillingSettingsMapper).insert(argThat(settings ->
         settings.getUserId().equals(userId)
-            && settings.getExternalCustomerId().equals(externalCustomerId)
-            && settings.getCurrency().equals("USD")
+        && settings.getExternalCustomerId().equals(externalCustomerId)
+        && settings.getCurrency().equals("USD")
     ));
   }
 

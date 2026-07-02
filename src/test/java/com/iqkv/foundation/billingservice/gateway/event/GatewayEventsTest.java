@@ -259,8 +259,8 @@ class GatewayEventsTest {
   }
 
   private GatewaySubscriptionEvent subscriptionEventAt(final String eventId,
-                                                        final String eventType,
-                                                        final Instant occurredAt) {
+                                                       final String eventType,
+                                                       final Instant occurredAt) {
     final var now = Instant.now();
     return new GatewaySubscriptionEvent(
         eventId, eventType, occurredAt, "STRIPE",

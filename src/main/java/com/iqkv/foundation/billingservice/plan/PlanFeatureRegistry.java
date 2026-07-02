@@ -25,7 +25,7 @@ import com.iqkv.foundation.billingservice.infrastructure.config.ProductSchema;
 import org.springframework.stereotype.Component;
 
 /**
-* In-memory registry of {@code planCode → PlanEntitlement} and {@code planCode → PricingModel},
+ * In-memory registry of {@code planCode → PlanEntitlement} and {@code planCode → PricingModel},
  * populated at startup from {@link BillingConfigurationProperties}. Read-only after
  * initialization — O(1) lookups with no DB or network calls.
  *

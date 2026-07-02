@@ -83,7 +83,7 @@ class TrialNotificationServiceTest {
     verify(billingSettingsMapper).findByTenantKey(tenantKey);
     verify(messagingService).publishNotification(argThat(event ->
         event.getRecipientEmail().equals("billing@example.com")
-            && event.getType() == NotificationEventType.TRIAL_ENDING
+        && event.getType() == NotificationEventType.TRIAL_ENDING
     ));
   }
 
@@ -107,7 +107,7 @@ class TrialNotificationServiceTest {
     verify(billingSettingsMapper).findByTenantKey(tenantKey);
     verify(messagingService).publishNotification(argThat(event ->
         event.getRecipientEmail().equals("billing@example.com")
-            && event.getType() == NotificationEventType.PAYMENT_OVERDUE
+        && event.getType() == NotificationEventType.PAYMENT_OVERDUE
     ));
   }
 

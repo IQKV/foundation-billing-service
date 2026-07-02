@@ -51,7 +51,7 @@ public interface UserBillingSettingsService {
   /**
    * Creates billing settings for the given user.
    *
-   * @param userId the user ID
+   * @param userId  the user ID
    * @param request the create request
    * @return the created {@link UserBillingSettings}
    * @throws com.iqkv.foundation.billingservice.shared.exception.DuplicateResourceException if settings already exist for the user
@@ -61,7 +61,7 @@ public interface UserBillingSettingsService {
   /**
    * Partially updates billing settings for the given user.
    *
-   * @param userId the user ID
+   * @param userId  the user ID
    * @param request the update request
    * @return the updated {@link UserBillingSettings}
    * @throws com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException if no settings exist for the user
