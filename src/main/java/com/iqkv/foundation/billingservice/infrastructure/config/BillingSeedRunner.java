@@ -21,7 +21,7 @@ import java.util.Collection;
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.plan.Plan;
-import com.iqkv.foundation.billingservice.plan.PlanFeatures;
+import com.iqkv.foundation.billingservice.plan.PlanEntitlement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -43,7 +43,7 @@ import tools.jackson.databind.json.JsonMapper;
  * field from YAML is pre-populated into {@code plan.externalPriceId} before the call so
  * the LS adapter can look up the variant without creating anything.
  *
- * <p>The typed {@link PlanFeatures} from each product schema is serialized to JSON
+ * <p>The typed {@link PlanEntitlement} from each product schema is serialized to JSON
  * and stored in the {@code feature_set} column for observability. It is never read
  * back from the DB for access decisions — the in-memory {@code PlanFeatureRegistry}
  * is the authoritative source at runtime.
@@ -98,7 +98,7 @@ public class BillingSeedRunner implements ApplicationRunner {
           return newPlan;
         });
 
-    final PlanFeatures features = schema.features() != null ? schema.features() : PlanFeatures.NONE;
+    final PlanEntitlement features = schema.features() != null ? schema.features() : PlanEntitlement.NONE;
 
     plan.setDisplayName(schema.displayName());
     plan.setDescription(schema.description());
@@ -157,11 +157,11 @@ public class BillingSeedRunner implements ApplicationRunner {
     log.info("Successfully seeded and synchronized plan: {}", plan.getPlanCode());
   }
 
-  private String serializeFeatures(final PlanFeatures features, final String planCode) {
+  private String serializeFeatures(final PlanEntitlement features, final String planCode) {
     try {
       return jsonMapper.writeValueAsString(features);
     } catch (final Exception e) {
-      log.warn("Failed to serialize PlanFeatures for plan {}, storing null: {}", planCode, e.getMessage());
+      log.warn("Failed to serialize PlanEntitlement for plan {}, storing null: {}", planCode, e.getMessage());
       return null;
     }
   }

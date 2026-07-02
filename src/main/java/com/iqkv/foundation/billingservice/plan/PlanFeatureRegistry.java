@@ -25,7 +25,7 @@ import com.iqkv.foundation.billingservice.infrastructure.config.ProductSchema;
 import org.springframework.stereotype.Component;
 
 /**
- * In-memory registry of {@code planCode → PlanFeatures} and {@code planCode → PricingModel},
+* In-memory registry of {@code planCode → PlanEntitlement} and {@code planCode → PricingModel},
  * populated at startup from {@link BillingConfigurationProperties}. Read-only after
  * initialization — O(1) lookups with no DB or network calls.
  *
@@ -44,10 +44,10 @@ public class PlanFeatureRegistry {
    * @param features     typed feature set for entitlement checks and quota enforcement
    * @param pricingModel pricing mode — {@link PricingModel#FLAT} or {@link PricingModel#PER_SEAT}
    */
-  public record PlanCatalogEntry(String planCode, PlanFeatures features, PricingModel pricingModel) {
+  public record PlanCatalogEntry(String planCode, PlanEntitlement features, PricingModel pricingModel) {
   }
 
-  private final Map<String, PlanFeatures> featureRegistry;
+  private final Map<String, PlanEntitlement> featureRegistry;
   private final Map<String, PricingModel> pricingRegistry;
 
   public PlanFeatureRegistry(final BillingConfigurationProperties props) {
@@ -55,7 +55,7 @@ public class PlanFeatureRegistry {
         .filter(s -> s.planCode() != null)
         .collect(Collectors.toUnmodifiableMap(
             ProductSchema::planCode,
-            s -> s.features() != null ? s.features() : PlanFeatures.NONE
+            s -> s.features() != null ? s.features() : PlanEntitlement.NONE
         ));
     this.pricingRegistry = props.planCatalog().products().values().stream()
         .filter(s -> s.planCode() != null)
@@ -66,17 +66,17 @@ public class PlanFeatureRegistry {
   }
 
   /**
-   * Returns the {@link PlanFeatures} for the given plan code.
-   * Falls back to {@link PlanFeatures#NONE} when the plan code is unknown.
+   * Returns the {@link PlanEntitlement} for the given plan code.
+   * Falls back to {@link PlanEntitlement#NONE} when the plan code is unknown.
    *
    * @param planCode the plan code to look up (e.g. {@code "pro-monthly"})
    * @return the plan's features, never {@code null}
    */
-  public PlanFeatures forPlan(final String planCode) {
+  public PlanEntitlement resolveEntitlement(final String planCode) {
     if (planCode == null || planCode.isBlank()) {
-      return PlanFeatures.NONE;
+      return PlanEntitlement.NONE;
     }
-    return featureRegistry.getOrDefault(planCode, PlanFeatures.NONE);
+    return featureRegistry.getOrDefault(planCode, PlanEntitlement.NONE);
   }
 
   /**
@@ -103,12 +103,12 @@ public class PlanFeatureRegistry {
   }
 
   /**
-   * Returns the full catalog as a map of {@code planCode → PlanFeatures}.
+   * Returns the full catalog as a map of {@code planCode → PlanEntitlement}.
    * Used internally where only feature data is needed.
    *
-   * @return unmodifiable map of planCode to PlanFeatures
+   * @return unmodifiable map of planCode to PlanEntitlement
    */
-  public Map<String, PlanFeatures> all() {
+  public Map<String, PlanEntitlement> all() {
     return featureRegistry;
   }
 

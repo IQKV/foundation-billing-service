@@ -18,7 +18,7 @@ package com.iqkv.foundation.billingservice.shared.exception;
 
 /**
  * Thrown when a requested seat count exceeds the ceiling defined by the plan's
- * {@code PlanFeatures.maxUsers} (0 = unlimited).
+ * {@code PlanEntitlement.maxUsers} (0 = unlimited).
  *
  * <p>Maps to HTTP {@code 422 Unprocessable Entity} — the request is well-formed but
  * cannot be fulfilled within the plan's seat limit. The response body carries

@@ -115,7 +115,7 @@ public class SubscriptionService {
     if (requestedSeats < 1) {
       throw new IllegalArgumentException("Seat count must be at least 1");
     }
-    final int maxUsers = planFeatureRegistry.forPlan(plan.getPlanCode()).maxUsers();
+    final int maxUsers = planFeatureRegistry.resolveEntitlement(plan.getPlanCode()).maxUsers();
     if (maxUsers > 0 && requestedSeats > maxUsers) {
       throw new SeatLimitExceededException(plan.getPlanCode(), requestedSeats, maxUsers);
     }

@@ -20,7 +20,7 @@ package com.iqkv.foundation.billingservice.plan;
  * Value object for a single named feature entry within a plan's feature map.
  *
  * <p>The feature code (e.g. {@code "priority_support"}) is also the map key on
- * {@link PlanFeatures#features()}, so it is carried here as well to make the object
+ * {@link PlanEntitlement#features()}, so it is carried here as well to make the object
  * self-contained when iterating the map or serialising individual entries (e.g. REST
  * responses, pricing-page DTOs). New features are added purely in YAML; no Java change required.
  *

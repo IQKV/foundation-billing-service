@@ -18,7 +18,7 @@ package com.iqkv.foundation.billingservice.subscription;
 
 import java.time.Instant;
 
-import com.iqkv.foundation.billingservice.plan.PlanFeatures;
+import com.iqkv.foundation.billingservice.plan.PlanEntitlement;
 
 /**
  * Represents the entitlement details derived from an active subscription.
@@ -34,6 +34,6 @@ public record EntitlementDetails(
     String planCode,
     String status,
     Instant currentPeriodEnd,
-    PlanFeatures features
+    PlanEntitlement features
 ) {
 }

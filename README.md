@@ -24,7 +24,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 - **Webhook processing** — payment gateway webhooks are ingested and processed idempotently; duplicate delivery is safe
 - **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, `invoice.created`, `invoice.finalized`, `invoice.updated`, `payment.failed`, and `refund.created` to the platform event bus
 - **Multi-gateway strategy** — `PaymentGatewayPort` interface decouples business logic from gateway SDKs; Stripe and Lemon Squeezy are implemented
-- **Plan catalog** — plan definitions with typed `PlanFeatures` (`maxUsers`, `maxProjects` as typed quota fields; extensible `features` map keyed by feature code such as `priority_support`; `trialPeriodDays` to define free trial length in days, 0 means no trial) defined in YAML configuration. Each plan carries a `pricingModel` field — `FLAT` (fixed price per period, default) or `PER_SEAT` (price × seat count; `maxUsers` acts as the seat ceiling). `BillingSeedRunner` synchronizes plans with the Stripe catalog at application startup. Plan management is config-driven — there is no REST API for creating, updating, or deactivating plans. `PlanFeatureRegistry` serves an in-memory feature map loaded at startup for zero-latency entitlement evaluation and the internal plans endpoint (`/internal/plans`); features are the single source of truth for platform-wide access control
+- **Plan catalog** — plan definitions with typed `PlanEntitlement` (`maxUsers`, `maxProjects` as typed quota fields; extensible `features` map keyed by feature code such as `priority_support`; `trialPeriodDays` to define free trial length in days, 0 means no trial) defined in YAML configuration. Each plan carries a `pricingModel` field — `FLAT` (fixed price per period, default) or `PER_SEAT` (price × seat count; `maxUsers` acts as the seat ceiling). `BillingSeedRunner` synchronizes plans with the Stripe catalog at application startup. Plan management is config-driven — there is no REST API for creating, updating, or deactivating plans. `PlanFeatureRegistry` serves an in-memory feature map loaded at startup for zero-latency entitlement evaluation and the internal plans endpoint (`/internal/plans`); features are the single source of truth for platform-wide access control
 - **Observability** — instrumented with Micrometer for Prometheus metrics; includes a custom Grafana dashboard for business KPIs (revenue, subscriptions, webhook health)
 
 ## Quick Links
@@ -124,7 +124,7 @@ Base path: `/api/v1/billing`
 | ------ | ------------------ | ------------------------------ | ------------------------------------------------------------------------ |
 | `GET`  | `/entitlements/me` | JWT `TENANT_OWNER` or `MEMBER` | Active plan, subscription status, and typed features for current subject |
 
-**Entitlement evaluation is tightly coupled with plan features** — the response includes the complete `PlanFeatures` record for the tenant's active plan, enabling fine-grained access control decisions in client applications. Returns `404` when no active subscription exists. Resolves subject by rollout mode (tenant in multi-tenant, user in single-tenant).
+**Entitlement evaluation is tightly coupled with plan features** — the response includes the complete `PlanEntitlement` record for the tenant's active plan, enabling fine-grained access control decisions in client applications. Returns `404` when no active subscription exists. Resolves subject by rollout mode (tenant in multi-tenant, user in single-tenant).
 
 **Example Response (with trial):**
 
@@ -358,7 +358,7 @@ src/main/java/com/iqkv/foundation/billingservice/
 │   └── adapter/        # Gateway implementations
 │       ├── stripe/     # Stripe implementation of PaymentGatewayPort
 │       └── lemon-squeezy/ # Lemon Squeezy implementation of PaymentGatewayPort
-├── plan/               # Plan catalog — CRUD, typed PlanFeatures, PlanFeatureRegistry, eligibility policy
+├── plan/               # Plan catalog — CRUD, typed PlanEntitlement, PlanFeatureRegistry, eligibility policy
 ├── subscription/       # Subscription cache, subject resolution, entitlement evaluation, entitlements endpoint
 ├── settings/           # Tenant billing settings (contact email, tax ID, external customer ID)
 ├── userbilling/        # Per-user billing settings (single-tenant mode)

@@ -24,7 +24,7 @@ package com.iqkv.foundation.billingservice.plan;
  *       Stripe line item is always {@code quantity = 1}.</li>
  *   <li>{@link #PER_SEAT} — the price is multiplied by the number of purchased seats.
  *       Stripe line item uses {@code quantity = seatCount}. The plan's
- *       {@code PlanFeatures.maxUsers} acts as the seat ceiling (0 = unlimited).</li>
+ *       {@code PlanEntitlement.maxUsers} acts as the seat ceiling (0 = unlimited).</li>
  * </ul>
  *
  * <p>Both modes use a Stripe {@code UNIT_AMOUNT} recurring price — the distinction is

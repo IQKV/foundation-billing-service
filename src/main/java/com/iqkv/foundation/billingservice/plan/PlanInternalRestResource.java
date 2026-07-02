@@ -51,7 +51,7 @@ public class PlanInternalRestResource {
    * @param features     the typed feature set for this plan
    * @param pricingModel pricing mode — {@code FLAT} or {@code PER_SEAT}; never null
    */
-  public record PlanCatalogEntry(String planCode, PlanFeatures features, PricingModel pricingModel) {
+  public record PlanCatalogEntry(String planCode, PlanEntitlement features, PricingModel pricingModel) {
   }
 
   /**
@@ -76,7 +76,7 @@ public class PlanInternalRestResource {
       String billingPeriod,
       Integer priceMinor,
       String currency,
-      PlanFeatures features,
+      PlanEntitlement features,
       String scope,
       Boolean active,
       PricingModel pricingModel
@@ -129,7 +129,7 @@ public class PlanInternalRestResource {
             schema.billingPeriod(),
             schema.priceMinor(),
             schema.currency(),
-            schema.features() != null ? schema.features() : PlanFeatures.NONE,
+            schema.features() != null ? schema.features() : PlanEntitlement.NONE,
             schema.scope(),
             schema.active() != null ? schema.active() : Boolean.TRUE,
             schema.effectivePricingModel()

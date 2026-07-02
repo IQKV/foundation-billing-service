@@ -20,7 +20,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import com.iqkv.foundation.billingservice.infrastructure.security.JwtClaimNames;
-import com.iqkv.foundation.billingservice.plan.PlanFeatures;
+import com.iqkv.foundation.billingservice.plan.PlanEntitlement;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Self-service endpoint exposing the current subject's entitlement details.
  *
  * <p>Returns the resolved plan code, subscription status, period end, and typed
- * {@link PlanFeatures} for the active subscription of the authenticated subject.
+ * {@link PlanEntitlement} for the active subscription of the authenticated subject.
  * Suitable for UI plan status display and one-off quota lookups.
  */
 @RestController
@@ -61,7 +61,7 @@ public class EntitlementRestResource {
       String planCode,
       String status,
       Instant currentPeriodEnd,
-      PlanFeatures features
+      PlanEntitlement features
   ) {
   }
 

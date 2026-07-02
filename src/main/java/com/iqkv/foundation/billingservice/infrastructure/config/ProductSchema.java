@@ -20,14 +20,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-import com.iqkv.foundation.billingservice.plan.PlanFeatures;
+import com.iqkv.foundation.billingservice.plan.PlanEntitlement;
 import com.iqkv.foundation.billingservice.plan.PricingModel;
 
 /**
  * Gateway-neutral configuration for a single product entry in the plan catalog.
  *
  * <p>Bound from {@code iqkv.billing.plan-catalog.products.<key>} in YAML.
- * {@code features} is optional — {@link PlanFeatures#NONE} is used when absent.
+ * {@code features} is optional — {@link PlanEntitlement#NONE} is used when absent.
  * {@code pricingModel} is optional — defaults to {@link PricingModel#FLAT} when absent,
  * preserving backward compatibility for all existing plan definitions.
  *
@@ -45,7 +45,7 @@ public record ProductSchema(
     @NotBlank String billingPeriod,
     @NotNull @Positive Integer priceMinor,
     @NotBlank String currency,
-    PlanFeatures features,
+    PlanEntitlement features,
     @NotBlank String scope,
     Boolean active,
     Integer trialPeriodDays,

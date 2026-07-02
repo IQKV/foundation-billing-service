@@ -22,7 +22,7 @@ import java.time.Instant;
 import java.util.Map;
 
 import com.iqkv.foundation.billingservice.plan.PlanFeature;
-import com.iqkv.foundation.billingservice.plan.PlanFeatures;
+import com.iqkv.foundation.billingservice.plan.PlanEntitlement;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +36,7 @@ class EntitlementDetailsTest {
     final String planCode = "pro-monthly";
     final String status = "active";
     final Instant periodEnd = Instant.now().plusSeconds(2592000);
-    final PlanFeatures features = new PlanFeatures(50, 0, Map.of(
+    final PlanEntitlement features = new PlanEntitlement(50, 0, Map.of(
         "priority_support", new PlanFeature("priority_support", "Priority Support", "true", "Access to priority support channel")
     ));
 
@@ -57,11 +57,11 @@ class EntitlementDetailsTest {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.USER, "user-456");
     final Instant periodEnd = Instant.now().plusSeconds(2592000);
 
-    final var details = new EntitlementDetails(subject, "basic-monthly", "trialing", periodEnd, PlanFeatures.NONE);
+    final var details = new EntitlementDetails(subject, "basic-monthly", "trialing", periodEnd, PlanEntitlement.NONE);
 
     assertThat(details.subject().type()).isEqualTo(SubjectType.USER);
     assertThat(details.subject().key()).isEqualTo("user-456");
-    assertThat(details.features()).isEqualTo(PlanFeatures.NONE);
+    assertThat(details.features()).isEqualTo(PlanEntitlement.NONE);
     assertThat(details.features().has("priority_support")).isFalse();
     assertThat(details.features().maxUsers()).isEqualTo(1);
   }
@@ -71,7 +71,7 @@ class EntitlementDetailsTest {
   void shouldSupportRecordEquality() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Instant periodEnd = Instant.now();
-    final PlanFeatures features = new PlanFeatures(5, 3, Map.of());
+    final PlanEntitlement features = new PlanEntitlement(5, 3, Map.of());
     final var details1 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, features);
     final var details2 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, features);
 
@@ -84,7 +84,7 @@ class EntitlementDetailsTest {
   void shouldHaveMeaningfulToString() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final var details = new EntitlementDetails(
-        subject, "pro-monthly", "active", Instant.now(), PlanFeatures.NONE
+        subject, "pro-monthly", "active", Instant.now(), PlanEntitlement.NONE
     );
 
     final String toString = details.toString();
@@ -99,7 +99,7 @@ class EntitlementDetailsTest {
   void shouldCreateEntitlementDetailsForDifferentStatuses() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Instant periodEnd = Instant.now();
-    final PlanFeatures features = PlanFeatures.NONE;
+    final PlanEntitlement features = PlanEntitlement.NONE;
 
     final var activeDetails = new EntitlementDetails(subject, "pro-monthly", "active", periodEnd, features);
     final var trialingDetails = new EntitlementDetails(subject, "pro-monthly", "trialing", periodEnd, features);

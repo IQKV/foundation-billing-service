@@ -21,7 +21,7 @@ import java.util.Optional;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.SubscriptionMapper;
 import com.iqkv.foundation.billingservice.plan.PlanFeatureRegistry;
-import com.iqkv.foundation.billingservice.plan.PlanFeatures;
+import com.iqkv.foundation.billingservice.plan.PlanEntitlement;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
  *
  * <p>Queries the local subscription cache by {@code (subject_type, subject_key)}.
  * If an active subscription is found, resolves the human-readable {@code planCode}
- * from the plan catalog and looks up the typed {@link PlanFeatures} from the
+ * from the plan catalog and looks up the typed {@link PlanEntitlement} from the
  * in-memory {@link PlanFeatureRegistry}.
  *
  * <p>The {@code planId} on a subscription holds the payment gateway's price reference
@@ -73,13 +73,13 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
           "free",
           "active", // free plan is always active
           null, // free plan has no period end
-          PlanFeatures.NONE
+          PlanEntitlement.NONE
       ));
     }
 
     final Subscription subscription = activeSubscription.get();
     final String planCode = resolvePlanCode(subscription.getPlanId());
-    final PlanFeatures features = planFeatureRegistry.forPlan(planCode);
+    final PlanEntitlement features = planFeatureRegistry.resolveEntitlement(planCode);
 
     meterRegistry.counter("billing_entitlements_check_total",
         "result", "allowed",

@@ -9,7 +9,7 @@ The JWT must be passed as a `Bearer` token in the `Authorization` header.
 
 ## Plan-Based Feature Access Control
 
-The billing service is the **single source of truth** for plan features across the platform. All access control decisions are driven by the `PlanFeatures` configuration defined in YAML.
+The billing service is the **single source of truth** for plan features across the platform. All access control decisions are driven by the `PlanEntitlement` configuration defined in YAML.
 
 ### Architecture Overview
 
@@ -17,7 +17,7 @@ The billing service is the **single source of truth** for plan features across t
 YAML Config → PlanFeatureRegistry → /internal/plans → Gateway/Services → Access Control
 ```
 
-1. **Plan Definition**: Features defined in `application-prd.yml` as typed `PlanFeatures` records
+1. **Plan Definition**: Features defined in `application-prd.yml` as typed `PlanEntitlement` records
 2. **In-Memory Registry**: `PlanFeatureRegistry` loads features at startup for zero-latency lookups
 3. **Internal API**: `/internal/plans` serves feature catalog to gateway and downstream services
 4. **Distributed Caching**: Each service maintains local `PlanCatalogCache` with 10-minute refresh
@@ -25,7 +25,7 @@ YAML Config → PlanFeatureRegistry → /internal/plans → Gateway/Services →
 
 ### Feature Types
 
-`PlanFeatures` uses a split design:
+`PlanEntitlement` uses a split design:
 
 - **`maxUsers`** (integer): Maximum users per tenant — typed quota field (0 = unlimited); for `PER_SEAT` plans also acts as the maximum purchasable seat count
 - **`maxProjects`** (integer): Maximum projects per tenant — typed quota field (0 = unlimited)
@@ -173,7 +173,7 @@ The `{tenantKey}` is validated against the authenticated tenant's JWT `tenant_id
 | ------ | ------------------ | ------------------------------ | ------------------------------------------------------------------------ |
 | `GET`  | `/entitlements/me` | JWT `TENANT_OWNER` or `MEMBER` | Active plan, subscription status, and typed features for current subject |
 
-**Entitlement evaluation is tightly coupled with plan features** — this endpoint serves as the primary integration point between billing and platform access control. The response includes the complete `PlanFeatures` record for the tenant's active plan, enabling fine-grained access control decisions in client applications.
+**Entitlement evaluation is tightly coupled with plan features** — this endpoint serves as the primary integration point between billing and platform access control. The response includes the complete `PlanEntitlement` record for the tenant's active plan, enabling fine-grained access control decisions in client applications.
 
 **Response Example (with trial):**
 
