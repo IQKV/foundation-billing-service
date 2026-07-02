@@ -12,7 +12,7 @@
         <result property="billingPeriod" column="billing_period"/>
         <result property="priceMinor" column="price_minor"/>
         <result property="currency" column="currency"/>
-        <result property="featureSet" column="feature_set"/>
+        <result property="entitlement" column="entitlement"/>
         <result property="scope" column="scope"/>
         <result property="externalProductId" column="external_product_id"/>
         <result property="externalPriceId" column="external_price_id"/>
@@ -26,7 +26,7 @@
 
     <select id="findById" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
+        entitlement, scope, external_product_id, external_price_id, active, trial_period_days,
         pricing_model, gateway_type, created_at, updated_at
         FROM plan_catalog
         WHERE id = #{id}::uuid
@@ -34,7 +34,7 @@
 
     <select id="findByPlanCode" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
+        entitlement, scope, external_product_id, external_price_id, active, trial_period_days,
         pricing_model, gateway_type, created_at, updated_at
         FROM plan_catalog
         WHERE plan_code = #{planCode}
@@ -42,7 +42,7 @@
 
     <select id="findByExternalPriceId" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
+        entitlement, scope, external_product_id, external_price_id, active, trial_period_days,
         pricing_model, gateway_type, created_at, updated_at
         FROM plan_catalog
         WHERE external_price_id = #{externalPriceId}
@@ -50,7 +50,7 @@
 
     <select id="findAllActive" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
+        entitlement, scope, external_product_id, external_price_id, active, trial_period_days,
         pricing_model, gateway_type, created_at, updated_at
         FROM plan_catalog
         WHERE active = true
@@ -59,7 +59,7 @@
 
     <select id="findAll" resultMap="planResultMap">
         SELECT id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
+        entitlement, scope, external_product_id, external_price_id, active, trial_period_days,
         pricing_model, gateway_type, created_at, updated_at
         FROM plan_catalog
         ORDER BY plan_code ASC
@@ -68,13 +68,13 @@
     <insert id="insert" parameterType="com.iqkv.foundation.billingservice.plan.Plan">
         INSERT INTO plan_catalog
         (id, plan_code, display_name, description, billing_period, price_minor, currency,
-        feature_set, scope, external_product_id, external_price_id, active, trial_period_days,
+        entitlement, scope, external_product_id, external_price_id, active, trial_period_days,
         pricing_model, gateway_type, created_at, updated_at)
         VALUES
         (COALESCE(#{id}::uuid, gen_random_uuid()),
         #{planCode}, #{displayName}, #{description}, #{billingPeriod}, #{priceMinor},
         COALESCE(#{currency}, 'USD'),
-        #{featureSet},
+        #{entitlement},
         #{scope},
         #{externalProductId},
         #{externalPriceId},
@@ -93,7 +93,7 @@
         billing_period = #{billingPeriod},
         price_minor = #{priceMinor},
         currency = #{currency},
-        feature_set = #{featureSet},
+        entitlement = #{entitlement},
         scope = #{scope},
         external_product_id = #{externalProductId},
         external_price_id = #{externalPriceId},

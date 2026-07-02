@@ -44,7 +44,7 @@ import tools.jackson.databind.json.JsonMapper;
  * the LS adapter can look up the variant without creating anything.
  *
  * <p>The typed {@link PlanEntitlement} from each product schema is serialized to JSON
- * and stored in the {@code feature_set} column for observability. It is never read
+ * and stored in the {@code entitlement} column for observability. It is never read
  * back from the DB for access decisions — the in-memory {@code PlanFeatureRegistry}
  * is the authoritative source at runtime.
  */
@@ -98,14 +98,14 @@ public class BillingSeedRunner implements ApplicationRunner {
           return newPlan;
         });
 
-    final PlanEntitlement features = schema.entitlement() != null ? schema.entitlement() : PlanEntitlement.NONE;
+    final PlanEntitlement planEntitlement = schema.entitlement() != null ? schema.entitlement() : PlanEntitlement.NONE;
 
     plan.setDisplayName(schema.displayName());
     plan.setDescription(schema.description());
     plan.setBillingPeriod(schema.billingPeriod());
     plan.setPriceMinor(schema.priceMinor());
     plan.setCurrency(schema.currency());
-    plan.setFeatureSet(serializeFeatures(features, schema.planCode()));
+    plan.setEntitlement(serializeEntitlement(planEntitlement, schema.planCode()));
     plan.setScope(schema.scope());
     plan.setActive(schema.active() != null ? schema.active() : Boolean.TRUE);
     plan.setTrialPeriodDays(schema.trialPeriodDays() != null && schema.trialPeriodDays() > 0
@@ -157,7 +157,7 @@ public class BillingSeedRunner implements ApplicationRunner {
     log.info("Successfully seeded and synchronized plan: {}", plan.getPlanCode());
   }
 
-  private String serializeFeatures(final PlanEntitlement features, final String planCode) {
+  private String serializeEntitlement(final PlanEntitlement features, final String planCode) {
     try {
       return jsonMapper.writeValueAsString(features);
     } catch (final Exception e) {

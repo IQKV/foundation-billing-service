@@ -25,7 +25,7 @@
             <column name="currency" type="VARCHAR(3)" defaultValue="USD">
                 <constraints nullable="false"/>
             </column>
-            <column name="feature_set" type="TEXT"/>
+            <column name="entitlement" type="TEXT"/>
             <column name="scope" type="VARCHAR(16)">
                 <constraints nullable="false"/>
             </column>

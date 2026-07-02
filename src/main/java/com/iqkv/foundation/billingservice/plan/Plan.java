@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * <p>{@code scope} determines whether the plan is applicable to a tenant ({@code TENANT})
  * or a user ({@code USER}), matching the active rollout mode's subject scope.
  *
- * <p>{@code featureSet} is a JSON string describing the entitlement included in the plan.
+ * <p>{@code entitlement} is a JSON string describing the entitlement included in the plan.
  * {@code priceMinor} is the price in the smallest currency unit (e.g. cents for USD).
  */
 public class Plan {
@@ -39,7 +39,7 @@ public class Plan {
   private String billingPeriod;   // MONTHLY | ANNUAL
   private Integer priceMinor;     // price in cents (or smallest currency unit)
   private String currency;        // default "USD"
-  private String featureSet;      // JSON string of feature flags/limits
+  private String entitlement;      // JSON string of feature flags/limits
   private String scope;           // TENANT | USER
   private String externalProductId;
   private String externalPriceId;
@@ -60,7 +60,7 @@ public class Plan {
               final String billingPeriod,
               final Integer priceMinor,
               final String currency,
-              final String featureSet,
+              final String entitlement,
               final String scope,
               final String externalProductId,
               final String externalPriceId,
@@ -77,7 +77,7 @@ public class Plan {
     this.billingPeriod = billingPeriod;
     this.priceMinor = priceMinor;
     this.currency = currency;
-    this.featureSet = featureSet;
+    this.entitlement = entitlement;
     this.scope = scope;
     this.externalProductId = externalProductId;
     this.externalPriceId = externalPriceId;
@@ -145,12 +145,12 @@ public class Plan {
     this.currency = currency;
   }
 
-  public String getFeatureSet() {
-    return featureSet;
+  public String getEntitlement() {
+    return entitlement;
   }
 
-  public void setFeatureSet(String featureSet) {
-    this.featureSet = featureSet;
+  public void setEntitlement(String entitlement) {
+    this.entitlement = entitlement;
   }
 
   public String getScope() {

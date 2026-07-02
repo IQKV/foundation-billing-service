@@ -127,7 +127,7 @@ class PlanEligibilityPolicyImplTest {
     plan.setPlanCode(planCode);
     plan.setDisplayName("Test Plan");
     plan.setScope(scope);
-    plan.setFeatureSet("{\"feature1\": true}");
+    plan.setEntitlement("{\"feature1\": true}");
     return plan;
   }
 }

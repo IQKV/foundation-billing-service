@@ -121,7 +121,7 @@ class DomainEntitiesTest {
     assertThat(plan.getBillingPeriod()).isEqualTo("MONTHLY");
     assertThat(plan.getPriceMinor()).isEqualTo(2999);
     assertThat(plan.getCurrency()).isEqualTo("USD");
-    assertThat(plan.getFeatureSet()).isEqualTo("{\"feature\":true}");
+    assertThat(plan.getEntitlement()).isEqualTo("{\"feature\":true}");
     assertThat(plan.getScope()).isEqualTo("TENANT");
     assertThat(plan.getExternalProductId()).isEqualTo("prod_ext123");
     assertThat(plan.getExternalPriceId()).isEqualTo("price_ext456");
@@ -142,7 +142,7 @@ class DomainEntitiesTest {
     plan.setBillingPeriod("ANNUAL");
     plan.setPriceMinor(9999);
     plan.setCurrency("GBP");
-    plan.setFeatureSet(null);
+    plan.setEntitlement(null);
     plan.setScope("USER");
     plan.setExternalProductId(null);
     plan.setExternalPriceId(null);
@@ -157,7 +157,7 @@ class DomainEntitiesTest {
     assertThat(plan.getPlanCode()).isEqualTo("basic-annual");
     assertThat(plan.getBillingPeriod()).isEqualTo("ANNUAL");
     assertThat(plan.getActive()).isFalse();
-    assertThat(plan.getFeatureSet()).isNull();
+    assertThat(plan.getEntitlement()).isNull();
   }
 
   // ─── Subscription ─────────────────────────────────────────────────────────
