@@ -99,11 +99,11 @@ class EntitlementDetailsTest {
   void shouldCreateEntitlementDetailsForDifferentStatuses() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Instant periodEnd = Instant.now();
-    final PlanEntitlement features = PlanEntitlement.NONE;
+    final PlanEntitlement planEntitlement = PlanEntitlement.NONE;
 
-    final var activeDetails = new EntitlementDetails(subject, "pro-monthly", "active", periodEnd, features);
-    final var trialingDetails = new EntitlementDetails(subject, "pro-monthly", "trialing", periodEnd, features);
-    final var pastDueDetails = new EntitlementDetails(subject, "pro-monthly", "past_due", periodEnd, features);
+    final var activeDetails = new EntitlementDetails(subject, "pro-monthly", "active", periodEnd, planEntitlement);
+    final var trialingDetails = new EntitlementDetails(subject, "pro-monthly", "trialing", periodEnd, planEntitlement);
+    final var pastDueDetails = new EntitlementDetails(subject, "pro-monthly", "past_due", periodEnd, planEntitlement);
 
     assertThat(activeDetails.status()).isEqualTo("active");
     assertThat(trialingDetails.status()).isEqualTo("trialing");
