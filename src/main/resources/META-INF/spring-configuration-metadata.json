@@ -251,7 +251,7 @@
             "name": "iqkv.liquibase.change-log",
             "type": "java.lang.String",
             "description": "Classpath location of the Liquibase changelog master file.",
-            "defaultValue": "db/changelog/db.changelog-master.xml"
+            "defaultValue": "db/changelog/system/db.changelog-system.xml"
         },
         {
             "name": "iqkv.liquibase.contexts",

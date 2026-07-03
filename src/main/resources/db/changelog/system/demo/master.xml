@@ -6,6 +6,6 @@
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Demo data for development and testing (Liquibase context: demo). -->
-    <!-- <include file="db/changelog/demo/20260513120000-demo-billing-seed.xml"/> -->
+    <!-- <include file="db/changelog/system/demo/20260513120000-demo-billing-seed.xml"/> -->
 
 </databaseChangeLog>

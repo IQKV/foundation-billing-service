@@ -8,9 +8,6 @@
 # ===================================================================
 
 spring:
-  liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.xml
   mail:
     port: ${MAIL_PORT:1025}
     username: ${MAIL_USERNAME:}
