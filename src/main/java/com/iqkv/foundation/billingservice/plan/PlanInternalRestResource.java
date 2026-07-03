@@ -48,10 +48,10 @@ public class PlanInternalRestResource {
    * {@code PlanCatalogCache} at startup and on periodic refresh.
    *
    * @param planCode        the plan code (e.g. {@code "pro-monthly"})
-   * @param planEntitlement the typed feature set for this plan
+   * @param entitlement      the typed feature set for this plan
    * @param pricingModel    pricing mode — {@code FLAT} or {@code PER_SEAT}; never null
    */
-  public record PlanCatalogEntry(String planCode, PlanEntitlement planEntitlement, PricingModel pricingModel) {
+  public record PlanCatalogEntry(String planCode, PlanEntitlement entitlement, PricingModel pricingModel) {
   }
 
   private final PlanFeatureRegistry planFeatureRegistry;
