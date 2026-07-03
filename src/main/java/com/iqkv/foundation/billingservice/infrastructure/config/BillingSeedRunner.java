@@ -157,9 +157,9 @@ public class BillingSeedRunner implements ApplicationRunner {
     log.info("Successfully seeded and synchronized plan: {}", plan.getPlanCode());
   }
 
-  private String serializeEntitlement(final PlanEntitlement features, final String planCode) {
+  private String serializeEntitlement(final PlanEntitlement planEntitlement, final String planCode) {
     try {
-      return jsonMapper.writeValueAsString(features);
+      return jsonMapper.writeValueAsString(planEntitlement);
     } catch (final Exception e) {
       log.warn("Failed to serialize PlanEntitlement for plan {}, storing null: {}", planCode, e.getMessage());
       return null;

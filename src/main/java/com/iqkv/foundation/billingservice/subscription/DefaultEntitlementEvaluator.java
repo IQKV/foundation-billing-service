@@ -79,7 +79,7 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
 
     final Subscription subscription = activeSubscription.get();
     final String planCode = resolvePlanCode(subscription.getPlanId());
-    final PlanEntitlement features = planFeatureRegistry.resolveEntitlement(planCode);
+    final PlanEntitlement planEntitlement = planFeatureRegistry.resolveEntitlement(planCode);
 
     meterRegistry.counter("billing_entitlements_check_total",
         "result", "allowed",
@@ -90,7 +90,7 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
         planCode,
         subscription.getStatus(),
         subscription.getCurrentPeriodEnd(),
-        features
+        planEntitlement
     ));
   }
 

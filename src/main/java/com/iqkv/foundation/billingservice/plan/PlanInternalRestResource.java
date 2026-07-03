@@ -47,11 +47,11 @@ public class PlanInternalRestResource {
    * Consumed by downstream services (IAM, Gateway) to populate their local
    * {@code PlanCatalogCache} at startup and on periodic refresh.
    *
-   * @param planCode     the plan code (e.g. {@code "pro-monthly"})
-   * @param features     the typed feature set for this plan
-   * @param pricingModel pricing mode — {@code FLAT} or {@code PER_SEAT}; never null
+   * @param planCode        the plan code (e.g. {@code "pro-monthly"})
+   * @param planEntitlement the typed feature set for this plan
+   * @param pricingModel    pricing mode — {@code FLAT} or {@code PER_SEAT}; never null
    */
-  public record PlanCatalogEntry(String planCode, PlanEntitlement features, PricingModel pricingModel) {
+  public record PlanCatalogEntry(String planCode, PlanEntitlement planEntitlement, PricingModel pricingModel) {
   }
 
   private final PlanFeatureRegistry planFeatureRegistry;

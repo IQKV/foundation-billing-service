@@ -36,11 +36,11 @@ class EntitlementDetailsTest {
     final String planCode = "pro-monthly";
     final String status = "active";
     final Instant periodEnd = Instant.now().plusSeconds(2592000);
-    final PlanEntitlement features = new PlanEntitlement(50, 0, Map.of(
+    final PlanEntitlement planEntitlement = new PlanEntitlement(50, 0, Map.of(
         "priority_support", new PlanFeature("priority_support", "Priority Support", "true", "Access to priority support channel")
     ));
 
-    final var details = new EntitlementDetails(subject, planCode, status, periodEnd, features);
+    final var details = new EntitlementDetails(subject, planCode, status, periodEnd, planEntitlement);
 
     assertThat(details.subject()).isEqualTo(subject);
     assertThat(details.planCode()).isEqualTo(planCode);
@@ -71,9 +71,9 @@ class EntitlementDetailsTest {
   void shouldSupportRecordEquality() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Instant periodEnd = Instant.now();
-    final PlanEntitlement features = new PlanEntitlement(5, 3, Map.of());
-    final var details1 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, features);
-    final var details2 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, features);
+    final PlanEntitlement planEntitlement = new PlanEntitlement(5, 3, Map.of());
+    final var details1 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, planEntitlement);
+    final var details2 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, planEntitlement);
 
     assertThat(details1).isEqualTo(details2);
     assertThat(details1.hashCode()).isEqualTo(details2.hashCode());
