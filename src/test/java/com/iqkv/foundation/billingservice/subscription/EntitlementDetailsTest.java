@@ -38,7 +38,7 @@ class EntitlementDetailsTest {
     final Instant periodEnd = Instant.now().plusSeconds(2592000);
     final PlanEntitlement planEntitlement = new PlanEntitlement(50, 0, Map.of(
         "priority_support", new PlanFeature("priority_support", "Priority Support", "true", "Access to priority support channel")
-    ));
+    ), null);
 
     final var details = new EntitlementDetails(subject, planCode, status, periodEnd, planEntitlement);
 
@@ -46,9 +46,9 @@ class EntitlementDetailsTest {
     assertThat(details.planCode()).isEqualTo(planCode);
     assertThat(details.status()).isEqualTo(status);
     assertThat(details.currentPeriodEnd()).isEqualTo(periodEnd);
-    assertThat(details.features()).isEqualTo(features);
-    assertThat(details.features().has("priority_support")).isTrue();
-    assertThat(details.features().maxUsers()).isEqualTo(50);
+    assertThat(details.planEntitlement()).isEqualTo(planEntitlement);
+    assertThat(details.planEntitlement().has("priority_support")).isTrue();
+    assertThat(details.planEntitlement().maxUsers()).isEqualTo(50);
   }
 
   @Test
@@ -61,9 +61,9 @@ class EntitlementDetailsTest {
 
     assertThat(details.subject().type()).isEqualTo(SubjectType.USER);
     assertThat(details.subject().key()).isEqualTo("user-456");
-    assertThat(details.features()).isEqualTo(PlanEntitlement.NONE);
-    assertThat(details.features().has("priority_support")).isFalse();
-    assertThat(details.features().maxUsers()).isEqualTo(1);
+    assertThat(details.planEntitlement()).isEqualTo(PlanEntitlement.NONE);
+    assertThat(details.planEntitlement().has("priority_support")).isFalse();
+    assertThat(details.planEntitlement().maxUsers()).isEqualTo(1);
   }
 
   @Test
@@ -71,7 +71,7 @@ class EntitlementDetailsTest {
   void shouldSupportRecordEquality() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Instant periodEnd = Instant.now();
-    final PlanEntitlement planEntitlement = new PlanEntitlement(5, 3, Map.of());
+    final PlanEntitlement planEntitlement = new PlanEntitlement(5, 3, Map.of(), null);
     final var details1 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, planEntitlement);
     final var details2 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, planEntitlement);
 

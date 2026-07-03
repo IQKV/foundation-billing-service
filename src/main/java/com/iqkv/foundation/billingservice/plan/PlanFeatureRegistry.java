@@ -42,9 +42,8 @@ public class PlanFeatureRegistry {
    *
    * @param planCode        unique plan identifier (e.g. {@code "pro-monthly"})
    * @param entitlement typed feature set for entitlement checks and quota enforcement
-   * @param pricingModel    pricing mode — {@link PricingModel#FLAT} or {@link PricingModel#PER_SEAT}
    */
-  public record PlanCatalogEntry(String planCode, PlanEntitlement entitlement, PricingModel pricingModel) {
+  public record PlanCatalogEntry(String planCode, PlanEntitlement entitlement) {
   }
 
   private final Map<String, PlanEntitlement> featureRegistry;
@@ -55,7 +54,15 @@ public class PlanFeatureRegistry {
         .filter(s -> s.planCode() != null)
         .collect(Collectors.toUnmodifiableMap(
             ProductSchema::planCode,
-            s -> s.entitlement() != null ? s.entitlement() : PlanEntitlement.NONE
+            s -> {
+              final PlanEntitlement baseEntitlement = s.entitlement() != null ? s.entitlement() : PlanEntitlement.NONE;
+              return new PlanEntitlement(
+                  baseEntitlement.maxUsers(),
+                  baseEntitlement.maxProjects(),
+                  baseEntitlement.features(),
+                  s.effectivePricingModel() != null ? s.effectivePricingModel().name() : null
+              );
+            }
         ));
     this.pricingRegistry = props.planCatalog().products().values().stream()
         .filter(s -> s.planCode() != null)
@@ -124,8 +131,7 @@ public class PlanFeatureRegistry {
             planCode -> planCode,
             planCode -> new PlanCatalogEntry(
                 planCode,
-                featureRegistry.get(planCode),
-                pricingRegistry.getOrDefault(planCode, PricingModel.FLAT)
+                featureRegistry.get(planCode)
             )
         ));
   }

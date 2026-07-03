@@ -74,13 +74,13 @@ class DefaultEntitlementEvaluatorTest {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Subscription subscription = createSubscription("price_pro123", "active");
     final Plan plan = createPlan("pro-monthly");
-    final PlanEntitlement expectedFeatures = new PlanEntitlement(50, 0, Map.of(
+    final PlanEntitlement expectedEntitlement = new PlanEntitlement(50, 0, Map.of(
         "priority_support", new PlanFeature("priority_support", "Priority Support", "true", "Access to priority support channel")
-    ));
+    ), null);
 
     when(subscriptionMapper.findActiveBySubject("TENANT", "tenant-123")).thenReturn(Optional.of(subscription));
     when(planMapper.findByExternalPriceId("price_pro123")).thenReturn(Optional.of(plan));
-    when(planFeatureRegistry.resolveEntitlement("pro-monthly")).thenReturn(expectedFeatures);
+    when(planFeatureRegistry.resolveEntitlement("pro-monthly")).thenReturn(expectedEntitlement);
 
     final Optional<EntitlementDetails> result = entitlementEvaluator.evaluateEntitlements(subject);
 
@@ -88,8 +88,8 @@ class DefaultEntitlementEvaluatorTest {
     assertThat(result.get().subject()).isEqualTo(subject);
     assertThat(result.get().planCode()).isEqualTo("pro-monthly");
     assertThat(result.get().status()).isEqualTo("active");
-    assertThat(result.get().features()).isEqualTo(expectedFeatures);
-    assertThat(result.get().features().has("priority_support")).isTrue();
+    assertThat(result.get().planEntitlement()).isEqualTo(expectedEntitlement);
+    assertThat(result.get().planEntitlement().has("priority_support")).isTrue();
     verify(subscriptionMapper).findActiveBySubject("TENANT", "tenant-123");
     verify(planMapper).findByExternalPriceId("price_pro123");
     verify(planFeatureRegistry).resolveEntitlement("pro-monthly");
@@ -110,7 +110,7 @@ class DefaultEntitlementEvaluatorTest {
 
     assertThat(result).isPresent();
     assertThat(result.get().planCode()).isEqualTo("price_legacy"); // raw ID fallback
-    assertThat(result.get().features()).isEqualTo(PlanEntitlement.NONE);
+    assertThat(result.get().planEntitlement()).isEqualTo(PlanEntitlement.NONE);
   }
 
   @Test
@@ -126,7 +126,7 @@ class DefaultEntitlementEvaluatorTest {
     assertThat(result.get().planCode()).isEqualTo("free");
     assertThat(result.get().status()).isEqualTo("active");
     assertThat(result.get().currentPeriodEnd()).isNull();
-    assertThat(result.get().features()).isEqualTo(PlanEntitlement.NONE);
+    assertThat(result.get().planEntitlement()).isEqualTo(PlanEntitlement.NONE);
     verify(subscriptionMapper).findActiveBySubject("TENANT", "tenant-999");
     verifyNoInteractions(planMapper, planFeatureRegistry);
   }
@@ -144,7 +144,7 @@ class DefaultEntitlementEvaluatorTest {
 
     assertThat(result).isPresent();
     assertThat(result.get().planCode()).isNull();
-    assertThat(result.get().features()).isEqualTo(PlanEntitlement.NONE);
+    assertThat(result.get().planEntitlement()).isEqualTo(PlanEntitlement.NONE);
     verifyNoInteractions(planMapper);
   }
 

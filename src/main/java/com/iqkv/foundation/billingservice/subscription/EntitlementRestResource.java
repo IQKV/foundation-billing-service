@@ -103,7 +103,7 @@ public class EntitlementRestResource {
         details.planCode(),
         details.status(),
         details.currentPeriodEnd(),
-        details.features()
+        details.planEntitlement()
     ));
   }
 }

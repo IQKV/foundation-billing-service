@@ -48,10 +48,9 @@ public class PlanInternalRestResource {
    * {@code PlanCatalogCache} at startup and on periodic refresh.
    *
    * @param planCode        the plan code (e.g. {@code "pro-monthly"})
-   * @param entitlement      the typed feature set for this plan
-   * @param pricingModel    pricing mode — {@code FLAT} or {@code PER_SEAT}; never null
+   * @param entitlement   the typed feature set for this plan
    */
-  public record PlanCatalogEntry(String planCode, PlanEntitlement entitlement, PricingModel pricingModel) {
+  public record PlanCatalogEntry(String planCode, PlanEntitlement entitlement) {
   }
 
   private final PlanFeatureRegistry planFeatureRegistry;
@@ -76,7 +75,7 @@ public class PlanInternalRestResource {
   })
   public ResponseEntity<List<PlanCatalogEntry>> listPlanCatalog() {
     final List<PlanCatalogEntry> entries = planFeatureRegistry.allEntries().values().stream()
-        .map(e -> new PlanCatalogEntry(e.planCode(), e.features(), e.pricingModel()))
+        .map(e -> new PlanCatalogEntry(e.planCode(), e.entitlement()))
         .sorted(Comparator.comparing(PlanCatalogEntry::planCode))
         .toList();
     return ResponseEntity.ok(entries);

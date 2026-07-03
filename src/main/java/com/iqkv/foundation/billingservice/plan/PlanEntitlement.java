@@ -46,13 +46,14 @@ import java.util.Map;
 public record PlanEntitlement(
     int maxUsers,
     int maxProjects,
-    Map<String, PlanFeature> features
+    Map<String, PlanFeature> features,
+    String pricingModel
 ) {
 
   /**
    * Safe fallback: most restrictive quotas, no display entitlement.
    */
-  public static final PlanEntitlement NONE = new PlanEntitlement(1, 1, Collections.emptyMap());
+  public static final PlanEntitlement NONE = new PlanEntitlement(1, 1, Collections.emptyMap(), null);
 
   public PlanEntitlement {
     if (maxUsers < 0) {
@@ -79,5 +80,23 @@ public record PlanEntitlement(
     }
     final PlanFeature feature = features.get(code);
     return feature != null && feature.isEnabled();
+  }
+
+  /**
+   * Returns {@code true} if the plan uses per-seat pricing.
+   * Falls back to {@code false} (flat) when {@code pricingModel} is absent — safe for
+   * existing plans that pre-date the per-seat billing feature.
+   */
+  public boolean isPerSeat() {
+    return "PER_SEAT".equalsIgnoreCase(pricingModel);
+  }
+
+  /**
+   * Returns {@code true} if the plan uses flat pricing.
+   * {@code null} or unrecognized values are treated as flat — safe for existing plans
+   * that pre-date the per-seat billing feature.
+   */
+  public boolean isFlatPricing() {
+    return !isPerSeat();
   }
 }
