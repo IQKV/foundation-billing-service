@@ -69,12 +69,12 @@ public class TenantExtractionFilter extends OncePerRequestFilter {
     try {
       final String resolved = resolveTenantId(request);
       final String tenantId = resolved;
-            if (tenantId == null) {
-              writeProblemDetail(response, request, HttpServletResponse.SC_BAD_REQUEST,
-                  "Tenant ID Required",
-                  "Request must include a tenant identifier via the X-Tenant-ID header or a JWT with a tenant_id claim.");
-              return;
-            }
+      if (tenantId == null) {
+        writeProblemDetail(response, request, HttpServletResponse.SC_BAD_REQUEST,
+            "Tenant ID Required",
+            "Request must include a tenant identifier via the X-Tenant-ID header or a JWT with a tenant_id claim.");
+        return;
+      }
       TenantContext.setCurrentTenant(tenantId);
       filterChain.doFilter(request, response);
     } finally {
