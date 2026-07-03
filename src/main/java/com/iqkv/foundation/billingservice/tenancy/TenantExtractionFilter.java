@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.UUID;
 
 import com.iqkv.foundation.billingservice.infrastructure.security.JwtClaimNames;
+import com.iqkv.foundation.tenancy.TenantContext;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -43,10 +44,6 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Returns a RFC 7807 {@code application/problem+json} 400 response when the tenant
  * cannot be resolved. Always clears the tenant context in a {@code finally} block.
- *
- * <p><strong>Temporary:</strong> when no tenant can be resolved the filter falls back to
- * {@value #DEFAULT_PLATFORM_TENANT} to support demo/development environments.
- * Remove this fallback before going to production.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
@@ -55,8 +52,6 @@ public class TenantExtractionFilter extends OncePerRequestFilter {
   private static final String TENANT_HEADER = "X-Tenant-ID";
   private static final String MDC_CORRELATION_ID = "correlationId";
 
-  // TODO: remove demo fallback before production
-  private static final String DEFAULT_PLATFORM_TENANT = "platform";
 
   private final JwtDecoder jwtDecoder;
   private final JsonMapper objectMapper;
@@ -73,14 +68,13 @@ public class TenantExtractionFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
     try {
       final String resolved = resolveTenantId(request);
-      // TODO: remove demo fallback before production
-      final String tenantId = (resolved != null) ? resolved : DEFAULT_PLATFORM_TENANT;
-      //      if (tenantId == null) {
-      //        writeProblemDetail(response, request, HttpServletResponse.SC_BAD_REQUEST,
-      //            "Tenant ID Required",
-      //            "Request must include a tenant identifier via the X-Tenant-ID header or a JWT with a tenant_id claim.");
-      //        return;
-      //      }
+      final String tenantId = resolved;
+            if (tenantId == null) {
+              writeProblemDetail(response, request, HttpServletResponse.SC_BAD_REQUEST,
+                  "Tenant ID Required",
+                  "Request must include a tenant identifier via the X-Tenant-ID header or a JWT with a tenant_id claim.");
+              return;
+            }
       TenantContext.setCurrentTenant(tenantId);
       filterChain.doFilter(request, response);
     } finally {
