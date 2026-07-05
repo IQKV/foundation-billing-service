@@ -39,6 +39,7 @@ public class RabbitMQConfig {
   // -------------------------------------------------------------------------
   // Billing queue names
   // -------------------------------------------------------------------------
+  public static final String TENANT_PROVISIONING_QUEUE = "iqkv.billing.tenant.provisioning";
   public static final String TENANT_EVENTS_QUEUE = "iqkv.billing.tenant.events";
   public static final String USER_EVENTS_QUEUE = "iqkv.billing.user.events";
   public static final String NOTIFICATIONS_QUEUE = "iqkv.billing.notifications";
@@ -93,6 +94,14 @@ public class RabbitMQConfig {
   }
 
   @Bean
+  public Queue tenantProvisioningQueue() {
+    return QueueBuilder.durable(TENANT_PROVISIONING_QUEUE)
+        .withArgument("x-dead-letter-exchange", DLX_EXCHANGE)
+        .withArgument("x-message-ttl", TTL_24H_MS)
+        .build();
+  }
+
+  @Bean
   public Queue tenantEventsQueue() {
     return QueueBuilder.durable(TENANT_EVENTS_QUEUE)
         .withArgument("x-dead-letter-exchange", DLX_EXCHANGE)
@@ -114,6 +123,12 @@ public class RabbitMQConfig {
         .withArgument("x-dead-letter-exchange", DLX_EXCHANGE)
         .withArgument("x-message-ttl", TTL_24H_MS)
         .build();
+  }
+
+  @Bean
+  public Binding tenantProvisioningBinding() {
+    return BindingBuilder.bind(tenantProvisioningQueue()).to(eventsExchange())
+        .with(ROUTING_TENANT_CREATED);
   }
 
   @Bean
