@@ -31,6 +31,11 @@ public interface UserBillingSettingsMapper {
   Optional<UserBillingSettings> findByUserId(UUID userId);
 
   /**
+   * Returns the billing settings for the given external customer ID, or empty if not found.
+   */
+  Optional<UserBillingSettings> findByExternalCustomerId(String externalCustomerId);
+
+  /**
    * Returns true if billing settings exist for the given user ID.
    */
   boolean existsByUserId(UUID userId);

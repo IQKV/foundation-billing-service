@@ -123,12 +123,14 @@ public class WebhookProcessingService {
   public boolean process(final GatewayWebhookEvent event) {
     final String externalEventId = event.eventId();
     final String eventType = event.eventType();
+    final String tenantKey = extractTenantKey(event);
 
     // First try to insert the event atomically using ON CONFLICT
     final int inserted = webhookLogMapper.insertIfNotExists(new WebhookLog(
         UUID.randomUUID(),
         externalEventId,
         eventType,
+        tenantKey,
         STATUS_RECEIVED,
         null,
         Instant.now(),
@@ -713,5 +715,63 @@ public class WebhookProcessingService {
         .or(() -> planMapper.findByPlanCode(planId))
         .map(plan -> plan.getPlanCode())
         .orElse(planId);
+  }
+
+  private String extractTenantKey(GatewayWebhookEvent event) {
+    // First, if event has metadata (like GatewaySubscriptionEvent), use subject resolver
+    if (event instanceof GatewaySubscriptionEvent sub) {
+      try {
+        final String tenantKeyFromMeta = sub.metadata().get("tenantKey");
+        final UUID userId = resolveUserId(sub.metadata());
+        if (subjectResolver != null) {
+          final SubscriptionSubject subject = subjectResolver.resolveSubject(tenantKeyFromMeta, userId);
+          if (subject != null && subject.key() != null && !subject.key().isBlank()) {
+            return subject.key();
+          }
+        }
+        // If subjectResolver isn't set or didn't give a valid subject, fall back
+        if (tenantKeyFromMeta != null && !tenantKeyFromMeta.isBlank()) {
+          return tenantKeyFromMeta;
+        }
+      } catch (final Exception ex) {
+        // Fall through to try other options if subject resolver fails
+      }
+    }
+
+    // Otherwise, try to get subjectKey from billing settings using externalCustomerId
+    final String externalCustomerId = extractExternalCustomerId(event);
+    if (externalCustomerId != null && !externalCustomerId.isBlank()) {
+      // Check multi-tenant billing settings first
+      if (billingSettingsMapper != null) {
+        final String tenantKey = billingSettingsMapper.findByExternalCustomerId(externalCustomerId)
+            .map(settings -> settings.getTenantKey())
+            .orElse(null);
+        if (tenantKey != null && !tenantKey.isBlank()) {
+          return tenantKey;
+        }
+      }
+
+      // If not found, check single-tenant user billing settings
+      if (userBillingSettingsMapper != null) {
+        return userBillingSettingsMapper.findByExternalCustomerId(externalCustomerId)
+            .map(settings -> settings.getUserId().toString())
+            .orElse(null);
+      }
+    }
+
+    return null;
+  }
+
+  private String extractExternalCustomerId(GatewayWebhookEvent event) {
+    if (event instanceof GatewaySubscriptionEvent sub) {
+      return sub.externalCustomerId();
+    } else if (event instanceof GatewayInvoiceEvent inv) {
+      return inv.externalCustomerId();
+    } else if (event instanceof GatewayPaymentFailureEvent pay) {
+      return pay.externalCustomerId();
+    } else if (event instanceof GatewayRefundEvent ref) {
+      return ref.externalCustomerId();
+    }
+    return null;
   }
 }

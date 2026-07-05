@@ -26,6 +26,13 @@
         WHERE user_id = #{userId}::uuid
     </select>
 
+    <select id="findByExternalCustomerId" resultMap="userBillingSettingsResultMap">
+        SELECT id, user_id, external_customer_id, billing_email, company_name,
+        billing_address, tax_id, tax_id_type, currency, gateway_type, created_at, updated_at
+        FROM user_billing_settings
+        WHERE external_customer_id = #{externalCustomerId}
+    </select>
+
     <select id="existsByUserId" resultType="boolean">
         SELECT EXISTS(SELECT 1 FROM user_billing_settings WHERE user_id = #{userId}::uuid)
     </select>

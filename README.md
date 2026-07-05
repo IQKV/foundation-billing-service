@@ -21,7 +21,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 - **Billing settings** — each tenant has a 1:1 `billing_settings` record that is the single source of truth for payment gateway customer metadata; decoupled from IAM users by design
 - **Billing email** — a separate `billing_email` field allows finance teams to receive invoices without a system account
 - **Tax ID / VAT/GST** — stored in `billing_settings` for compliant B2B invoices
-- **Webhook processing** — payment gateway webhooks are ingested and processed idempotently; duplicate delivery is safe
+- **Webhook processing** — payment gateway webhooks are ingested and processed idempotently; duplicate delivery is safe; webhook logs capture tenant context and are queryable via admin API
 - **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, `invoice.created`, `invoice.finalized`, `invoice.updated`, `payment.failed`, and `refund.created` to the platform event bus
 - **Multi-gateway strategy** — `PaymentGatewayPort` interface decouples business logic from gateway SDKs; Stripe and Lemon Squeezy are implemented
 - **Plan catalog** — plan definitions with typed `PlanEntitlement` (`maxUsers`, `maxProjects` as typed quota fields; extensible `features` map keyed by feature code such as `priority_support`; `trialPeriodDays` to define free trial length in days, 0 means no trial) defined in YAML configuration. Each plan carries a `pricingModel` field — `FLAT` (fixed price per period, default) or `PER_SEAT` (price × seat count; `maxUsers` acts as the seat ceiling). `BillingSeedRunner` synchronizes plans with the Stripe catalog at application startup. Plan management is config-driven — there is no REST API for creating, updating, or deactivating plans. `PlanFeatureRegistry` serves an in-memory feature map loaded at startup for zero-latency entitlement evaluation and the internal plans endpoint (`/internal/plans`); features are the single source of truth for platform-wide access control
@@ -229,6 +229,15 @@ The Billing service publishes payment-related events to RabbitMQ for downstream 
 | ------ | ------------------------- | ----------------------- | ------------------------------------------------ |
 | `POST` | `/webhooks/stripe`        | Stripe signature        | Receive and process Stripe webhook events        |
 | `POST` | `/webhooks/lemon-squeezy` | Lemon Squeezy signature | Receive and process Lemon Squeezy webhook events |
+
+### Webhook Logs
+
+| Method | Path                       | Auth                                  | Description                                      |
+| ------ | -------------------------- | ------------------------------------- | ------------------------------------------------ |
+| `GET`  | `/webhook-logs/me`         | JWT `TENANT_OWNER`, `ADMIN`, `MEMBER` | List webhook logs for current subject            |
+| `GET`  | `/webhook-logs/me/{id}`    | JWT `TENANT_OWNER`, `ADMIN`, `MEMBER` | Get single webhook log by ID for current subject |
+| `GET`  | `/admin/webhook-logs`      | JWT `PLATFORM_ADMIN`                  | List all webhook logs (paginated, filterable)    |
+| `GET`  | `/admin/webhook-logs/{id}` | JWT `PLATFORM_ADMIN`                  | Get single webhook log entry by UUID             |
 
 ## Tech Stack
 

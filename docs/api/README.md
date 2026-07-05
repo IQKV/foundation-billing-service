@@ -312,6 +312,21 @@ Not exposed via a public gateway route — internal network access only.
 
 No JWT required. Secured by gateway-specific signature verification (`Stripe-Signature` for Stripe, `X-Signature` for Lemon Squeezy). Always returns `200 OK` after the idempotency check to prevent retries on business logic failures.
 
+### Webhook Logs
+
+| Method | Path                       | Auth                                     | Description                                      |
+| ------ | -------------------------- | ---------------------------------------- | ------------------------------------------------ |
+| `GET`  | `/webhook-logs/me`         | JWT `TENANT_OWNER`, `ADMIN`, or `MEMBER` | List webhook logs for current subject            |
+| `GET`  | `/webhook-logs/me/{id}`    | JWT `TENANT_OWNER`, `ADMIN`, or `MEMBER` | Get single webhook log by ID for current subject |
+| `GET`  | `/admin/webhook-logs`      | JWT `PLATFORM_ADMIN`                     | List all webhook logs (paginated, filterable)    |
+| `GET`  | `/admin/webhook-logs/{id}` | JWT `PLATFORM_ADMIN`                     | Get single webhook log entry by UUID             |
+
+- `GET /webhook-logs/me` and `GET /admin/webhook-logs` support query parameters: `page`, `size`, `sortBy`, `sortDir`, `search`, `status`, `tenantKey`
+- `search` matches on `tenantKey`, `eventType`, or `externalEventId`
+- `status` filters by webhook processing status (`RECEIVED`, `PROCESSED`, `FAILED`)
+- `tenantKey` filters logs by tenant (single-tenant mode uses user key)
+- `sortBy` accepts: `tenantKey`, `eventType`, `status`, `receivedAt`, `processedAt`
+
 ---
 
 ### Interactive Documentation

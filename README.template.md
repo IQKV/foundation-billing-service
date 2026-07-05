@@ -12,7 +12,7 @@ The Billing service owns the payment gateway integration layer for the platform:
 - **Billing settings** — each tenant has a 1:1 `billing_settings` record that is the single source of truth for payment gateway customer metadata; decoupled from IAM users by design
 - **Billing email** — a separate `billing_email` field allows finance teams to receive invoices without a system account
 - **Tax ID / VAT/GST** — stored in `billing_settings` for compliant B2B invoices
-- **Webhook processing** — payment gateway webhooks are ingested and processed idempotently via a gateway-agnostic orchestrator; duplicate delivery is safe
+- **Webhook processing** — payment gateway webhooks are ingested and processed idempotently via a gateway-agnostic orchestrator; duplicate delivery is safe; webhook logs capture tenant context and are queryable via admin API
 - **Lifecycle events** — publishes `subscription.created`, `subscription.cancelled`, `invoice.paid`, `invoice.created`, `invoice.finalized`, `invoice.updated`, `payment.failed`, and `refund.created` to the platform event bus
 - **Observability** — instrumented with Micrometer for Prometheus metrics; includes a custom Grafana dashboard for business KPIs (revenue, subscriptions, webhook health)
 - **Email notifications** — publishes `notification.billing.email` events for async delivery by the notification service
@@ -233,6 +233,15 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 | ------ | ------------------------- | ----------------------- | ------------------------------------------------ |
 | `POST` | `/webhooks/stripe`        | Stripe signature        | Receive and process Stripe webhook events        |
 | `POST` | `/webhooks/lemon-squeezy` | Lemon Squeezy signature | Receive and process Lemon Squeezy webhook events |
+
+### Webhook Logs — `/api/v1/billing/webhook-logs`
+
+| Method | Path                       | Auth                                  | Description                                      |
+| ------ | -------------------------- | ------------------------------------- | ------------------------------------------------ |
+| `GET`  | `/webhook-logs/me`         | JWT `TENANT_OWNER`, `ADMIN`, `MEMBER` | List webhook logs for current subject            |
+| `GET`  | `/webhook-logs/me/{id}`    | JWT `TENANT_OWNER`, `ADMIN`, `MEMBER` | Get single webhook log by ID for current subject |
+| `GET`  | `/admin/webhook-logs`      | JWT `PLATFORM_ADMIN`                  | List all webhook logs (paginated, filterable)    |
+| `GET`  | `/admin/webhook-logs/{id}` | JWT `PLATFORM_ADMIN`                  | Get single webhook log entry by UUID             |
 
 > Auth legend: `JWT` = valid Bearer token; `JWT ROLE` = JWT with that authority; `X-Tenant-ID` = 8-char tenantKey header; Stripe signature = `Stripe-Signature` header; Lemon Squeezy signature = `X-Signature` header (both verified against webhook secret).
 

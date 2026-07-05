@@ -8,23 +8,44 @@
         <id property="id" column="id"/>
         <result property="externalEventId" column="external_event_id"/>
         <result property="eventType" column="event_type"/>
+        <result property="tenantKey" column="tenant_key"/>
         <result property="status" column="status"/>
         <result property="errorMessage" column="error_message"/>
         <result property="receivedAt" column="received_at"/>
         <result property="processedAt" column="processed_at"/>
     </resultMap>
 
+    <sql id="webhookLogColumns">
+        id, external_event_id, event_type, tenant_key, status, error_message, received_at, processed_at
+    </sql>
+
     <insert id="insert" parameterType="com.iqkv.foundation.billingservice.webhook.WebhookLog">
         INSERT INTO webhook_log
-        (id, external_event_id, event_type, status, error_message, received_at, processed_at)
+        (id, external_event_id, event_type, tenant_key, status, error_message, received_at, processed_at)
         VALUES
         (COALESCE(#{id}::uuid, gen_random_uuid()),
         #{externalEventId},
         #{eventType},
+        #{tenantKey},
         COALESCE(#{status}, 'RECEIVED'),
         #{errorMessage},
         COALESCE(#{receivedAt}, now()),
         #{processedAt})
+    </insert>
+
+    <insert id="insertIfNotExists" parameterType="com.iqkv.foundation.billingservice.webhook.WebhookLog">
+        INSERT INTO webhook_log
+        (id, external_event_id, event_type, tenant_key, status, error_message, received_at, processed_at)
+        VALUES
+        (COALESCE(#{id}::uuid, gen_random_uuid()),
+        #{externalEventId},
+        #{eventType},
+        #{tenantKey},
+        COALESCE(#{status}, 'RECEIVED'),
+        #{errorMessage},
+        COALESCE(#{receivedAt}, now()),
+        #{processedAt})
+        ON CONFLICT (external_event_id) DO NOTHING
     </insert>
 
     <select id="existsByExternalEventId" resultType="boolean">
@@ -38,5 +59,69 @@
         processed_at = #{processedAt}
         WHERE external_event_id = #{externalEventId}
     </update>
+
+    <select id="findById" resultMap="webhookLogResultMap">
+        SELECT
+        <include refid="webhookLogColumns"/>
+        FROM webhook_log
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <select id="findAll" resultMap="webhookLogResultMap">
+        SELECT
+        <include refid="webhookLogColumns"/>
+        FROM webhook_log
+        <where>
+            <if test="search != null and search != ''">
+                (
+                LOWER(tenant_key) LIKE LOWER(CONCAT('%', #{search}, '%'))
+                OR LOWER(event_type) LIKE LOWER(CONCAT('%', #{search}, '%'))
+                OR LOWER(external_event_id) LIKE LOWER(CONCAT('%', #{search}, '%'))
+                )
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="tenantKey != null and tenantKey != ''">
+                AND tenant_key = #{tenantKey}
+            </if>
+        </where>
+        ORDER BY
+        <choose>
+            <when test="sortBy == 'tenantKey'">tenant_key</when>
+            <when test="sortBy == 'eventType'">event_type</when>
+            <when test="sortBy == 'status'">status</when>
+            <when test="sortBy == 'receivedAt'">received_at</when>
+            <when test="sortBy == 'processedAt'">processed_at</when>
+            <otherwise>received_at</otherwise>
+        </choose>
+        <choose>
+            <when test="sortDir == 'asc'">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>
+        , id ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM webhook_log
+        <where>
+            <if test="search != null and search != ''">
+                (
+                LOWER(tenant_key) LIKE LOWER(CONCAT('%', #{search}, '%'))
+                OR LOWER(event_type) LIKE LOWER(CONCAT('%', #{search}, '%'))
+                OR LOWER(external_event_id) LIKE LOWER(CONCAT('%', #{search}, '%'))
+                )
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="tenantKey != null and tenantKey != ''">
+                AND tenant_key = #{tenantKey}
+            </if>
+        </where>
+    </select>
 
 </mapper>

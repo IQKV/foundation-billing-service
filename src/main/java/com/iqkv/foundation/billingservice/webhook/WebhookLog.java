@@ -34,6 +34,7 @@ public class WebhookLog {
   private UUID id;
   private String externalEventId;  // payment-gateway-agnostic (e.g. Stripe evt_xxx)
   private String eventType;
+  private String tenantKey;        // tenant key for organization context
   private String status;           // RECEIVED | PROCESSED | FAILED
   private String errorMessage;     // null unless FAILED
   private Instant receivedAt;
@@ -49,9 +50,21 @@ public class WebhookLog {
                     final String errorMessage,
                     final Instant receivedAt,
                     final Instant processedAt) {
+    this(id, externalEventId, eventType, null, status, errorMessage, receivedAt, processedAt);
+  }
+
+  public WebhookLog(final UUID id,
+                    final String externalEventId,
+                    final String eventType,
+                    final String tenantKey,
+                    final String status,
+                    final String errorMessage,
+                    final Instant receivedAt,
+                    final Instant processedAt) {
     this.id = id;
     this.externalEventId = externalEventId;
     this.eventType = eventType;
+    this.tenantKey = tenantKey;
     this.status = status;
     this.errorMessage = errorMessage;
     this.receivedAt = receivedAt;
@@ -80,6 +93,14 @@ public class WebhookLog {
 
   public void setEventType(String eventType) {
     this.eventType = eventType;
+  }
+
+  public String getTenantKey() {
+    return tenantKey;
+  }
+
+  public void setTenantKey(String tenantKey) {
+    this.tenantKey = tenantKey;
   }
 
   public String getStatus() {

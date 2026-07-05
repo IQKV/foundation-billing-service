@@ -21,6 +21,7 @@
     <include file="db/changelog/system/20260701000002-add-order-id-to-subscriptions.xml"/>
     <include file="db/changelog/system/20260701000003-add-gateway-type-to-plan-catalog.xml"/>
     <include file="db/changelog/system/20260701000004-add-gateway-type-to-user-billing-settings.xml"/>
+    <include file="db/changelog/system/20260705120000-add-tenant-key-to-webhook-log.xml"/>
 
     <!-- Demo data (Liquibase context: demo); enable with iqkv.liquibase.contexts=demo -->
     <include file="db/changelog/system/demo/master.xml"/>

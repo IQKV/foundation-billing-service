@@ -17,6 +17,9 @@
 package com.iqkv.foundation.billingservice.infrastructure.persistence;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import com.iqkv.foundation.billingservice.webhook.WebhookLog;
 import org.apache.ibatis.annotations.Mapper;
@@ -35,4 +38,18 @@ public interface WebhookLogMapper {
                     @Param("status") String status,
                     @Param("errorMessage") String errorMessage,
                     @Param("processedAt") Instant processedAt);
+
+  Optional<WebhookLog> findById(@Param("id") UUID id);
+
+  List<WebhookLog> findAll(@Param("limit") int limit,
+                           @Param("offset") int offset,
+                           @Param("sortBy") String sortBy,
+                           @Param("sortDir") String sortDir,
+                           @Param("search") String search,
+                           @Param("status") String status,
+                           @Param("tenantKey") String tenantKey);
+
+  long countAll(@Param("search") String search,
+                @Param("status") String status,
+                @Param("tenantKey") String tenantKey);
 }
