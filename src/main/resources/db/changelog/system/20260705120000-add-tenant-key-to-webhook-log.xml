@@ -7,7 +7,7 @@
 
     <changeSet id="20260705120000-add-tenant-key-to-webhook-log" author="iqkv">
         <addColumn tableName="webhook_log">
-            <column name="tenant_key" type="varchar(255)" afterColumn="event_type"/>
+            <column name="tenant_key" type="varchar(255)"/>
         </addColumn>
         <rollback>
             <dropColumn tableName="webhook_log" columnName="tenant_key"/>
