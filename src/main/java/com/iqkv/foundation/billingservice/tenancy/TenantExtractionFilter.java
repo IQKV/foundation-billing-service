@@ -44,6 +44,10 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Returns a RFC 7807 {@code application/problem+json} 400 response when the tenant
  * cannot be resolved. Always clears the tenant context in a {@code finally} block.
+ *
+ * <p>Admin endpoints ({@code /api/v1/billing/admin/**}) are exempt from tenant extraction.
+ * Those paths are restricted to {@code PLATFORM_ADMIN} authority and operate across all
+ * tenants for oversight purposes; tenant context is applied per-use-case within those handlers.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
@@ -90,6 +94,7 @@ public class TenantExtractionFilter extends OncePerRequestFilter {
     return path.startsWith("/actuator/")
            || path.startsWith("/api-docs/")
            || path.startsWith("/swagger-ui/")
+           || path.startsWith("/api/v1/billing/admin/")
            || ("POST".equalsIgnoreCase(method) && path.equals("/api/v1/billing/webhooks/stripe"))
            || ("POST".equalsIgnoreCase(method) && path.equals("/api/v1/billing/webhooks/lemon-squeezy"));
   }
