@@ -177,7 +177,7 @@ services:
 
   # MailHog for local email testing
   mailhog:
-    image: mailhog/mailhog:latest
+    image: mailhog/mailhog:v1.0.1
     container_name: foundation-billing-mailhog-dev
     ports:
       - "1025:1025" # SMTP
