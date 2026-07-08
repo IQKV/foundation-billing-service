@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Internal service-to-service endpoint exposing the plan feature catalog, and public endpoint for pricing pages.
  *
  * <p>Used by the gateway and downstream services to populate their local
- * {@code PlanCatalogCache} at startup and on periodic refresh. Also used by public pricing pages.
+ * {@code PlanResolver} at startup and on periodic refresh. Also used by public pricing pages.
  * No authentication required: the response contains no sensitive data
  * (plan codes, names, descriptions, prices, and feature flags that are already publicly visible on the pricing page).
  */
@@ -45,7 +45,7 @@ public class PlanInternalRestResource {
   /**
    * Response payload for a single plan entry in the internal catalog.
    * Consumed by downstream services (IAM, Gateway) to populate their local
-   * {@code PlanCatalogCache} at startup and on periodic refresh.
+   * {@code PlanResolver} at startup and on periodic refresh.
    *
    * @param planCode        the plan code (e.g. {@code "pro-monthly"})
    * @param entitlement   the typed feature set for this plan

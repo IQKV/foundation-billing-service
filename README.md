@@ -178,7 +178,7 @@ Base path: `/api/v1/billing`
 
 | Method | Path                     | Auth | Description                                                            |
 | ------ | ------------------------ | ---- | ---------------------------------------------------------------------- |
-| `GET`  | `/internal/plans`        | None | Full plan feature catalog — used by gateway/service `PlanCatalogCache` |
+| `GET`  | `/internal/plans`        | None | Full plan feature catalog — used by gateway/service `PlanResolver` |
 | `GET`  | `/internal/plans/public` | None | Full plan catalog details for public pricing pages                     |
 
 **Public within internal network** — no authentication required since the response contains only non-sensitive plan feature data (same as any public pricing page). Not exposed via a public gateway route. Backed by in-memory `PlanFeatureRegistry` — no DB reads.

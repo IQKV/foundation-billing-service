@@ -20,7 +20,7 @@ YAML Config → PlanFeatureRegistry → /internal/plans → Gateway/Services →
 1. **Plan Definition**: Features defined in `application-prd.yml` as typed `PlanEntitlement` records
 2. **In-Memory Registry**: `PlanFeatureRegistry` loads features at startup for zero-latency lookups
 3. **Internal API**: `/internal/plans` serves feature catalog to gateway and downstream services
-4. **Distributed Caching**: Each service maintains local `PlanCatalogCache` with 10-minute refresh
+4. **Distributed Caching**: Each service maintains local `PlanResolver` with 10-minute refresh
 5. **Enforcement**: Gateway enforces boolean features; services enforce quotas at write operations
 
 ### Feature Types
@@ -242,7 +242,7 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 
 **Public within internal network** — no authentication required since the response contains only non-sensitive plan feature data (same as any public pricing page).
 
-- `GET /internal/plans`: Used by the gateway and downstream services to populate their local `PlanCatalogCache` at startup and on periodic refresh. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
+- `GET /internal/plans`: Used by the gateway and downstream services to populate their local `PlanResolver` at startup and on periodic refresh. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
 - `GET /internal/plans/public`: Exposes active plans with full details (display name, description, price, billing period, features) for public website pricing pages. Reads from static YAML properties — no DB reads.
 
 **Response Example:**
@@ -294,8 +294,8 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 **Integration Pattern:**
 This endpoint is the foundation of the platform's **plan-based feature access control system**:
 
-1. **Gateway Integration**: Gateway `PlanCatalogCache` refreshes from this endpoint every 10 minutes
-2. **Downstream Services**: Each service maintains its own `PlanCatalogCache` for quota enforcement
+1. **Gateway Integration**: Gateway `PlanResolver` refreshes from this endpoint every 10 minutes
+2. **Downstream Services**: Each service maintains its own `PlanResolver` for quota enforcement
 3. **Zero Hot-Path Calls**: All feature checks use in-memory cache, no network requests during user operations
 4. **Fail-Safe Security**: Services deny access when cache is empty or plan is unknown
 
