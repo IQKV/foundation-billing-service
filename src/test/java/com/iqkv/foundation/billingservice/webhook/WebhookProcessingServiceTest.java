@@ -182,7 +182,7 @@ class WebhookProcessingServiceTest {
     ));
     verify(messagingService).publishSubscriptionCreated(
         eq(tenantKey), eq(externalSubscriptionId),
-        eq(SubjectType.TENANT.name()), eq(tenantKey), eq("price_basic")
+        eq(SubjectType.TENANT.name()), eq(tenantKey), eq("price_basic"), eq(1L)
     );
     verify(webhookLogMapper).updateStatus(eq("evt_sub_created"), eq("PROCESSED"), eq(null), any());
   }
