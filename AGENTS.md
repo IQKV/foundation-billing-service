@@ -547,7 +547,7 @@ maven_commands:
         when: "Before committing or when explicitly requested"
 
 workflow:
-    1. develop: "Implement entitlement with -Dcheckstyle.skip=true"
+    1. develop: "Implement features with -Dcheckstyle.skip=true"
     2. test: "Run tests with -Dcheckstyle.skip=true"
     3. verify: "Ensure functionality works correctly"
     4. style: "Run mvn checkstyle:check separately"
@@ -659,7 +659,7 @@ Brief description of changes and motivation.
 ```yaml
 review_checklist:
     code_quality:
-        - Modern Java entitlement used appropriately
+        - Modern Java features used appropriately
         - Proper exception handling
         - No code duplication
 
