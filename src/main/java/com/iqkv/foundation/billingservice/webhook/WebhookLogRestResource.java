@@ -56,10 +56,10 @@ public class WebhookLogRestResource {
   @Operation(
       summary = "List webhook logs for current subject",
       description = "Returns a paginated, sorted, and optionally filtered list of webhook logs "
-          + "for the current subject (tenant in multi-tenant mode, user in single-tenant mode). "
-          + "Requires TENANT_OWNER, ADMIN, or MEMBER authority.")
+                    + "for the current subject (tenant in multi-tenant mode, user in single-tenant mode). "
+                    + "Requires TENANT_OWNER, ADMIN, or MEMBER authority.")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Page of webhook logs returned"),
       @ApiResponse(responseCode = "400", description = "Invalid query parameters", content = @Content),
@@ -79,9 +79,9 @@ public class WebhookLogRestResource {
   @Operation(
       summary = "Get webhook log by ID for current subject",
       description = "Returns a single webhook log for the current subject (tenant in multi-tenant mode, "
-          + "user in single-tenant mode). Requires TENANT_OWNER, ADMIN, or MEMBER authority.")
+                    + "user in single-tenant mode). Requires TENANT_OWNER, ADMIN, or MEMBER authority.")
   @Parameter(name = "X-Tenant-ID", in = ParameterIn.HEADER, required = true,
-      description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
+             description = "8-char alphanumeric tenantKey (e.g. xk7f2b9a)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Webhook log found"),
       @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content),

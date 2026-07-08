@@ -40,7 +40,7 @@ public class PlanFeatureRegistry {
    * Combines a plan's feature entitlements and pricing mode into a single transferable object.
    * Used by the internal plans endpoint so consumers receive both in one response entry.
    *
-   * @param planCode        unique plan identifier (e.g. {@code "pro-monthly"})
+   * @param planCode    unique plan identifier (e.g. {@code "pro-monthly"})
    * @param entitlement typed feature set for entitlement checks and quota enforcement
    */
   public record PlanCatalogEntry(String planCode, PlanEntitlement entitlement) {

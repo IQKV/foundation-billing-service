@@ -47,8 +47,8 @@ public class PlanInternalRestResource {
    * Consumed by downstream services (IAM, Gateway) to populate their local
    * {@code PlanResolver} at startup and on periodic refresh.
    *
-   * @param planCode        the plan code (e.g. {@code "pro-monthly"})
-   * @param entitlement   the typed feature set for this plan
+   * @param planCode    the plan code (e.g. {@code "pro-monthly"})
+   * @param entitlement the typed feature set for this plan
    */
   public record PlanCatalogEntry(String planCode, PlanEntitlement entitlement) {
   }
