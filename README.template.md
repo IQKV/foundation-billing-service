@@ -172,10 +172,10 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 
 ### Plan Catalog (internal) — `/api/v1/billing/internal/plans`
 
-| Method | Path                     | Auth | Description                                                            |
-| ------ | ------------------------ | ---- | ---------------------------------------------------------------------- |
+| Method | Path                     | Auth | Description                                                        |
+| ------ | ------------------------ | ---- | ------------------------------------------------------------------ |
 | `GET`  | `/internal/plans`        | None | Full plan feature catalog — used by gateway/service `PlanResolver` |
-| `GET`  | `/internal/plans/public` | None | Full plan catalog details for public pricing pages                     |
+| `GET`  | `/internal/plans/public` | None | Full plan catalog details for public pricing pages                 |
 
 **Public within internal network** — no authentication required since the response contains only non-sensitive plan feature data (same as any public pricing page). Not exposed via a public gateway route. Backed by in-memory `PlanFeatureRegistry` — no DB reads.
 
