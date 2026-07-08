@@ -214,7 +214,8 @@ public class WebhookProcessingService {
         subscription.getExternalSubscriptionId(),
         subject.type().name(),
         subject.key(),
-        resolvePlanCode(subscription.getPlanId())
+        resolvePlanCode(subscription.getPlanId()),
+        subscription.getQuantity()
     );
     log.info("Published subscription.created for tenant={}, subscription={}",
         tenantKey, subscription.getExternalSubscriptionId());
@@ -251,7 +252,8 @@ public class WebhookProcessingService {
           subscription.getExternalSubscriptionId(),
           subject.type().name(),
           subject.key(),
-          resolvePlanCode(subscription.getPlanId())
+          resolvePlanCode(subscription.getPlanId()),
+          subscription.getQuantity()
       );
       log.info("Published subscription.updated for tenant={}, subscription={}, subjectType={}, planCode={}",
           tenantKey, subscription.getExternalSubscriptionId(),

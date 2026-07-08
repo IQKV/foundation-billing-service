@@ -627,7 +627,8 @@ public class SubscriptionService {
           subscription.getExternalSubscriptionId(),
           subscription.getSubjectType(),
           subscription.getSubjectKey(),
-          resolvePlanCode(subscription.getPlanId())
+          resolvePlanCode(subscription.getPlanId()),
+          subscription.getQuantity()
       );
       log.info("Published subscription.updated for tenant={}, subscription={}", tenantKey, subscription.getExternalSubscriptionId());
     }
@@ -699,7 +700,8 @@ public class SubscriptionService {
           subscription.getExternalSubscriptionId(),
           subscription.getSubjectType(),
           subscription.getSubjectKey(),
-          resolvePlanCode(subscription.getPlanId())
+          resolvePlanCode(subscription.getPlanId()),
+          subscription.getQuantity()
       );
       log.info("Published subscription.updated for tenant={}, subscription={}", tenantKey, subscription.getExternalSubscriptionId());
     }
@@ -732,7 +734,8 @@ public class SubscriptionService {
           subscription.getExternalSubscriptionId(),
           subscription.getSubjectType(),
           subscription.getSubjectKey(),
-          resolvePlanCode(subscription.getPlanId())
+          resolvePlanCode(subscription.getPlanId()),
+          subscription.getQuantity()
       );
       log.info("Published subscription.updated for tenant={}, subscription={}", tenantKey, subscription.getExternalSubscriptionId());
     }
