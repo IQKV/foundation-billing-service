@@ -100,7 +100,7 @@
         active = #{active},
         trial_period_days = COALESCE(#{trialPeriodDays}, 0),
         pricing_model = COALESCE(#{pricingModel}, 'FLAT'),
-        gateway_type = #{gatewayType},
+        gateway_type = COALESCE(#{gatewayType}, gateway_type),
         updated_at = now()
         WHERE plan_code = #{planCode}
     </update>

@@ -111,6 +111,7 @@ public class BillingSeedRunner implements ApplicationRunner {
     plan.setTrialPeriodDays(schema.trialPeriodDays() != null && schema.trialPeriodDays() > 0
         ? schema.trialPeriodDays() : null);
     plan.setPricingModel(schema.effectivePricingModel().name());
+    plan.setGatewayType(paymentGatewayPort.getGatewayType().name());
 
     // For Lemon Squeezy: pre-populate externalPriceId from the YAML-configured variant ID
     // so the LS adapter can verify it without creating a new variant.
