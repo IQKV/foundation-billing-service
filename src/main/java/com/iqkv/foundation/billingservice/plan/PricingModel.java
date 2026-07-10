@@ -32,5 +32,6 @@ package com.iqkv.foundation.billingservice.plan;
  */
 public enum PricingModel {
   FLAT,
-  PER_SEAT
+  PER_SEAT,
+  METERED
 }

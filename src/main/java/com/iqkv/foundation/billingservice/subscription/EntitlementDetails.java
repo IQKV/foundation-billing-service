@@ -27,7 +27,7 @@ import com.iqkv.foundation.billingservice.plan.PlanEntitlement;
  * @param planCode         the human-readable plan code (e.g. {@code "pro-monthly"})
  * @param status           the subscription status (active, trialing, past_due, etc.)
  * @param currentPeriodEnd when the current billing vperiod ends
- * @param planEntitlement      the typed feature set for the active plan; never {@code null}
+ * @param planEntitlement  the typed feature set for the active plan; never {@code null}
  */
 public record EntitlementDetails(
     SubscriptionSubject subject,

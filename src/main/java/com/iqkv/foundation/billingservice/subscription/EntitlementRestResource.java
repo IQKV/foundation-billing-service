@@ -55,7 +55,7 @@ public class EntitlementRestResource {
    * @param planCode         the human-readable plan code (e.g. {@code "pro-monthly"})
    * @param status           the subscription status (e.g. {@code "active"}, {@code "trialing"})
    * @param currentPeriodEnd when the current billing period ends
-   * @param planEntitlement      the typed feature set for the active plan
+   * @param planEntitlement  the typed feature set for the active plan
    */
   public record EntitlementResponse(
       String planCode,

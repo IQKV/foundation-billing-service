@@ -36,6 +36,7 @@ import com.iqkv.foundation.billingservice.gateway.GatewayType;
 import com.iqkv.foundation.billingservice.gateway.command.CreateCheckoutSessionCommand;
 import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
 import com.iqkv.foundation.billingservice.gateway.command.CreateRefundCommand;
+import com.iqkv.foundation.billingservice.gateway.command.ReportUsageCommand;
 import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayInvoiceEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayPaymentFailureEvent;
@@ -303,6 +304,12 @@ public class LemonSqueezyGatewayAdapter implements PaymentGatewayPort {
       throw new PaymentGatewayException(
           "Failed to create LS customer portal session for: " + customerId, e);
     }
+  }
+
+  @Override
+  public void reportUsage(ReportUsageCommand command) {
+    log.warn("Usage reporting is not yet implemented for Lemon Squeezy: subscription={}",
+        command.externalSubscriptionId());
   }
 
   private void patch(final String path, final Map<String, Object> attributes) {

@@ -202,10 +202,43 @@ iqkv:
       #     currency: "USD"
       #     scope: "TENANT"
       #     active: true
-      #     externalVariantId: "123456"  # LS variant ID — configure before deployment
+      #   externalVariantId: "123456"  # LS variant ID — configure before deployment
       #     features:
       #       maxUsers: 5
       #       maxProjects: 3
+      #
+      # Example (METERED plan, Stripe):
+      # products:
+      #   api-pro-monthly:
+      #     planCode: "api-pro-monthly"
+      #     displayName: "API Pro (Metered)"
+      #     description: "Pay-per-use API access with 10,000 free calls."
+      #     billingPeriod: "MONTHLY"
+      #     priceMinor: 0  # Base price (can be 0 for pay-per-use only)
+      #     currency: "USD"
+      #     scope: "TENANT"
+      #     active: true
+      #     trialPeriodDays: 0
+      #     pricingModel: "METERED"
+      #     metering:
+      #       metricName: "api_calls"
+      #       aggregationType: "SUM"
+      #       externalMeterId: "mtr_123456789"  # Stripe meter ID
+      #       tiers:
+      #         - upTo: 10000
+      #           unitPriceMinor: 0
+      #         - upTo: 100000
+      #           unitPriceMinor: 1  # $0.01 per call
+      #         - upTo: null  # Unlimited
+      #           unitPriceMinor: 0.5  # $0.005 per call after 100k
+      #     entitlement:
+      #       maxUsers: 0
+      #       maxProjects: 0
+      #       features:
+      #         api_access:
+      #           title: "API Access"
+      #           value: "true"
+      #           description: "Full access to all API endpoints"
 
   auth:
     jwt:

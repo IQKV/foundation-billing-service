@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="20260710000001-add-plan-metering-config" author="iqkv">
+        <!-- New table for plan metering configuration -->
+        <createTable tableName="plan_metering_config" schemaName="public">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="plan_id" type="UUID">
+                <constraints nullable="false"
+                    foreignKeyName="fk_plan_metering_config_plan"
+                    referencedTableName="plan_catalog"
+                    referencedColumnNames="id"/>
+            </column>
+            <column name="metric_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="aggregation_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="external_meter_id" type="VARCHAR(255)"/>
+            <column name="tiers_config" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP"
+                defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"
+                defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Unique constraint: one metering config per plan -->
+        <addUniqueConstraint tableName="plan_metering_config"
+            columnNames="plan_id"
+            constraintName="uk_plan_metering_config_plan_id"/>
+
+        <!-- Index for plan_id lookups -->
+        <createIndex tableName="plan_metering_config"
+            indexName="idx_plan_metering_config_plan_id">
+            <column name="plan_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

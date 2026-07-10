@@ -16,12 +16,18 @@
 
 package com.iqkv.foundation.billingservice.infrastructure.config;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Optional;
+import java.util.UUID;
 
 import com.iqkv.foundation.billingservice.gateway.port.PaymentGatewayPort;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
+import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMeteringConfigMapper;
 import com.iqkv.foundation.billingservice.plan.Plan;
 import com.iqkv.foundation.billingservice.plan.PlanEntitlement;
+import com.iqkv.foundation.billingservice.plan.PlanMeteringConfig;
+import com.iqkv.foundation.billingservice.plan.PricingModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -57,15 +63,18 @@ public class BillingSeedRunner implements ApplicationRunner {
   private final BillingConfigurationProperties billingProps;
   private final PaymentGatewayPort paymentGatewayPort;
   private final PlanMapper planMapper;
+  private final PlanMeteringConfigMapper planMeteringConfigMapper;
   private final JsonMapper jsonMapper;
 
   public BillingSeedRunner(final BillingConfigurationProperties billingProps,
                            final PaymentGatewayPort paymentGatewayPort,
                            final PlanMapper planMapper,
+                           final PlanMeteringConfigMapper planMeteringConfigMapper,
                            final JsonMapper jsonMapper) {
     this.billingProps = billingProps;
     this.paymentGatewayPort = paymentGatewayPort;
     this.planMapper = planMapper;
+    this.planMeteringConfigMapper = planMeteringConfigMapper;
     this.jsonMapper = jsonMapper;
   }
 
@@ -155,7 +164,64 @@ public class BillingSeedRunner implements ApplicationRunner {
           plan.getPlanCode(), schema.planCode());
     }
 
+    // Sync metering config (if applicable)
+    syncMeteringConfig(schema, plan);
+
     log.info("Successfully seeded and synchronized plan: {}", plan.getPlanCode());
+  }
+
+  private void syncMeteringConfig(final ProductSchema schema, final Plan plan) {
+    final ProductSchema.MeteringConfig meteringSchema = schema.metering();
+    final Optional<PlanMeteringConfig> existingConfig = planMeteringConfigMapper.findByPlanId(plan.getId());
+
+    if (schema.effectivePricingModel() != PricingModel.METERED) {
+      // If not a metered plan, delete any existing config
+      existingConfig.ifPresent(config -> planMeteringConfigMapper.deleteByPlanId(plan.getId()));
+      return;
+    }
+
+    // If metered plan but no config provided: warn and skip
+    if (meteringSchema == null) {
+      log.warn("Plan '{}' uses METERED pricing model but has no metering configuration", schema.planCode());
+      return;
+    }
+
+    // Prepare config to persist
+    final PlanMeteringConfig config;
+    if (existingConfig.isPresent()) {
+      config = existingConfig.get();
+    } else {
+      config = new PlanMeteringConfig();
+      config.setId(UUID.randomUUID());
+      config.setPlanId(plan.getId());
+      config.setCreatedAt(LocalDateTime.now());
+    }
+
+    config.setMetricName(meteringSchema.metricName());
+    config.setAggregationType(meteringSchema.aggregationType());
+    config.setExternalMeterId(meteringSchema.externalMeterId());
+    config.setTiersConfig(serializeTiersConfig(meteringSchema.tiers(), schema.planCode()));
+    config.setUpdatedAt(LocalDateTime.now());
+
+    if (existingConfig.isPresent()) {
+      planMeteringConfigMapper.update(config);
+    } else {
+      planMeteringConfigMapper.insert(config);
+    }
+
+    log.debug("Successfully synced metering config for plan '{}'", schema.planCode());
+  }
+
+  private String serializeTiersConfig(final java.util.List<ProductSchema.TierConfig> tiers, final String planCode) {
+    if (tiers == null || tiers.isEmpty()) {
+      return null;
+    }
+    try {
+      return jsonMapper.writeValueAsString(tiers);
+    } catch (final Exception e) {
+      log.warn("Failed to serialize tiers config for plan '{}', storing null", planCode, e);
+      return null;
+    }
   }
 
   private String serializeEntitlement(final PlanEntitlement planEntitlement, final String planCode) {

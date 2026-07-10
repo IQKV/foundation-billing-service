@@ -19,8 +19,10 @@ package com.iqkv.foundation.billingservice.infrastructure.config;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import java.util.List;
 
 import com.iqkv.foundation.billingservice.plan.PlanEntitlement;
+import com.iqkv.foundation.billingservice.plan.PlanMeteringConfig;
 import com.iqkv.foundation.billingservice.plan.PricingModel;
 
 /**
@@ -51,12 +53,34 @@ public record ProductSchema(
     Integer trialPeriodDays,
     PricingModel pricingModel,
     // Lemon Squeezy variant ID (integer string). Ignored by the Stripe adapter.
-    String externalVariantId
+    String externalVariantId,
+    // Metering configuration (only for METERED pricing model)
+    MeteringConfig metering
 ) {
   /**
    * Returns the effective pricing model, defaulting to {@link PricingModel#FLAT} when absent.
    */
   public PricingModel effectivePricingModel() {
     return pricingModel != null ? pricingModel : PricingModel.FLAT;
+  }
+
+  /**
+   * Gateway-neutral configuration for metered billing.
+   */
+  public record MeteringConfig(
+      @NotBlank String metricName,
+      PlanMeteringConfig.AggregationType aggregationType,
+      String externalMeterId,
+      List<TierConfig> tiers
+  ) {
+  }
+
+  /**
+   * Configuration for a single tier in tiered metering.
+   */
+  public record TierConfig(
+      Long upTo,
+      @NotNull @Positive Integer unitPriceMinor
+  ) {
   }
 }

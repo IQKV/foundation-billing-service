@@ -22,6 +22,7 @@ import com.iqkv.foundation.billingservice.gateway.GatewayType;
 import com.iqkv.foundation.billingservice.gateway.command.CreateCheckoutSessionCommand;
 import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
 import com.iqkv.foundation.billingservice.gateway.command.CreateRefundCommand;
+import com.iqkv.foundation.billingservice.gateway.command.ReportUsageCommand;
 import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
 import com.iqkv.foundation.billingservice.plan.Plan;
@@ -149,4 +150,12 @@ public interface PaymentGatewayPort {
    * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if session creation fails
    */
   String createPortalSession(String customerId, String returnUrl);
+
+  /**
+   * Reports usage for a metered subscription.
+   *
+   * @param command the report usage command
+   * @throws com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayException if reporting fails
+   */
+  void reportUsage(ReportUsageCommand command);
 }

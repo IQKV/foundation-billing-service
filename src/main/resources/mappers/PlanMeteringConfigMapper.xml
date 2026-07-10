@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMeteringConfigMapper">
+
+  <resultMap id="PlanMeteringConfigResultMap" type="com.iqkv.foundation.billingservice.plan.PlanMeteringConfig">
+    <id property="id" column="id"/>
+    <result property="planId" column="plan_id"/>
+    <result property="metricName" column="metric_name"/>
+    <result property="aggregationType" column="aggregation_type"
+        typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+    <result property="externalMeterId" column="external_meter_id"/>
+    <result property="tiersConfig" column="tiers_config"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
+  </resultMap>
+
+  <select id="findByPlanId" resultMap="PlanMeteringConfigResultMap">
+    SELECT * FROM plan_metering_config
+    WHERE plan_id = #{planId}
+  </select>
+
+  <insert id="insert" parameterType="com.iqkv.foundation.billingservice.plan.PlanMeteringConfig">
+    INSERT INTO plan_metering_config (id, plan_id, metric_name, aggregation_type, external_meter_id, tiers_config, created_at, updated_at)
+    VALUES (#{id}, #{planId}, #{metricName}, #{aggregationType}, #{externalMeterId}, #{tiersConfig}, #{createdAt}, #{updatedAt})
+  </insert>
+
+  <update id="update" parameterType="com.iqkv.foundation.billingservice.plan.PlanMeteringConfig">
+    UPDATE plan_metering_config
+    SET metric_name = #{metricName},
+        aggregation_type = #{aggregationType},
+        external_meter_id = #{externalMeterId},
+        tiers_config = #{tiersConfig},
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = #{id}
+  </update>
+
+  <delete id="deleteByPlanId">
+    DELETE FROM plan_metering_config
+    WHERE plan_id = #{planId}
+  </delete>
+
+</mapper>

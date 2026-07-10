@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="20260710000000-add-metered-pricing-model" author="iqkv">
+        <sql>
+            ALTER TABLE plan_catalog
+            DROP CONSTRAINT chk_plan_catalog_pricing_model;
+        </sql>
+        <sql>
+            ALTER TABLE plan_catalog
+            ADD CONSTRAINT chk_plan_catalog_pricing_model
+            CHECK (pricing_model IN ('FLAT', 'PER_SEAT', 'METERED'));
+        </sql>
+        <rollback>
+            <sql>
+                ALTER TABLE plan_catalog
+                DROP CONSTRAINT chk_plan_catalog_pricing_model;
+            </sql>
+            <sql>
+                ALTER TABLE plan_catalog
+                ADD CONSTRAINT chk_plan_catalog_pricing_model
+                CHECK (pricing_model IN ('FLAT', 'PER_SEAT'));
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

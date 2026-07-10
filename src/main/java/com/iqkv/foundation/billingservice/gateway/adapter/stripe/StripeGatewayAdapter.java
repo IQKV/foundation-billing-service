@@ -25,6 +25,7 @@ import com.iqkv.foundation.billingservice.gateway.GatewayType;
 import com.iqkv.foundation.billingservice.gateway.command.CreateCheckoutSessionCommand;
 import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
 import com.iqkv.foundation.billingservice.gateway.command.CreateRefundCommand;
+import com.iqkv.foundation.billingservice.gateway.command.ReportUsageCommand;
 import com.iqkv.foundation.billingservice.gateway.command.UpdateSubscriptionCommand;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayInvoiceEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayPaymentFailureEvent;
@@ -396,18 +397,24 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
                 ? PriceCreateParams.Recurring.Interval.YEAR
                 : PriceCreateParams.Recurring.Interval.MONTH;
 
-        final PriceCreateParams priceParams = PriceCreateParams.builder()
+        final PriceCreateParams.Builder priceParamsBuilder = PriceCreateParams.builder()
             .setProduct(productId)
             .setUnitAmount(Long.valueOf(plan.getPriceMinor()))
             .setCurrency(plan.getCurrency())
-            .setRecurring(PriceCreateParams.Recurring.builder()
-                .setInterval(interval)
-                .build())
             .setActive(plan.getActive())
             .putMetadata("plan_code", plan.getPlanCode())
-            .putMetadata("managed_by", "foundation-billing-service")
-            .build();
-        final Price price = Price.create(priceParams);
+            .putMetadata("managed_by", "foundation-billing-service");
+
+        final PriceCreateParams.Recurring.Builder recurringBuilder = PriceCreateParams.Recurring.builder()
+            .setInterval(interval);
+
+        if ("METERED".equalsIgnoreCase(plan.getPricingModel())) {
+          recurringBuilder.setUsageType(PriceCreateParams.Recurring.UsageType.METERED);
+        }
+
+        priceParamsBuilder.setRecurring(recurringBuilder.build());
+
+        final Price price = Price.create(priceParamsBuilder.build());
         priceId = price.getId();
         plan.setExternalPriceId(priceId);
         log.debug("Created Stripe price {} for product {}", priceId, productId);
@@ -604,6 +611,12 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
     }
     final SubscriptionItem item = stripe.getItems().getData().get(0);
     return item.getPrice() != null ? item.getPrice().getId() : null;
+  }
+
+  @Override
+  public void reportUsage(ReportUsageCommand command) {
+    log.warn("Usage reporting is not yet implemented: subscription={}, metric={}, quantity={}",
+        command.externalSubscriptionId(), command.metricName(), command.quantity());
   }
 
   private String extractSubscriptionId(final Invoice invoice) {
