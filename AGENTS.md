@@ -6,70 +6,73 @@ This document provides comprehensive guidelines for repository management, devel
 
 ## 🏛️ Repository Structure & Organization
 
-### Tactical DDD Project Layout
+### Project Layout
 
 ```
 project-root/
 ├── .github/                          # GitHub workflows and automation
-│   └── workflows/                    # CI/CD pipeline definitions
+│   ├── ISSUE_TEMPLATE/               # Issue templates
+│   ├── workflows/                    # CI/CD pipeline definitions
+├── .husky/                           # Git hooks
+├── .mvn/                             # Maven wrapper
+├── docker/                           # Docker configs for local dev
+│   ├── dbgate/                       # Database UI
+│   ├── grafana/                      # Observability dashboards
+│   ├── postgres/                     # Database init scripts
+│   ├── prometheus/                   # Metrics config
+├── docs/                             # Architecture, deployment, API docs
 ├── src/
 │   ├── main/
-│   │   ├── java/                     # Java source code
-│   │   │   └── com/example/project/
-│   │   │       ├── shared/           # Shared kernel (cross-cutting concerns)
-│   │   │       │   ├── domain/       # Shared domain primitives
-│   │   │       │   ├── exception/    # Common exceptions
-│   │   │       │   └── util/         # Utility classes
+│   │   ├── java/
+│   │   │   └── com/iqkv/foundation/billingservice/
+│   │   │       ├── gateway/          # Payment gateway integration (commands, events, ports, REST resources)
 │   │   │       ├── infrastructure/   # Infrastructure layer
-│   │   │       │   ├── config/       # Spring configuration
-│   │   │       │   ├── security/     # Security implementation
-│   │   │       │   ├── persistence/  # JPA repositories, adapters
-│   │   │       │   └── messaging/    # Event publishers, message brokers
-│   │   │       ├── [bounded-context-1]/  # Example: user
-│   │   │       │   ├── domain/       # Domain layer (core business logic)
-│   │   │       │   │   ├── model/    # Aggregates, entities, value objects
-│   │   │       │   │   ├── service/  # Domain services
-│   │   │       │   │   └── event/    # Domain events
-│   │   │       │   ├── application/  # Application layer
-│   │   │       │   │   ├── service/  # Application services (use cases)
-│   │   │       │   │   ├── dto/      # Data transfer objects
-│   │   │       │   │   └── port/     # Ports (interfaces for adapters)
-│   │   │       │   └── adapter/      # Adapters (interface layer)
-│   │   │       │       ├── in/       # Inbound adapters
-│   │   │       │       │   └── rest/ # REST controllers
-│   │   │       │       └── out/      # Outbound adapters
-│   │   │       │           └── persistence/ # Repository implementations
-│   │   │       ├── [bounded-context-2]/  # Example: order
-│   │   │       │   ├── domain/
-│   │   │       │   ├── application/
-│   │   │       │   └── adapter/
-│   │   │       └── Application.java  # Spring Boot main class
+│   │   │       │   ├── config/       # Spring configuration, properties classes
+│   │   │       │   ├── messaging/    # RabbitMQ event consumers/publishers
+│   │   │       │   ├── mybatis/      # MyBatis type handlers
+│   │   │       │   ├── persistence/  # MyBatis mapper interfaces
+│   │   │       │   ├── security/     # Security filters, config
+│   │   │       ├── plan/             # Plan management bounded context
+│   │   │       ├── settings/         # Billing settings bounded context
+│   │   │       ├── shared/           # Shared kernel (exceptions, utils)
+│   │   │       ├── subscription/     # Subscription management bounded context
+│   │   │       ├── tenancy/          # Multi-tenancy support
+│   │   │       ├── userbilling/      # User billing settings bounded context
+│   │   │       ├── webhook/          # Payment gateway webhook handlers
+│   │   │       └── BillingServiceApplication.java  # Main class
 │   │   └── resources/
+│   │       ├── META-INF/
+│   │       │   └── spring-configuration-metadata.json
+│   │       ├── db/changelog/         # Liquibase migrations
+│   │       ├── i18n/                 # Internationalization
+│   │       ├── keys/                 # JWT keys
+│   │       ├── mappers/              # MyBatis XML mappers
+│   │       ├── templates/email/      # Email templates
 │   │       ├── application.yml       # Base configuration
-│   │       ├── application-local.yml # Local development profile
-│   │       └── db/changelog/         # Database migrations (if using Liquibase)
+│   │       ├── application-local.yml # Local dev
+│   │       ├── application-sit.yml   # SIT
+│   │       ├── application-uat.yml   # UAT
+│   │       ├── application-prd.yml   # Production
+│   │       ├── banner.txt
+│   │       └── logback-spring.xml
 │   └── test/
-│       └── java/                     # Unit, integration, and architecture tests
-│           └── com/example/project/
-│               ├── [bounded-context]/
-│               │   ├── domain/       # Domain model tests
-│               │   ├── application/  # Application service tests
-│               │   └── adapter/      # Adapter tests
-│               └── architecture/     # ArchUnit tests
+│       └── java/com/iqkv/foundation/billingservice/
+│           ├── domain/               # Domain tests
+│           ├── gateway/              # Gateway tests
+│           ├── infrastructure/       # Infrastructure tests
+│           ├── plan/                 # Plan tests
+│           ├── settings/             # Settings tests
+│           ├── subscription/         # Subscription tests
+│           ├── userbilling/          # User billing tests
+│           ├── webhook/              # Webhook tests
+│           ├── BillingServiceApplicationTests.java
+│           ├── IntegrationTest.java
+│           └── TechnicalStructureTest.java
 ├── .gitignore
-├── pom.xml                           # Maven build configuration
+├── pom.xml                           # Maven build config
 ├── README.md
-└── AGENTS.md                         # This file
+├── AGENTS.md                         # This file
 ```
-
-**Key DDD Concepts:**
-
-- **Bounded Context**: Logical boundary for a specific domain model (e.g., user, order, payment)
-- **Domain Layer**: Core business logic, entities, value objects, aggregates, domain services
-- **Application Layer**: Use cases, orchestration, DTOs, ports (interfaces)
-- **Adapter Layer**: Implementation of ports (REST controllers, repository implementations)
-- **Infrastructure**: Technical concerns (config, security, persistence framework)
-- **Shared Kernel**: Common code shared across bounded contexts
 
 ## 🤖 AI Agent Guidelines
 
@@ -91,7 +94,7 @@ explanations:
 
 verification:
     format: "Minimal wording - state outcome only"
-    example: "Tests pass. Coverage at 65%."
+    example: "Tests pass. Coverage at 90%."
     avoid: "Lengthy descriptions of what was verified"
 ```
 
@@ -127,7 +130,7 @@ All tests are passing successfully and the code is ready for review.
 **✅ CONCISE (Do this):**
 
 ```
-Added user authentication endpoint with JWT token generation. Tests pass, coverage at 68%.
+Added user authentication endpoint with JWT token generation. Tests pass, coverage at 90%.
 ```
 
 #### When to Be Detailed
@@ -181,27 +184,41 @@ Before making recommendations, agents should understand the project's technology
 **Runtime & Framework**
 
 - Java 25 with modern features (records, pattern matching, text blocks, var)
-- Spring Boot 4.x
+- Spring Boot 3.x
 - Maven for build management
 
-**Data & Caching**
+**Data & Persistence**
 
-- Database: PostgreSQL/MySQL/H2 (check project configuration)
-- Spring Data JPA with Hibernate
-- Redis for caching (if configured)
+- Database: PostgreSQL
+- MyBatis for data access
+- Liquibase for database migrations
+
+**Messaging & Integration**
+
+- RabbitMQ for event-driven architecture
+- Stripe and Lemon Squeezy payment gateways
+- ShedLock for distributed locking
+
+**Observability**
+
+- Spring Boot Actuator
+- Prometheus for metrics
+- Grafana for dashboards
+- Logback with Logstash encoder
 
 **Security**
 
 - Spring Security
-- JWT authentication (if configured)
-- Method-level security with `@PreAuthorize`
+- OAuth2 Resource Server (JWT)
+- Multi-tenancy support via foundation-tenancy library
 
 **Testing**
 
-- JUnit 5 for unit tests
+- JUnit 5 for unit and integration tests
 - Mockito for mocking
-- Testcontainers for integration tests (if configured)
+- Testcontainers (PostgreSQL and RabbitMQ)
 - ArchUnit for architecture validation
+- JaCoCo for code coverage (90% threshold)
 
 **API Documentation**
 
@@ -211,8 +228,8 @@ Before making recommendations, agents should understand the project's technology
 **Build & Deployment**
 
 - Maven 3.9.0+
-- Docker (if Dockerfile present)
-- Environment profiles: local, staging, production
+- Docker
+- Environment profiles: local, sit, uat, prd
 
 ## 📋 Development Standards
 
@@ -409,44 +426,52 @@ checkstyle_modules:
         enforcement: "Build fails on unused imports"
 ```
 
+*_REST Resource Pattern (named *RestResource):*_
+
+```java
+@RestController
+@RequestMapping("/api/v1/plans")
+@RequiredArgsConstructor
+@Tag(name = "Plan Management")
+public class PlanCatalogRestResource {
+
+  private final PlanCatalogService planCatalogService;
+
+  @GetMapping
+  @Operation(summary = "Get all active plans")
+  public ResponseEntity<List<PublicPlanEntry>> getActivePlans() {
+    return ResponseEntity.ok(planCatalogService.getActivePlans());
+  }
+}
+```
+
 **Service Layer Pattern:**
 
 ```java
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserService {
+public class PlanCatalogService {
 
-  private final UserRepository userRepository;
+  private final PlanMapper planMapper;
 
-  @Transactional
-  public UserDto createUser(UserCreateCommand command) {
-    log.info("Creating user: {}", command.username());
-
-    var user = User.builder().username(command.username()).email(command.email()).build();
-
-    var savedUser = userRepository.save(user);
-    return UserMapper.toDto(savedUser);
+  public List<PublicPlanEntry> getActivePlans() {
+    return planMapper.findAllActive().stream()
+        .map(plan -> new PublicPlanEntry(plan.getPlanCode(), plan.getDisplayName(), plan.getPriceMinor(), plan.getCurrency()))
+        .toList();
   }
 }
 ```
 
-**REST Controller Pattern:**
+**MyBatis Mapper Pattern:**
 
 ```java
-@RestController
-@RequestMapping("/api/v1/users")
-@RequiredArgsConstructor
-@Tag(name = "User Management")
-public class UserController {
-
-  private final UserService userService;
-
-  @GetMapping("/{id}")
-  @Operation(summary = "Get user by ID")
-  public ResponseEntity<UserDto> getUser(@PathVariable Long id) {
-    return userService.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
-  }
+@Mapper
+public interface PlanMapper {
+  List<Plan> findAllActive();
+  Optional<Plan> findByPlanCode(String planCode);
+  void insert(Plan plan);
+  void update(Plan plan);
 }
 ```
 
@@ -456,27 +481,32 @@ public class UserController {
 
 ```java
 @ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+class PlanCatalogServiceTest {
 
   @Mock
-  private UserRepository userRepository;
+  private PlanMapper planMapper;
 
   @InjectMocks
-  private UserService userService;
+  private PlanCatalogService planCatalogService;
 
   @Test
-  @DisplayName("Should create user successfully")
-  void shouldCreateUser() {
+  @DisplayName("Should return active plans")
+  void shouldReturnActivePlans() {
     // Arrange
-    var command = new UserCreateCommand("john.doe", "john@example.com");
-    when(userRepository.save(any(User.class))).thenAnswer((i) -> i.getArgument(0));
+    var plan = new Plan();
+    plan.setPlanCode("pro-monthly");
+    plan.setDisplayName("Pro Monthly");
+    plan.setPriceMinor(999);
+    plan.setCurrency("USD");
+    plan.setActive(true);
+    when(planMapper.findAllActive()).thenReturn(List.of(plan));
 
     // Act
-    var result = userService.createUser(command);
+    var result = planCatalogService.getActivePlans();
 
     // Assert
-    assertThat(result.username()).isEqualTo("john.doe");
-    verify(userRepository).save(any(User.class));
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).planCode()).isEqualTo("pro-monthly");
   }
 }
 ```
@@ -487,44 +517,32 @@ class UserServiceTest {
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("test")
-class UserServiceIntegrationTest {
+class PlanCatalogServiceIntegrationTest {
 
   @Container
   static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
+
+  @Container
+  static RabbitMQContainer rabbitMQ = new RabbitMQContainer("rabbitmq:3.12-alpine");
 
   @DynamicPropertySource
   static void configureProperties(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", postgres::getJdbcUrl);
     registry.add("spring.datasource.username", postgres::getUsername);
     registry.add("spring.datasource.password", postgres::getPassword);
+    registry.add("spring.rabbitmq.host", rabbitMQ::getHost);
+    registry.add("spring.rabbitmq.port", rabbitMQ::getAmqpPort::toString);
+    registry.add("spring.rabbitmq.username", rabbitMQ::getAdminUsername);
+    registry.add("spring.rabbitmq.password", rabbitMQ::getAdminPassword);
   }
 
   @Autowired
-  private UserService userService;
+  private PlanCatalogService planCatalogService;
 
   @Test
-  void shouldCreateAndRetrieveUser() {
+  void shouldCreateAndRetrievePlan() {
     // Test implementation
   }
-}
-```
-
-**Architecture Tests with ArchUnit:**
-
-```java
-@AnalyzeClasses(packages = "com.example.project")
-class ArchitectureTest {
-
-  @ArchTest
-  static final ArchRule servicesOnlyAccessedByControllersOrServices = classes()
-    .that()
-    .resideInAPackage("..service..")
-    .should()
-    .onlyBeAccessed()
-    .byAnyPackage("..controller..", "..service..", "..config..");
-
-  @ArchTest
-  static final ArchRule repositoriesShouldBeInterfaces = classes().that().resideInAPackage("..repository..").should().beInterfaces();
 }
 ```
 
@@ -650,7 +668,7 @@ Brief description of changes and motivation.
 
 - ✅ All tests pass
 - ✅ Checkstyle validation passes
-- ✅ Code coverage meets minimum threshold
+- ✅ Code coverage meets minimum threshold (90%)
 - ✅ Commit messages follow Conventional Commits
 - ✅ No merge conflicts
 
@@ -665,7 +683,7 @@ review_checklist:
 
     security:
         - Input validation with @Valid
-        - No SQL injection vulnerabilities
+        - No SQL injection vulnerabilities (MyBatis parameterized queries)
         - No sensitive data exposure
 
     testing:
@@ -685,19 +703,19 @@ review_checklist:
 
 ```yaml
 authentication:
-  - [ ] Secure authentication mechanism implemented
-  - [ ] Password hashing (BCrypt or similar)
+  - [ ] Secure authentication mechanism implemented (OAuth2 Resource Server)
+  - [ ] JWT validation
   - [ ] Token expiration configured
   - [ ] Account lockout protection
 
 authorization:
   - [ ] Role-based access control
   - [ ] Method-level security with @PreAuthorize
-  - [ ] User can only access own data
+  - [ ] User can only access own data (multi-tenancy)
 
 input_validation:
   - [ ] Bean Validation annotations (@Valid, @NotBlank)
-  - [ ] SQL injection prevention (parameterized queries)
+  - [ ] SQL injection prevention (MyBatis parameterized queries)
   - [ ] XSS prevention
   - [ ] Request size limits configured
 
@@ -735,8 +753,8 @@ void shouldDenyAccessToAdminEndpoint() throws Exception {
 
 ```yaml
 test_coverage:
-    minimum_threshold: ">= 60%"
-    target: ">= 80%"
+    minimum_threshold: ">= 90%"
+    target: ">= 95%"
 
 code_style:
     tool: "Checkstyle"
@@ -745,9 +763,8 @@ code_style:
 architecture:
     tool: "ArchUnit"
     rules:
-        - "Services only accessed by controllers"
-        - "No cyclic dependencies"
         - "Proper package structure"
+        - "No cyclic dependencies"
 ```
 
 ### Quality Gates
@@ -759,7 +776,7 @@ mvn clean verify
 # Run only tests
 mvn test
 
-# Check code coverage
+# Check code coverage (JaCoCo)
 mvn jacoco:report
 # View: target/site/jacoco/index.html
 
@@ -767,44 +784,21 @@ mvn jacoco:report
 mvn checkstyle:check
 
 # Run architecture tests
-mvn test -Dtest=*ArchitectureTest
+mvn test -Dtest=TechnicalStructureTest
 ```
 
 ## 🚀 CI/CD Pipeline
 
-### Recommended GitHub Actions Workflow
+### GitHub Actions Workflows
 
-```yaml
-name: CI/CD Pipeline
+The project has existing workflows in `.github/workflows`:
 
-on:
-    push:
-        branches: [main, develop]
-    pull_request:
-        branches: [main, develop]
-
-jobs:
-    build-and-test:
-        runs-on: ubuntu-latest
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Set up JDK 25
-              uses: actions/setup-java@v4
-              with:
-                  java-version: "25"
-                  distribution: "temurin"
-                  cache: "maven"
-
-            - name: Build and Test
-              run: mvn clean verify
-
-            - name: Upload Coverage
-              uses: codecov/codecov-action@v3
-              with:
-                  files: target/site/jacoco/jacoco.xml
-```
+- `auto-approve-dependabot-pr.yml`
+- `build-nodejs-project.yml`
+- `check-commit-message.yml`
+- `check-markdown-links.yml`
+- `check-pr-title.yml`
+- `use-template.yml`
 
 ## 📚 Documentation Standards
 
@@ -812,15 +806,18 @@ jobs:
 
 ```java
 @RestController
-@RequestMapping("/api/v1/users")
-@Tag(name = "User Management", description = "User operations")
-public class UserController {
+@RequestMapping("/api/v1/plans")
+@Tag(name = "Plan Management", description = "Plan operations")
+public class PlanCatalogRestResource {
 
-  @GetMapping("/{id}")
-  @Operation(summary = "Get user by ID", description = "Retrieves a user by their unique identifier")
-  @ApiResponses({ @ApiResponse(responseCode = "200", description = "User found"), @ApiResponse(responseCode = "404", description = "User not found") })
-  public ResponseEntity<UserDto> getUser(@Parameter(description = "User ID", example = "1") @PathVariable Long id) {
-    return userService.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+  @GetMapping("/{planCode}")
+  @Operation(summary = "Get plan by code", description = "Retrieves a plan by its code")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Plan found"),
+    @ApiResponse(responseCode = "404", description = "Plan not found")
+  })
+  public ResponseEntity<Plan> getPlanByCode(@Parameter(description = "Plan code", example = "pro-monthly") @PathVariable String planCode) {
+    return ResponseEntity.ok().build();
   }
 }
 ```
@@ -921,31 +918,31 @@ risk_evaluation:
 
 ```java
 // 1. Define DTO
-public record CreateRequest(@NotBlank String name) {}
+public record CreatePlanRequest(@NotBlank String planCode, @NotBlank String displayName) {}
 
 // 2. Add service method
 @Service
-public class MyService {
+public class PlanService {
 
-  public MyDto create(CreateRequest request) {
+  public Plan createPlan(CreatePlanRequest request) {
     /* ... */
   }
 }
 
-// 3. Add controller endpoint
+// 3. Add REST resource endpoint
 @RestController
-public class MyController {
+public class PlanRestResource {
 
   @PostMapping
-  @Operation(summary = "Create resource")
-  public ResponseEntity<MyDto> create(@Valid @RequestBody CreateRequest request) {
-    return ResponseEntity.status(HttpStatus.CREATED).body(myService.create(request));
+  @Operation(summary = "Create plan")
+  public ResponseEntity<Plan> createPlan(@Valid @RequestBody CreatePlanRequest request) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(planService.createPlan(request));
   }
 }
 
 // 4. Add tests
 @Test
-void shouldCreateResource() {
+void shouldCreatePlan() {
   /* ... */
 }
 ```
@@ -953,34 +950,77 @@ void shouldCreateResource() {
 **Pattern: Adding database migration (Liquibase)**
 
 ```xml
-<changeSet id="001" author="developer">
-    <createTable tableName="users">
-        <column name="id" type="bigint" autoIncrement="true">
-            <constraints primaryKey="true"/>
-        </column>
-        <column name="username" type="varchar(100)">
-            <constraints nullable="false" unique="true"/>
-        </column>
-        <column name="created_at" type="timestamp"
-                defaultValueComputed="CURRENT_TIMESTAMP"/>
-    </createTable>
+<changeSet id="20260710120000" author="developer">
+  <createTable tableName="plans">
+    <column name="id" type="UUID">
+      <constraints primaryKey="true"/>
+    </column>
+    <column name="plan_code" type="varchar(100)">
+      <constraints nullable="false" unique="true"/>
+    </column>
+    <column name="created_at" type="timestamp"
+            defaultValueComputed="CURRENT_TIMESTAMP"/>
+  </createTable>
 </changeSet>
 ```
 
-**Pattern: Adding caching**
+**Pattern: Adding MyBatis mapper**
+
+1. Create Java interface in `infrastructure/persistence`:
 
 ```java
-@Service
-public class MyService {
+@Mapper
+public interface PlanMapper {
+  void insert(Plan plan);
+  Optional<Plan> findByPlanCode(String planCode);
+  List<Plan> findAll();
+}
+```
 
-  @Cacheable(value = "items", key = "#id")
-  public Optional<ItemDto> findById(Long id) {
-    return repository.findById(id).map(ItemMapper::toDto);
-  }
+2. Create XML mapper in `resources/mappers`:
 
-  @CacheEvict(value = "items", key = "#id")
-  public void delete(Long id) {
-    repository.deleteById(id);
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper">
+
+  <resultMap id="PlanResultMap" type="com.iqkv.foundation.billingservice.plan.Plan">
+    <id property="id" column="id"/>
+    <result property="planCode" column="plan_code"/>
+    <result property="displayName" column="display_name"/>
+    <result property="createdAt" column="created_at"/>
+  </resultMap>
+
+  <insert id="insert" parameterType="com.iqkv.foundation.billingservice.plan.Plan">
+    INSERT INTO plans (id, plan_code, display_name, created_at)
+    VALUES (#{id}, #{planCode}, #{displayName}, #{createdAt})
+  </insert>
+
+  <select id="findByPlanCode" resultMap="PlanResultMap">
+    SELECT * FROM plans WHERE plan_code = #{planCode}
+  </select>
+
+  <select id="findAll" resultMap="PlanResultMap">
+    SELECT * FROM plans
+  </select>
+</mapper>
+```
+
+**Pattern: Adding RabbitMQ event listener**
+
+```java
+@Component
+@RequiredArgsConstructor
+public class TenantEventConsumer {
+
+  private final PlanService planService;
+
+  @RabbitListener(queues = "${iqkv.messaging.rabbitmq.tenant-events-queue}")
+  public void handleTenantCreatedEvent(TenantCreatedEvent event) {
+    log.info("Handling tenant created event: {}", event.getTenantId());
+    // Process event
   }
 }
 ```
