@@ -17,33 +17,35 @@
 package com.iqkv.foundation.billingservice.infrastructure.security;
 
 /**
- * Constants for JWT claim names used throughout the billing service.
- * All JWT claim access must use these constants — never raw strings.
+ * JWT claim name constants used by the billing service.
+ *
+ * <p>These claims are issued by the IAM service ({@code foundation-iam-service}) and consumed
+ * here for tenant ownership enforcement and user identification.
+ *
+ * <p>Only the claims actually read by this service are declared here.
+ * The authoritative full list lives in {@code JwtClaimNames} inside {@code foundation-iam-service}.
  */
 public final class JwtClaimNames {
 
-  public static final String SUB = "sub";
-  public static final String ISS = "iss";
-  public static final String IAT = "iat";
-  public static final String EXP = "exp";
-  public static final String JTI = "jti";
-  public static final String TYPE = "type";
-  public static final String USER_ID = "userId";
-  public static final String USERNAME = "username";
-  public static final String EMAIL = "email";
-  public static final String FIRST_NAME = "firstName";
-  public static final String LAST_NAME = "lastName";
+  /**
+   * Tenant key (8-character NanoID).
+   * Used to enforce that a caller can only access resources belonging to their own tenant.
+   * Absent on platform-admin tokens — those operate cross-tenant.
+   */
   public static final String TENANT_ID = "tenant_id";
+
+  /**
+   * Unique user identifier (UUID string).
+   * Used to identify the subscription subject when creating or querying subscriptions.
+   */
+  public static final String USER_ID = "user_id";
+
+  /**
+   * Granted authority strings, e.g. {@code ["ROLE_USER", "TENANT_OWNER"]}.
+   * Mapped to Spring Security {@code GrantedAuthority} instances by the
+   * {@code JwtAuthenticationConverter}.
+   */
   public static final String AUTHORITIES = "authorities";
-  public static final String EMAIL_VERIFIED = "email_verified";
-  public static final String PLAN_CODE = "plan_code";
-  public static final String ONBOARDING_COMPLETED = "onboarding_completed";
-  public static final String PROFILE_COMPLETED = "profile_completed";
-
-  public static final String TYPE_ACCESS = "access";
-  public static final String TYPE_REFRESH = "refresh";
-
-  public static final String ISSUER = "foundation-iam-service";
 
   private JwtClaimNames() {
   }
