@@ -80,7 +80,6 @@ iqkv:
     tenant-runner-enabled: true
     system-change-log: db/changelog/system/db.changelog-system.xml
     tenant-change-log: db/changelog/tenant/db.changelog-tenant.xml
-    demo-tenants: []
     change-log: db/changelog/system/db.changelog-system.xml
     # Omit or leave empty for schema-only migrations. Use "demo" on local/sit/uat to load demo seed (see db/changelog/demo).
     contexts: ${LIQUIBASE_CONTEXTS:}
