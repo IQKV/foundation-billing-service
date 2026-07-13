@@ -25,10 +25,8 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import com.iqkv.foundation.tenancy.TenantKeyProvider;
-import com.iqkv.foundation.tenancy.TenantLiquibaseRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -45,7 +43,6 @@ import org.springframework.stereotype.Component;
  * not interfere when the runner is disabled.
  */
 @Component
-@ConditionalOnBean(TenantLiquibaseRunner.class)
 public class AllTenantsKeyProvider implements TenantKeyProvider {
 
   private static final Logger log = LoggerFactory.getLogger(AllTenantsKeyProvider.class);
