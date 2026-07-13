@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="20260713000000-add-subject-type-to-refunds" author="iqkv">
+        <!-- Add subject_type with a default so existing rows get a value -->
+        <addColumn tableName="refunds" schemaName="public">
+            <column name="subject_type" type="VARCHAR(16)" defaultValue="TENANT">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="refunds" schemaName="public" columnName="subject_type"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20260713000001-add-subject-key-to-refunds" author="iqkv">
+        <!-- Add subject_key as nullable first to allow backfill -->
+        <addColumn tableName="refunds" schemaName="public">
+            <column name="subject_key" type="VARCHAR(255)"/>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="refunds" schemaName="public" columnName="subject_key"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20260713000002-backfill-subject-key-on-refunds" author="iqkv">
+        <!-- Backfill subject_key from tenant_key for existing rows -->
+        <sql>
+            UPDATE refunds
+            SET subject_key = tenant_key
+            WHERE subject_key IS NULL;
+        </sql>
+        <rollback>
+            <sql>UPDATE refunds SET subject_key = NULL;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20260713000003-notnull-subject-key-on-refunds" author="iqkv">
+        <addNotNullConstraint tableName="refunds" schemaName="public"
+                              columnName="subject_key" columnDataType="VARCHAR(255)"/>
+        <rollback>
+            <dropNotNullConstraint tableName="refunds" schemaName="public"
+                                   columnName="subject_key" columnDataType="VARCHAR(255)"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20260713000004-chk-subject-type-on-refunds" author="iqkv" dbms="postgresql">
+        <sql>
+            ALTER TABLE refunds
+            ADD CONSTRAINT chk_refunds_subject_type
+            CHECK (subject_type IN ('TENANT', 'USER'));
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE refunds DROP CONSTRAINT chk_refunds_subject_type;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20260713000005-add-gateway-type-to-refunds" author="iqkv">
+        <!-- Add gateway_type with a default matching the existing gateway columns on other tables -->
+        <addColumn tableName="refunds" schemaName="public">
+            <column name="gateway_type" type="VARCHAR(32)" defaultValue="STRIPE">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="refunds" schemaName="public" columnName="gateway_type"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
