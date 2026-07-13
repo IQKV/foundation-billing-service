@@ -136,7 +136,7 @@ public class SubscriptionRestResource {
       @RequestBody final SubscriptionDtos.CreateCheckoutSessionRequest request,
       @AuthenticationPrincipal final Jwt jwt) {
     final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
-    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UUID userId = UUID.fromString(jwt.getClaimAsString(JwtClaimNames.USER_ID));
     return ResponseEntity.ok(subscriptionService.createCheckoutSessionForSubject(tenantKey, userId, request));
   }
 
@@ -202,7 +202,7 @@ public class SubscriptionRestResource {
   public ResponseEntity<SubscriptionDtos.SubscriptionResponse> getActiveForSubject(
       @AuthenticationPrincipal final Jwt jwt) {
     final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
-    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UUID userId = UUID.fromString(jwt.getClaimAsString(JwtClaimNames.USER_ID));
     final var subscription = subscriptionService.getActiveBySubject(tenantKey, userId);
     return ResponseEntity.ok(SubscriptionDtoMapper.toResponse(subscription));
   }
@@ -223,7 +223,7 @@ public class SubscriptionRestResource {
   public ResponseEntity<List<SubscriptionDtos.SubscriptionResponse>> getAllForSubject(
       @AuthenticationPrincipal final Jwt jwt) {
     final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
-    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UUID userId = UUID.fromString(jwt.getClaimAsString(JwtClaimNames.USER_ID));
     final var subscriptions = subscriptionService.getAllBySubject(tenantKey, userId)
         .stream()
         .map(SubscriptionDtoMapper::toResponse)

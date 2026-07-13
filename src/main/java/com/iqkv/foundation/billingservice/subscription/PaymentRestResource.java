@@ -115,7 +115,7 @@ public class PaymentRestResource {
       @RequestBody final SubscriptionDtos.CreateRefundRequest request,
       @AuthenticationPrincipal final Jwt jwt) {
     final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
-    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UUID userId = UUID.fromString(jwt.getClaimAsString(JwtClaimNames.USER_ID));
     return ResponseEntity.ok(subscriptionService.createRefundForSubject(tenantKey, userId, request));
   }
 
@@ -133,7 +133,7 @@ public class PaymentRestResource {
   public ResponseEntity<List<SubscriptionDtos.AdminRefundResponse>> listRefundsForMe(
       @AuthenticationPrincipal final Jwt jwt) {
     final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
-    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UUID userId = UUID.fromString(jwt.getClaimAsString(JwtClaimNames.USER_ID));
     final var refunds = subscriptionService.getAllRefundsBySubject(tenantKey, userId);
     return ResponseEntity.ok(refunds.stream()
         .map(RefundDtoMapper::toAdminResponse)

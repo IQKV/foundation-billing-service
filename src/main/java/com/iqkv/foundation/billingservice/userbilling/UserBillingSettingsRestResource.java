@@ -19,6 +19,7 @@ package com.iqkv.foundation.billingservice.userbilling;
 import jakarta.validation.Valid;
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.infrastructure.security.JwtClaimNames;
 import com.iqkv.foundation.billingservice.settings.BillingSettingsDtos;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -66,7 +67,7 @@ public class UserBillingSettingsRestResource {
   })
   public ResponseEntity<BillingSettingsDtos.BillingSettingsResponse> getSettings(
       @AuthenticationPrincipal final Jwt jwt) {
-    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UUID userId = UUID.fromString(jwt.getClaimAsString(JwtClaimNames.USER_ID));
     final UserBillingSettings settings = userBillingSettingsService.getByUserId(userId);
     return ResponseEntity.ok(UserBillingSettingsDtoMapper.toResponse(settings));
   }
@@ -85,7 +86,7 @@ public class UserBillingSettingsRestResource {
   public ResponseEntity<BillingSettingsDtos.BillingSettingsResponse> createSettings(
       @Valid @RequestBody final BillingSettingsDtos.CreateBillingSettingsRequest request,
       @AuthenticationPrincipal final Jwt jwt) {
-    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UUID userId = UUID.fromString(jwt.getClaimAsString(JwtClaimNames.USER_ID));
     final UserBillingSettings created = userBillingSettingsService.createForUser(userId, request);
     return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest().build().toUri())
         .body(UserBillingSettingsDtoMapper.toResponse(created));
@@ -105,7 +106,7 @@ public class UserBillingSettingsRestResource {
   public ResponseEntity<BillingSettingsDtos.BillingSettingsResponse> updateSettings(
       @Valid @RequestBody final BillingSettingsDtos.UpdateBillingSettingsRequest request,
       @AuthenticationPrincipal final Jwt jwt) {
-    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UUID userId = UUID.fromString(jwt.getClaimAsString(JwtClaimNames.USER_ID));
     final UserBillingSettings settings = userBillingSettingsService.updateForUser(userId, request);
     return ResponseEntity.ok(UserBillingSettingsDtoMapper.toResponse(settings));
   }
@@ -122,7 +123,7 @@ public class UserBillingSettingsRestResource {
   })
   public ResponseEntity<BillingSettingsDtos.PortalSessionResponse> createPortalSession(
       @AuthenticationPrincipal final Jwt jwt) {
-    final UUID userId = UUID.fromString(jwt.getSubject());
+    final UUID userId = UUID.fromString(jwt.getClaimAsString(JwtClaimNames.USER_ID));
     final String url = userBillingSettingsService.createPortalSession(userId);
     return ResponseEntity.ok(new BillingSettingsDtos.PortalSessionResponse(url));
   }
