@@ -22,6 +22,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -46,6 +47,23 @@ public class MessageSourceConfig implements WebMvcConfigurer {
     source.setCacheSeconds(3600);
     source.setFallbackToSystemLocale(false);
     return source;
+  }
+
+  @Bean
+  public MessageSource validationMessageSource() {
+    final var source = new ReloadableResourceBundleMessageSource();
+    source.setBasename("classpath:i18n/ValidationMessages");
+    source.setDefaultEncoding("UTF-8");
+    source.setCacheSeconds(3600);
+    source.setFallbackToSystemLocale(false);
+    return source;
+  }
+
+  @Bean
+  public LocalValidatorFactoryBean validator() {
+    final var factoryBean = new LocalValidatorFactoryBean();
+    factoryBean.setValidationMessageSource(validationMessageSource());
+    return factoryBean;
   }
 
   /**
