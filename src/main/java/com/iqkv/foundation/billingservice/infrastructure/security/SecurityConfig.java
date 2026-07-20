@@ -97,10 +97,19 @@ public class SecurityConfig {
 
   @Bean
   public JwtDecoder jwtDecoder() {
+    final AuthConfigurationProperties.Jwt jwt = authProps.jwt();
+
+    if (jwt.jwksUri() != null && !jwt.jwksUri().isBlank()) {
+      // Deployed (K8s): fetch public keys from the IAM JWKS endpoint.
+      // Nimbus handles caching and re-fetch on unknown kid automatically.
+      return NimbusJwtDecoder.withJwkSetUri(jwt.jwksUri()).build();
+    }
+
+    // Local dev / tests: parse the RSA public key from a PEM file.
+    // Accepts classpath: resources (test) or file: paths (custom local setups).
     try {
-      final String publicKeyPath = authProps.jwt().publicKeyPath();
       final String pem;
-      try (InputStream is = resourceLoader.getResource(publicKeyPath).getInputStream()) {
+      try (InputStream is = resourceLoader.getResource(jwt.publicKeyPath()).getInputStream()) {
         pem = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       }
       final String stripped = pem
@@ -112,7 +121,7 @@ public class SecurityConfig {
       final RSAPublicKey publicKey = (RSAPublicKey) keyFactory.generatePublic(new X509EncodedKeySpec(keyBytes));
       return NimbusJwtDecoder.withPublicKey(publicKey).build();
     } catch (final IOException | java.security.GeneralSecurityException e) {
-      throw new IllegalStateException("Failed to load RSA public key for JWT decoding", e);
+      throw new IllegalStateException("Failed to load RSA public key for JWT decoding from: " + jwt.publicKeyPath(), e);
     }
   }
 
