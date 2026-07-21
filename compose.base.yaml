@@ -104,6 +104,12 @@ services:
         -XX:+UseContainerSupport
         -XX:MaxRAMPercentage=75.0
         -Djava.security.egd=file:/dev/./urandom
+
+      # JWT / Authentication
+      # Uses the classpath PEM for local dev — no IAM service dependency.
+      # In K8s, JWT_JWKS_URI is injected by the Helm configmap instead.
+      JWT_PUBLIC_KEY_PATH: "classpath:keys/public.pem"
+      JWT_JWKS_URI: ""
     ports:
       - "8080:8080" # Billing service API
       - "8081:8081" # Actuator / management
