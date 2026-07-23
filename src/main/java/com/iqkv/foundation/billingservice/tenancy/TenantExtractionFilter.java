@@ -95,7 +95,7 @@ public class TenantExtractionFilter extends OncePerRequestFilter {
            || path.startsWith("/api-docs/")
            || path.startsWith("/swagger-ui/")
            || path.startsWith("/api/v1/billing/admin/")
-           || path.startsWith("/api/v1/billing/internal/plans/public")
+           || path.startsWith("/api/v1/billing/internal/plans")
            || ("POST".equalsIgnoreCase(method) && path.equals("/api/v1/billing/webhooks/stripe"))
            || ("POST".equalsIgnoreCase(method) && path.equals("/api/v1/billing/webhooks/lemon-squeezy"));
   }
