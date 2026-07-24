@@ -43,6 +43,10 @@ public record GatewaySubscriptionEvent(
     Map<String, String> metadata
 ) implements GatewayWebhookEvent {
 
+  public GatewaySubscriptionEvent {
+    metadata = metadata != null ? Map.copyOf(metadata) : Map.of();
+  }
+
   /**
    * Determines if this is a subscription creation event.
    */
