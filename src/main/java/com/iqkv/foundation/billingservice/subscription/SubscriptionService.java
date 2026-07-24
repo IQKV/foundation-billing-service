@@ -322,11 +322,15 @@ public class SubscriptionService {
       priceId = plan.getExternalPriceId();
     }
 
+    final String prorationBehavior = request.prorationBehavior() != null
+        ? request.prorationBehavior()
+        : "create_prorations";
+
     final var command = new UpdateSubscriptionCommand(
         externalSubscriptionId,
         priceId,
         request.quantity(),
-        request.prorationBehavior(),
+        prorationBehavior,
         java.util.Map.of()
     );
 

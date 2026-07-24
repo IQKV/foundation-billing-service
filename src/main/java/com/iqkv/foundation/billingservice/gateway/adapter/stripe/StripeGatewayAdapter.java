@@ -201,10 +201,11 @@ public class StripeGatewayAdapter implements PaymentGatewayPort {
             .build());
       }
 
-      if (command.prorationBehavior() != null) {
-        builder.setProrationBehavior(SubscriptionUpdateParams.ProrationBehavior.valueOf(
-            command.prorationBehavior().toUpperCase()));
-      }
+      final String prorationBehavior = command.prorationBehavior() != null
+          ? command.prorationBehavior()
+          : "create_prorations";
+      builder.setProrationBehavior(SubscriptionUpdateParams.ProrationBehavior.valueOf(
+          prorationBehavior.toUpperCase()));
 
       command.metadata().forEach(builder::putMetadata);
 

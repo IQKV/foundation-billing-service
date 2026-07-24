@@ -159,9 +159,12 @@ public class LemonSqueezyGatewayAdapter implements PaymentGatewayPort {
     if (command.quantity() != null) {
       attrs.put("quantity", command.quantity());
     }
-    if ("none".equalsIgnoreCase(command.prorationBehavior())) {
+    final String prorationBehavior = command.prorationBehavior() != null
+        ? command.prorationBehavior()
+        : "create_prorations";
+    if ("none".equalsIgnoreCase(prorationBehavior)) {
       attrs.put("immediate_payment", false);
-    } else if (command.prorationBehavior() != null) {
+    } else {
       attrs.put("immediate_payment", true);
     }
     patch("/subscriptions/" + command.subscriptionId(), attrs);
