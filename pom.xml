@@ -10,7 +10,7 @@
     <groupId>com.iqkv</groupId>
     <artifactId>foundation-billing-service</artifactId>
     <version>0.0.0-SNAPSHOT</version>
-    <name>IQ Key Value Billing Service</name>
+    <name>iQ Key Value Billing Service</name>
     <description>Billing and subscription management service</description>
     <developers>
 

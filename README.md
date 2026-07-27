@@ -1,6 +1,6 @@
 > ## 🤔 What is this service all about?
 >
-> - Billing and subscription management microservice for the IQ Key Value platform.
+> - Billing and subscription management microservice for the iQ Key Value platform.
 > - Payment gateway abstraction layer — supports multiple providers (Stripe implemented) via Strategy pattern; subscriptions, invoices, and the dashboard are managed on the gateway's side.
 > - Make the project easy to maintain with **8 issue templates**.
 > - Quick-start documentation
@@ -9,7 +9,7 @@
 
 ---
 
-# 💳 IQ Key Value Billing Service
+# 💳 iQ Key Value Billing Service
 
 Billing and subscription management microservice. Provides a gateway-agnostic payment abstraction layer — handles tenant-to-customer mapping, webhook ingestion, and lifecycle event publishing. No custom billing logic lives here.
 
