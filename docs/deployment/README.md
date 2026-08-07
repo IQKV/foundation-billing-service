@@ -90,7 +90,7 @@ The pipeline uses these Helm commands for deployment:
 
 ```bash
 # WIP / Feature branches (SIT)
-helm upgrade --install --atomic --wait --timeout 5m foundation-billing-service ./ \
+helm upgrade --install --rollback-on-failure --wait --timeout 5m foundation-billing-service ./ \
   --values ./values.yaml \
   --values ./values-sit.yaml \
   --set image.tag=${DRONE_BRANCH} \
@@ -107,7 +107,7 @@ helm upgrade --install --atomic --wait --timeout 5m foundation-billing-service .
   --create-namespace
 
 # Production (tagged releases)
-helm upgrade --install --atomic --wait --timeout 5m foundation-billing-service ./ \
+helm upgrade --install --rollback-on-failure --wait --timeout 5m foundation-billing-service ./ \
   --values ./values.yaml \
   --values ./values-prd.yaml \
   --set image.tag=${DRONE_TAG} \
