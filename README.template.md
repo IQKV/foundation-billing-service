@@ -299,7 +299,7 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 
 - JDK 25 (Eclipse Temurin)
 - Maven 3.9+
-- Node.js >= 22.15.0 & pnpm >= 11.0.8 (git hooks)
+- Node.js >= 22.15.0 & pnpm >= 10.33.2 (git hooks)
 - Docker & Docker Compose
 
 ## Quick Start
