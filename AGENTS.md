@@ -74,6 +74,40 @@ project-root/
 ├── AGENTS.md                         # This file
 ```
 
+## Execution Discipline
+
+- Root cause first. Fix the real entry point, not a bypass around it.
+- Read complete affected modules, callers, and tests before editing.
+- After two identical failures without new evidence, change approach — do not retry blindly.
+- Check relevant prerequisites early (`./mvnw verify`). Parallelize independent work.
+- Behavior proven and required gates green: finish. No speculative scope growth.
+
+## Security
+
+- Keep credentials, tokens, and private config out of commits, logs, and shared text.
+- Flag files likely to contain secrets (`.env`, `application-local.yml`, Stripe/LemonSqueezy keys) before staging.
+- No hardcoded secrets — use environment variables or Spring config properties.
+- Payment gateway credentials (Stripe secret key, webhook secret) must only come from config properties, never hardcoded.
+- Use exact or pinned dependency versions. Flag unusual package names before installing.
+- Never bypass `--no-verify` unless explicitly requested.
+
+## Commit Standards
+
+Format: `type(scope): subject`
+
+- Subject: imperative, lowercase, no trailing period, ≤ 72 chars
+- Types: `feat`, `fix`, `improvement`, `refactor`, `docs`, `test`, `chore`, `ci`, `perf`, `revert`
+- Scope: affected context or layer (e.g., `gateway`, `subscription`, `plan`, `webhook`, `refund`, `stripe`, `config`)
+- For `fix`: describe the symptom and trigger, not the code change
+  - ✅ `fix(webhook): duplicate invoice events processed when Stripe retries`
+  - ❌ `fix(webhook): add idempotency check`
+
+Examples:
+- `feat(subscription): add grace period support for failed renewals`
+- `fix(gateway): checkout session creation fails when currency not set on plan`
+- `refactor(stripe): extract webhook signature validation into dedicated class`
+- `chore(deps): update spring-boot to 3.5.0`
+
 ## 🤖 AI Agent Guidelines
 
 ### AI Communication Standards
