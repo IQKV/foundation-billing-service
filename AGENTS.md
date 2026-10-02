@@ -99,10 +99,11 @@ Format: `type(scope): subject`
 - Types: `feat`, `fix`, `improvement`, `refactor`, `docs`, `test`, `chore`, `ci`, `perf`, `revert`
 - Scope: affected context or layer (e.g., `gateway`, `subscription`, `plan`, `webhook`, `refund`, `stripe`, `config`)
 - For `fix`: describe the symptom and trigger, not the code change
-  - ✅ `fix(webhook): duplicate invoice events processed when Stripe retries`
-  - ❌ `fix(webhook): add idempotency check`
+    - ✅ `fix(webhook): duplicate invoice events processed when Stripe retries`
+    - ❌ `fix(webhook): add idempotency check`
 
 Examples:
+
 - `feat(subscription): add grace period support for failed renewals`
 - `fix(gateway): checkout session creation fails when currency not set on plan`
 - `refactor(stripe): extract webhook signature validation into dedicated class`
