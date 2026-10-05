@@ -60,7 +60,7 @@ iqkv:
           displayName: "Basic Yearly (SIT)"
           description: "A basic plan for small teams with limited support, billed yearly at a 20% discount!"
           billingPeriod: "ANNUAL"
-          priceMinor: 4800  # $48/year (instead of $60)
+          priceMinor: 4800 # $48/year (instead of $60)
           currency: "USD"
           scope: "TENANT"
           active: true
@@ -106,7 +106,7 @@ iqkv:
           displayName: "Pro Yearly (SIT)"
           description: "A pro plan for larger teams with priority support, billed yearly at a 20% discount!"
           billingPeriod: "ANNUAL"
-          priceMinor: 14400  # $144/year (instead of $180)
+          priceMinor: 14400 # $144/year (instead of $180)
           currency: "USD"
           scope: "TENANT"
           active: true
