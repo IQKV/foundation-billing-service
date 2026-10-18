@@ -48,7 +48,7 @@ class SubscriptionDtosTest {
         id, tenantKey, externalSubscriptionId, "cus_123", status, planId,
         quantity, trialStart, trialEnd, false, null,
         periodStart, periodEnd, true, canceledAt, "STRIPE", "order_123",
-        null, false
+        null, false, 3
     );
 
     // Assert
@@ -69,6 +69,7 @@ class SubscriptionDtosTest {
     assertThat(response.externalOrderId()).isEqualTo("order_123");
     assertThat(response.gracePeriodEnd()).isNull();
     assertThat(response.inGracePeriod()).isFalse();
+    assertThat(response.paymentRetryCount()).isEqualTo(3);
   }
 
   @Test
@@ -79,7 +80,7 @@ class SubscriptionDtosTest {
         UUID.randomUUID(), "tenant-123", "sub_abc", null, "active", "price_123",
         null, null, null, false, null,
         Instant.now(), Instant.now().plusSeconds(2592000), false, null, null, null,
-        null, false
+        null, false, null
     );
 
     // Assert
@@ -103,13 +104,13 @@ class SubscriptionDtosTest {
         id, "tenant-123", "sub_abc", null, "active", "price_123",
         5L, null, null, false, null,
         now, now.plusSeconds(2592000), false, null, null, null,
-        null, false
+        null, false, null
     );
     final var response2 = new SubscriptionDtos.SubscriptionResponse(
         id, "tenant-123", "sub_abc", null, "active", "price_123",
         5L, null, null, false, null,
         now, now.plusSeconds(2592000), false, null, null, null,
-        null, false
+        null, false, null
     );
 
     // Assert
@@ -125,7 +126,7 @@ class SubscriptionDtosTest {
         UUID.randomUUID(), "tenant-123", "sub_abc", null, "active", "price_123",
         1L, null, null, false, null,
         Instant.now(), Instant.now().plusSeconds(2592000), false, null, null, null,
-        null, false
+        null, false, null
     );
 
     // Act
@@ -294,7 +295,7 @@ class SubscriptionDtosTest {
         id, "tenant-123", "sub_ext123", "cus_ext123", "active", "price_123", 2L,
         null, null, false, null, now, now.plusSeconds(2592000), false, null,
         "TENANT", "tenant-123", "STRIPE", "order_123",
-        null, null, false,
+        null, null, false, null,
         created, created
     );
 
@@ -308,6 +309,7 @@ class SubscriptionDtosTest {
     assertThat(response.gracePeriodEnd()).isNull();
     assertThat(response.suspendedAt()).isNull();
     assertThat(response.inGracePeriod()).isFalse();
+    assertThat(response.paymentRetryCount()).isNull();
   }
 
   @Test
@@ -343,7 +345,7 @@ class SubscriptionDtosTest {
         UUID.randomUUID(), "tenant-123", "sub_1", null, "active", "price_1", 1L,
         null, null, false, null, Instant.now(), Instant.now(), false, null,
         "TENANT", "tenant-123", null, null,
-        null, null, false,
+        null, null, false, null,
         java.time.LocalDateTime.now(), java.time.LocalDateTime.now()
     );
     final var content = java.util.List.of(subscription);

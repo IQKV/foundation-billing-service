@@ -27,6 +27,7 @@
     <include file="db/changelog/system/20260713000000-add-subject-and-gateway-type-to-refunds.xml"/>
     <include file="db/changelog/system/20260713000001-create-shedlock-table.xml"/>
     <include file="db/changelog/system/20261018100000-add-grace-period-to-subscriptions.xml"/>
+    <include file="db/changelog/system/20261018110000-add-payment-retry-count-to-subscriptions.xml"/>
 
     <!-- Demo data (Liquibase context: demo); enable with iqkv.liquibase.contexts=demo -->
     <include file="db/changelog/system/demo/master.xml"/>

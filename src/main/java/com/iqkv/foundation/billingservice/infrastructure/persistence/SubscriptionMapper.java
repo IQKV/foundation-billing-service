@@ -112,6 +112,14 @@ public interface SubscriptionMapper {
    */
   List<Subscription> findExpiredGracePeriods();
 
+  /**
+   * Atomically increments the payment retry counter for a subscription.
+   * Called on each {@code invoice.payment_failed} webhook during the grace period.
+   *
+   * @param externalSubscriptionId gateway subscription ID
+   */
+  void incrementPaymentRetryCount(@Param("externalSubscriptionId") String externalSubscriptionId);
+
   // ─── Admin queries ─────────────────────────────────────────────────────────
 
   /**

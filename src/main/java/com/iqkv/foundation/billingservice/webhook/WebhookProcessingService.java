@@ -519,6 +519,15 @@ public class WebhookProcessingService {
     final var subjectContext = resolveSubjectFromSubscription(event.externalSubscriptionId(), tenantKey);
     final String currency = billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD";
 
+    // Track gateway payment retry attempts for the grace-period reminder emails.
+    final int currentRetryCount = subscriptionMapper
+        .findByExternalSubscriptionId(event.externalSubscriptionId())
+        .map(s -> s.getPaymentRetryCount() != null ? s.getPaymentRetryCount() : 0)
+        .orElse(0);
+    final int newRetryCount = currentRetryCount + 1;
+    final int remainingRetries = Math.max(0, billingProperties.maxPaymentRetries() - newRetryCount);
+    subscriptionMapper.incrementPaymentRetryCount(event.externalSubscriptionId());
+
     meterRegistry.counter("billing_payments_total",
         "status", "failed",
         "currency", currency,
@@ -548,7 +557,9 @@ public class WebhookProcessingService {
               "companyName", nullToEmpty(billingSettings.getCompanyName()),
               "invoiceId", nullToEmpty(event.externalInvoiceId()),
               "amountDue", event.amountDue() != null ? event.amountDue() / 100.0 : 0.0,
-              "currency", billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD"
+              "currency", billingSettings.getCurrency() != null ? billingSettings.getCurrency() : "USD",
+              "retryCount", newRetryCount,
+              "remainingRetries", remainingRetries
           ),
           Instant.now()));
     }

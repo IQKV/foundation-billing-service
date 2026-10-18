@@ -37,6 +37,7 @@ import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
 import com.iqkv.foundation.billingservice.infrastructure.config.BillingConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
+import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEventType;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.PlanMapper;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.RefundMapper;
@@ -46,6 +47,7 @@ import com.iqkv.foundation.billingservice.infrastructure.persistence.WebhookLogM
 import com.iqkv.foundation.billingservice.plan.PlanEligibilityPolicy;
 import com.iqkv.foundation.billingservice.settings.BillingSettings;
 import com.iqkv.foundation.billingservice.subscription.SubjectType;
+import com.iqkv.foundation.billingservice.subscription.Subscription;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubject;
 import com.iqkv.foundation.billingservice.subscription.SubscriptionSubjectResolver;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -351,6 +353,47 @@ class WebhookProcessingServiceTest {
     // Assert
     verify(subscriptionMapper).clearGracePeriod(subscriptionId);
     verify(subscriptionMapper, never()).setGracePeriodEnd(any(), any());
+  }
+
+  // -------------------------------------------------------------------------
+  // Payment retry tracking
+  // -------------------------------------------------------------------------
+
+  @Test
+  @DisplayName("Should increment retry count and include it in payment failed notification")
+  void shouldIncrementRetryCountAndIncludeInNotification() {
+    // Arrange
+    final String tenantKey = "tenant-retry";
+    final String customerId = "cus_retry123";
+    final String invoiceId = "inv_retry";
+    final String subscriptionId = "sub_retry123";
+    final GatewayPaymentFailureEvent event = new GatewayPaymentFailureEvent(
+        "evt_retry", "invoice.payment_failed", Instant.now(), "STRIPE",
+        invoiceId, customerId, subscriptionId, 4900L, "USD", "Card declined"
+    );
+    final BillingSettings settings = createBillingSettings(tenantKey, customerId);
+    final Subscription existing = new Subscription();
+    existing.setExternalSubscriptionId(subscriptionId);
+    existing.setPaymentRetryCount(2); // already 2 retries
+    existing.setSubjectType("TENANT");
+    existing.setSubjectKey(tenantKey);
+
+    when(webhookLogMapper.insertIfNotExists(any())).thenReturn(1);
+    when(billingSettingsMapper.findByExternalCustomerId(customerId)).thenReturn(Optional.of(settings));
+    when(subscriptionMapper.findByExternalSubscriptionId(subscriptionId)).thenReturn(Optional.of(existing));
+    when(notificationProps.defaultLocale()).thenReturn("en");
+    when(billingProperties.maxPaymentRetries()).thenReturn(5);
+
+    // Act
+    webhookProcessingService.process(event);
+
+    // Assert
+    verify(subscriptionMapper).incrementPaymentRetryCount(subscriptionId);
+    verify(messagingService).publishNotification(argThat(notification ->
+        notification.getType() == NotificationEventType.PAYMENT_FAILED
+        && notification.getPayload().get("retryCount").equals(3)
+        && notification.getPayload().get("remainingRetries").equals(2)
+    ));
   }
 
   // -------------------------------------------------------------------------

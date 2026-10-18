@@ -47,16 +47,25 @@ public record BillingConfigurationProperties(
     /*
      * Length of the payment grace period (in days) granted to a subscription whose renewal
      * payment fails. The subscription keeps full entitlements for this window; once it
-     * elapses a daily job suspends access. Defaults to 7 days.
+     * elapses a daily job suspends access. Defaults to 15 days.
      */
-    Integer gracePeriodDays
+    Integer gracePeriodDays,
+
+    /*
+     * Maximum number of payment retry attempts the gateway makes during the grace period.
+     * Used to compute "remaining retries" in notification emails. Defaults to 5.
+     */
+    Integer maxPaymentRetries
 ) {
   public BillingConfigurationProperties {
     if (planCatalog == null) {
       planCatalog = new PlanCatalogProperties(Collections.emptyMap());
     }
     if (gracePeriodDays == null || gracePeriodDays <= 0) {
-      gracePeriodDays = 7;
+      gracePeriodDays = 15;
+    }
+    if (maxPaymentRetries == null || maxPaymentRetries <= 0) {
+      maxPaymentRetries = 5;
     }
   }
 

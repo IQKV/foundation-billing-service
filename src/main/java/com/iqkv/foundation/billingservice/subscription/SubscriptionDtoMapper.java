@@ -51,7 +51,8 @@ public final class SubscriptionDtoMapper {
         subscription.getGatewayType(),
         subscription.getExternalOrderId(),
         subscription.getGracePeriodEnd(),
-        subscription.isInGracePeriod());
+        subscription.isInGracePeriod(),
+        subscription.getPaymentRetryCount());
   }
 
   /**
@@ -82,6 +83,7 @@ public final class SubscriptionDtoMapper {
         subscription.getGracePeriodEnd(),
         subscription.getSuspendedAt(),
         subscription.isInGracePeriod(),
+        subscription.getPaymentRetryCount(),
         subscription.getCreatedAt(),
         subscription.getUpdatedAt());
   }

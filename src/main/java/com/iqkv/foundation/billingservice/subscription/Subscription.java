@@ -53,6 +53,7 @@ public class Subscription {
   private String externalOrderId;         // nullable — Lemon Squeezy order ID
   private Instant gracePeriodEnd;          // nullable — deadline after which a past_due sub is suspended
   private Instant suspendedAt;            // nullable — set when the grace period expires
+  private Integer paymentRetryCount;      // gateway payment retry attempts during grace period; 0 when not past_due
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -265,6 +266,14 @@ public class Subscription {
 
   public void setSuspendedAt(Instant suspendedAt) {
     this.suspendedAt = suspendedAt;
+  }
+
+  public Integer getPaymentRetryCount() {
+    return paymentRetryCount;
+  }
+
+  public void setPaymentRetryCount(Integer paymentRetryCount) {
+    this.paymentRetryCount = paymentRetryCount;
   }
 
   /**

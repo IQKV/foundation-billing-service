@@ -54,7 +54,8 @@ public final class SubscriptionDtos {
       String gatewayType,
       String externalOrderId,
       Instant gracePeriodEnd,
-      boolean inGracePeriod) {
+      boolean inGracePeriod,
+      Integer paymentRetryCount) {
   }
 
   /**
@@ -199,6 +200,7 @@ public final class SubscriptionDtos {
       Instant gracePeriodEnd,
       Instant suspendedAt,
       boolean inGracePeriod,
+      Integer paymentRetryCount,
       LocalDateTime createdAt,
       LocalDateTime updatedAt) {
   }

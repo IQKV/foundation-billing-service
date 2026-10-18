@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="20261018110000" author="iqkv">
+        <comment>Add payment_retry_count to subscriptions to track gateway payment
+            retry attempts during the grace period. Incremented on each
+            invoice.payment_failed webhook; reset to 0 on recovery.</comment>
+
+        <addColumn tableName="subscriptions" schemaName="public">
+            <column name="payment_retry_count" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="subscriptions" schemaName="public" columnName="payment_retry_count"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

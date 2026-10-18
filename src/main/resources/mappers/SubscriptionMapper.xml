@@ -24,6 +24,7 @@
         <result property="externalOrderId" column="external_order_id"/>
         <result property="gracePeriodEnd" column="grace_period_end"/>
         <result property="suspendedAt" column="suspended_at"/>
+        <result property="paymentRetryCount" column="payment_retry_count"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -35,7 +36,7 @@
         cancel_at_period_end, canceled_at,
         subject_type, subject_key,
         gateway_type, external_order_id,
-        grace_period_end, suspended_at,
+        grace_period_end, suspended_at, payment_retry_count,
         created_at, updated_at
     </sql>
 
@@ -157,9 +158,10 @@
         UPDATE subscriptions
         SET grace_period_end = NULL,
         suspended_at = NULL,
+        payment_retry_count = 0,
         updated_at = now()
         WHERE external_subscription_id = #{externalSubscriptionId}
-        AND (grace_period_end IS NOT NULL OR suspended_at IS NOT NULL)
+        AND (grace_period_end IS NOT NULL OR suspended_at IS NOT NULL OR payment_retry_count > 0)
     </update>
 
     <update id="suspend">
@@ -168,6 +170,13 @@
         updated_at = now()
         WHERE id = #{id}
         AND suspended_at IS NULL
+    </update>
+
+    <update id="incrementPaymentRetryCount">
+        UPDATE subscriptions
+        SET payment_retry_count = payment_retry_count + 1,
+        updated_at = now()
+        WHERE external_subscription_id = #{externalSubscriptionId}
     </update>
 
     <select id="findExpiredGracePeriods" resultMap="subscriptionResultMap">

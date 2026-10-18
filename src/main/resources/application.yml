@@ -135,7 +135,9 @@ iqkv:
     #       because Lemon Squeezy mandates a customer email address.
     default-contact-email: ${DEFAULT_BILLING_EMAIL:}
     # Length of the payment grace period (days) for past_due renewals before access is suspended.
-    grace-period-days: ${GRACE_PERIOD_DAYS:7}
+    grace-period-days: ${GRACE_PERIOD_DAYS:15}
+    # Maximum gateway payment retry attempts tracked during the grace period.
+    max-payment-retries: ${MAX_PAYMENT_RETRIES:5}
     plan-catalog:
       # Config-driven plan catalog — the single source of truth for plan definitions.
       # BillingSeedRunner reads this map at startup, upserts rows into plan_catalog,
