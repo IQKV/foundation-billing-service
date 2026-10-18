@@ -260,7 +260,7 @@ Before making recommendations, agents should understand the project's technology
 **Runtime & Framework**
 
 - Java 25 with modern features (records, pattern matching, text blocks, var)
-- Spring Boot 3.x
+- Spring Boot 4.x
 - Maven for build management
 
 **Data & Persistence**
