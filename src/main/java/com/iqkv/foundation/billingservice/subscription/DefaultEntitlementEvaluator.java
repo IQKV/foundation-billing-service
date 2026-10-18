@@ -73,6 +73,8 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
           "free",
           "active", // free plan is always active
           null, // free plan has no period end
+          null, // no grace period
+          false,
           PlanEntitlement.NONE
       ));
     }
@@ -90,6 +92,8 @@ public class DefaultEntitlementEvaluator implements EntitlementEvaluator {
         planCode,
         subscription.getStatus(),
         subscription.getCurrentPeriodEnd(),
+        subscription.getGracePeriodEnd(),
+        subscription.isInGracePeriod(),
         planEntitlement
     ));
   }

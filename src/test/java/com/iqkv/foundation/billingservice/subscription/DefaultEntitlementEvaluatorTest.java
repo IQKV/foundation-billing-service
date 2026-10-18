@@ -148,6 +148,43 @@ class DefaultEntitlementEvaluatorTest {
     verifyNoInteractions(planMapper);
   }
 
+  @Test
+  @DisplayName("Should surface inGracePeriod flag when subscription is past_due with an active deadline")
+  void shouldSurfaceGracePeriodFlagWhenPastDue() {
+    final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-grace");
+    final Subscription subscription = createSubscription("price_pro123", "past_due");
+    subscription.setGracePeriodEnd(Instant.now().plusSeconds(86400)); // 1 day from now
+    final Plan plan = createPlan("pro-monthly");
+    final PlanEntitlement expectedEntitlement = PlanEntitlement.NONE;
+
+    when(subscriptionMapper.findActiveBySubject("TENANT", "tenant-grace")).thenReturn(Optional.of(subscription));
+    when(planMapper.findByExternalPriceId("price_pro123")).thenReturn(Optional.of(plan));
+    when(planFeatureRegistry.resolveEntitlement("pro-monthly")).thenReturn(expectedEntitlement);
+
+    final Optional<EntitlementDetails> result = entitlementEvaluator.evaluateEntitlements(subject);
+
+    assertThat(result).isPresent();
+    assertThat(result.get().status()).isEqualTo("past_due");
+    assertThat(result.get().inGracePeriod()).isTrue();
+    assertThat(result.get().gracePeriodEnd()).isNotNull();
+  }
+
+  @Test
+  @DisplayName("Should return free plan when subscription is suspended (excluded by query)")
+  void shouldReturnFreePlanWhenSuspended() {
+    final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-suspended");
+    // findActiveBySubject excludes suspended rows via AND suspended_at IS NULL,
+    // so a suspended subscription is never returned — simulate that by returning empty.
+    when(subscriptionMapper.findActiveBySubject("TENANT", "tenant-suspended")).thenReturn(Optional.empty());
+
+    final Optional<EntitlementDetails> result = entitlementEvaluator.evaluateEntitlements(subject);
+
+    assertThat(result).isPresent();
+    assertThat(result.get().planCode()).isEqualTo("free");
+    assertThat(result.get().inGracePeriod()).isFalse();
+    verifyNoInteractions(planMapper, planFeatureRegistry);
+  }
+
   private Subscription createSubscription(final String planId, final String status) {
     final var subscription = new Subscription();
     subscription.setId(UUID.randomUUID());

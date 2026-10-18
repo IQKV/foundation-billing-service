@@ -51,6 +51,8 @@ public class Subscription {
   private String subjectKey;              // tenantKey or userId depending on subjectType
   private String gatewayType;             // STRIPE | LEMON_SQUEEZY
   private String externalOrderId;         // nullable — Lemon Squeezy order ID
+  private Instant gracePeriodEnd;          // nullable — deadline after which a past_due sub is suspended
+  private Instant suspendedAt;            // nullable — set when the grace period expires
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -249,6 +251,22 @@ public class Subscription {
     this.updatedAt = updatedAt;
   }
 
+  public Instant getGracePeriodEnd() {
+    return gracePeriodEnd;
+  }
+
+  public void setGracePeriodEnd(Instant gracePeriodEnd) {
+    this.gracePeriodEnd = gracePeriodEnd;
+  }
+
+  public Instant getSuspendedAt() {
+    return suspendedAt;
+  }
+
+  public void setSuspendedAt(Instant suspendedAt) {
+    this.suspendedAt = suspendedAt;
+  }
+
   /**
    * Returns true if the subscription is currently in a trial period.
    */
@@ -258,5 +276,16 @@ public class Subscription {
     }
     final var now = Instant.now();
     return now.isAfter(trialStart) && now.isBefore(trialEnd);
+  }
+
+  /**
+   * Returns true if the subscription is in a payment grace period — i.e. past_due
+   * with a grace_period_end deadline that has not yet passed and has not been suspended.
+   */
+  public boolean isInGracePeriod() {
+    if (gracePeriodEnd == null || suspendedAt != null) {
+      return false;
+    }
+    return Instant.now().isBefore(gracePeriodEnd);
   }
 }

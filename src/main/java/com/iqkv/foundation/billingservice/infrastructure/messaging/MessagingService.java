@@ -149,6 +149,26 @@ public class MessagingService {
     publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_CANCELLED, event);
   }
 
+  /**
+   * Publishes a subscription.grace_period_ended event when a past_due subscription's
+   * grace period has expired and access has been suspended. Downstream consumers
+   * (e.g. IAM) should treat this as an entitlement cut-off signal.
+   */
+  public void publishSubscriptionGracePeriodEnded(final String tenantKey, final String externalSubscriptionId,
+                                                  final String subjectType, final String subjectKey) {
+    final var event = new SubscriptionEvent(
+        tenantKey,
+        externalSubscriptionId,
+        SubscriptionEvent.EventType.SUBSCRIPTION_GRACE_PERIOD_ENDED,
+        Instant.now(),
+        subjectType,
+        subjectKey,
+        null,
+        null
+    );
+    publish(RabbitMQConfig.EVENTS_EXCHANGE, RabbitMQConfig.ROUTING_SUBSCRIPTION_GRACE_PERIOD_ENDED, event);
+  }
+
   public void publishInvoicePaid(final String tenantKey, final String externalInvoiceId,
                                  final String externalCustomerId, final String externalSubscriptionId,
                                  final Long amountPaid, final String currency) {

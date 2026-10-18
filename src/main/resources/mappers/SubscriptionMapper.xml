@@ -22,6 +22,8 @@
         <result property="subjectKey" column="subject_key"/>
         <result property="gatewayType" column="gateway_type"/>
         <result property="externalOrderId" column="external_order_id"/>
+        <result property="gracePeriodEnd" column="grace_period_end"/>
+        <result property="suspendedAt" column="suspended_at"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -33,6 +35,7 @@
         cancel_at_period_end, canceled_at,
         subject_type, subject_key,
         gateway_type, external_order_id,
+        grace_period_end, suspended_at,
         created_at, updated_at
     </sql>
 
@@ -108,6 +111,7 @@
         WHERE subject_type = #{subjectType}
         AND subject_key = #{subjectKey}
         AND LOWER(status) IN ('active', 'trialing', 'past_due')
+        AND suspended_at IS NULL
         ORDER BY current_period_end DESC
         LIMIT 1
     </select>
@@ -135,6 +139,46 @@
         FROM subscriptions
         WHERE status = #{status}
         ORDER BY created_at DESC
+    </select>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Grace period queries
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <update id="setGracePeriodEnd">
+        UPDATE subscriptions
+        SET grace_period_end = #{gracePeriodEnd},
+        updated_at = now()
+        WHERE external_subscription_id = #{externalSubscriptionId}
+        AND grace_period_end IS NULL
+    </update>
+
+    <update id="clearGracePeriod">
+        UPDATE subscriptions
+        SET grace_period_end = NULL,
+        suspended_at = NULL,
+        updated_at = now()
+        WHERE external_subscription_id = #{externalSubscriptionId}
+        AND (grace_period_end IS NOT NULL OR suspended_at IS NOT NULL)
+    </update>
+
+    <update id="suspend">
+        UPDATE subscriptions
+        SET suspended_at = #{suspendedAt},
+        updated_at = now()
+        WHERE id = #{id}
+        AND suspended_at IS NULL
+    </update>
+
+    <select id="findExpiredGracePeriods" resultMap="subscriptionResultMap">
+        SELECT
+        <include refid="subscriptionColumns"/>
+        FROM subscriptions
+        WHERE LOWER(status) = 'past_due'
+        AND grace_period_end IS NOT NULL
+        AND grace_period_end &lt; now()
+        AND suspended_at IS NULL
+        ORDER BY grace_period_end ASC
     </select>
 
     <!-- ═══════════════════════════════════════════════════════════════════════

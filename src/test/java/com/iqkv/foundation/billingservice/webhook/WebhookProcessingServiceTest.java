@@ -34,6 +34,7 @@ import com.iqkv.foundation.billingservice.gateway.event.GatewayInvoiceEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayPaymentFailureEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewaySubscriptionEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
+import com.iqkv.foundation.billingservice.infrastructure.config.BillingConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.persistence.BillingSettingsMapper;
@@ -90,6 +91,9 @@ class WebhookProcessingServiceTest {
   @Mock
   private PlanEligibilityPolicy planEligibilityPolicy;
 
+  @Mock
+  private BillingConfigurationProperties billingProperties;
+
   private WebhookProcessingService webhookProcessingService;
   private MeterRegistry meterRegistry;
 
@@ -107,7 +111,8 @@ class WebhookProcessingServiceTest {
         notificationProps,
         subjectResolver,
         planEligibilityPolicy,
-        meterRegistry
+        meterRegistry,
+        billingProperties
     );
   }
 
@@ -300,6 +305,55 @@ class WebhookProcessingServiceTest {
   }
 
   // -------------------------------------------------------------------------
+  // Grace period
+  // -------------------------------------------------------------------------
+
+  @Test
+  @DisplayName("Should set grace period end when subscription becomes past_due")
+  void shouldSetGracePeriodEndWhenSubscriptionBecomesPastDue() {
+    // Arrange
+    final String tenantKey = "tenant-grace";
+    final String subscriptionId = "sub_grace123";
+    final GatewaySubscriptionEvent event = subscriptionUpdatedEvent(
+        "evt_past_due", tenantKey, subscriptionId, "past_due");
+
+    when(webhookLogMapper.insertIfNotExists(any())).thenReturn(1);
+    when(subjectResolver.resolveSubject(eq(tenantKey), any()))
+        .thenReturn(new SubscriptionSubject(SubjectType.TENANT, tenantKey));
+    when(billingSettingsMapper.findByTenantKey(tenantKey)).thenReturn(Optional.empty());
+    when(billingProperties.gracePeriodDays()).thenReturn(7);
+
+    // Act
+    webhookProcessingService.process(event);
+
+    // Assert
+    verify(subscriptionMapper).setGracePeriodEnd(eq(subscriptionId), any(Instant.class));
+    verify(subscriptionMapper, never()).clearGracePeriod(any());
+  }
+
+  @Test
+  @DisplayName("Should clear grace period when subscription recovers to active")
+  void shouldClearGracePeriodWhenSubscriptionRecoversToActive() {
+    // Arrange
+    final String tenantKey = "tenant-recover";
+    final String subscriptionId = "sub_recover123";
+    final GatewaySubscriptionEvent event = subscriptionUpdatedEvent(
+        "evt_recovered", tenantKey, subscriptionId, "active");
+
+    when(webhookLogMapper.insertIfNotExists(any())).thenReturn(1);
+    when(subjectResolver.resolveSubject(eq(tenantKey), any()))
+        .thenReturn(new SubscriptionSubject(SubjectType.TENANT, tenantKey));
+    when(billingSettingsMapper.findByTenantKey(tenantKey)).thenReturn(Optional.empty());
+
+    // Act
+    webhookProcessingService.process(event);
+
+    // Assert
+    verify(subscriptionMapper).clearGracePeriod(subscriptionId);
+    verify(subscriptionMapper, never()).setGracePeriodEnd(any(), any());
+  }
+
+  // -------------------------------------------------------------------------
   // Helpers
   // -------------------------------------------------------------------------
 
@@ -318,6 +372,30 @@ class WebhookProcessingServiceTest {
         subscriptionId,
         "cus_" + UUID.randomUUID(),
         "active",
+        "price_basic",
+        1L,
+        null,
+        null,
+        Instant.now(),
+        Instant.now().plusSeconds(2592000),
+        false,
+        null,
+        Map.of("tenantKey", tenantKey)
+    );
+  }
+
+  private GatewaySubscriptionEvent subscriptionUpdatedEvent(final String eventId,
+                                                            final String tenantKey,
+                                                            final String subscriptionId,
+                                                            final String status) {
+    return new GatewaySubscriptionEvent(
+        eventId,
+        "customer.subscription.updated",
+        Instant.now(),
+        "STRIPE",
+        subscriptionId,
+        "cus_" + UUID.randomUUID(),
+        status,
         "price_basic",
         1L,
         null,

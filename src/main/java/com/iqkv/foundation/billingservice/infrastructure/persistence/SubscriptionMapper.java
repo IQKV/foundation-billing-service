@@ -76,6 +76,42 @@ public interface SubscriptionMapper {
    */
   List<Subscription> findByStatus(String status);
 
+  /**
+   * Sets the grace period deadline for a subscription, but only if one is not already set.
+   * Idempotent across webhook retries — existing deadlines are never overwritten.
+   *
+   * @param externalSubscriptionId gateway subscription ID
+   * @param gracePeriodEnd         the deadline after which access is suspended
+   */
+  void setGracePeriodEnd(@Param("externalSubscriptionId") String externalSubscriptionId,
+                         @Param("gracePeriodEnd") Instant gracePeriodEnd);
+
+  /**
+   * Clears the grace period deadline and suspension marker for a subscription.
+   * Called when a subscription recovers (payment succeeds) or transitions away from past_due.
+   * Idempotent — no-op when neither field is set.
+   *
+   * @param externalSubscriptionId gateway subscription ID
+   */
+  void clearGracePeriod(@Param("externalSubscriptionId") String externalSubscriptionId);
+
+  /**
+   * Marks a subscription as suspended by setting {@code suspended_at}.
+   * Called by the daily grace period expiry job.
+   *
+   * @param id          subscription primary key
+   * @param suspendedAt the suspension timestamp
+   */
+  void suspend(@Param("id") java.util.UUID id,
+               @Param("suspendedAt") Instant suspendedAt);
+
+  /**
+   * Returns past_due subscriptions whose grace period deadline has passed and
+   * have not yet been suspended. Ordered by deadline ascending so the oldest
+   * expirations are processed first. Used by the daily grace period expiry job.
+   */
+  List<Subscription> findExpiredGracePeriods();
+
   // ─── Admin queries ─────────────────────────────────────────────────────────
 
   /**

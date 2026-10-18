@@ -27,6 +27,8 @@ import com.iqkv.foundation.billingservice.plan.PlanEntitlement;
  * @param planCode         the human-readable plan code (e.g. {@code "pro-monthly"})
  * @param status           the subscription status (active, trialing, past_due, etc.)
  * @param currentPeriodEnd when the current billing vperiod ends
+ * @param gracePeriodEnd   the grace period deadline for a past_due subscription; null when not in grace
+ * @param inGracePeriod    true when the subscription is past_due within its grace window
  * @param planEntitlement  the typed feature set for the active plan; never {@code null}
  */
 public record EntitlementDetails(
@@ -34,6 +36,8 @@ public record EntitlementDetails(
     String planCode,
     String status,
     Instant currentPeriodEnd,
+    Instant gracePeriodEnd,
+    boolean inGracePeriod,
     PlanEntitlement planEntitlement
 ) {
 }

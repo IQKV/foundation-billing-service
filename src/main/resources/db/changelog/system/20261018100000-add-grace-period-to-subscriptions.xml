@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.33.xsd">
+
+    <changeSet id="20261018100000" author="iqkv">
+        <comment>Add grace period tracking columns to subscriptions.
+            grace_period_end: deadline after which a past_due subscription is suspended.
+            suspended_at: set when the daily job suspends an expired grace period.</comment>
+
+        <addColumn tableName="subscriptions" schemaName="public">
+            <column name="grace_period_end" type="TIMESTAMP"/>
+            <column name="suspended_at" type="TIMESTAMP"/>
+        </addColumn>
+
+        <createIndex indexName="idx_subscriptions_grace_period_end"
+                     tableName="subscriptions" schemaName="public">
+            <column name="grace_period_end"/>
+        </createIndex>
+
+        <!-- Partial index: only rows with an active (un-suspended) grace period deadline.
+             Targets the daily expiry job's working set. -->
+        <sql>
+            CREATE INDEX idx_subscriptions_grace_active
+            ON subscriptions (grace_period_end)
+            WHERE grace_period_end IS NOT NULL AND suspended_at IS NULL;
+        </sql>
+
+        <rollback>
+            <sql>DROP INDEX IF EXISTS idx_subscriptions_grace_active;</sql>
+            <dropIndex indexName="idx_subscriptions_grace_period_end"
+                       tableName="subscriptions" schemaName="public"/>
+            <dropColumn tableName="subscriptions" schemaName="public" columnName="grace_period_end"/>
+            <dropColumn tableName="subscriptions" schemaName="public" columnName="suspended_at"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

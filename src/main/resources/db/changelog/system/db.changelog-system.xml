@@ -26,6 +26,7 @@
     <include file="db/changelog/system/20260710000001-add-plan-metering-config.xml"/>
     <include file="db/changelog/system/20260713000000-add-subject-and-gateway-type-to-refunds.xml"/>
     <include file="db/changelog/system/20260713000001-create-shedlock-table.xml"/>
+    <include file="db/changelog/system/20261018100000-add-grace-period-to-subscriptions.xml"/>
 
     <!-- Demo data (Liquibase context: demo); enable with iqkv.liquibase.contexts=demo -->
     <include file="db/changelog/system/demo/master.xml"/>

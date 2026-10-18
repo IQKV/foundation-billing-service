@@ -42,11 +42,21 @@ public record BillingConfigurationProperties(
      */
     @Email(message = "defaultContactEmail must be a valid email address") String defaultContactEmail,
 
-    PlanCatalogProperties planCatalog
+    PlanCatalogProperties planCatalog,
+
+    /*
+     * Length of the payment grace period (in days) granted to a subscription whose renewal
+     * payment fails. The subscription keeps full entitlements for this window; once it
+     * elapses a daily job suspends access. Defaults to 7 days.
+     */
+    Integer gracePeriodDays
 ) {
   public BillingConfigurationProperties {
     if (planCatalog == null) {
       planCatalog = new PlanCatalogProperties(Collections.emptyMap());
+    }
+    if (gracePeriodDays == null || gracePeriodDays <= 0) {
+      gracePeriodDays = 7;
     }
   }
 

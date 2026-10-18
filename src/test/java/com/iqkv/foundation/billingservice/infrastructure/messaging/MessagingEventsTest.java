@@ -81,7 +81,8 @@ class MessagingEventsTest {
     assertThat(SubscriptionEvent.EventType.values()).containsExactlyInAnyOrder(
         SubscriptionEvent.EventType.SUBSCRIPTION_CREATED,
         SubscriptionEvent.EventType.SUBSCRIPTION_UPDATED,
-        SubscriptionEvent.EventType.SUBSCRIPTION_CANCELLED
+        SubscriptionEvent.EventType.SUBSCRIPTION_CANCELLED,
+        SubscriptionEvent.EventType.SUBSCRIPTION_GRACE_PERIOD_ENDED
     );
   }
 

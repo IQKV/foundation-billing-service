@@ -40,7 +40,7 @@ class EntitlementDetailsTest {
         "priority_support", new PlanFeature("priority_support", "Priority Support", "true", "Access to priority support channel")
     ), null);
 
-    final var details = new EntitlementDetails(subject, planCode, status, periodEnd, planEntitlement);
+    final var details = new EntitlementDetails(subject, planCode, status, periodEnd, null, false, planEntitlement);
 
     assertThat(details.subject()).isEqualTo(subject);
     assertThat(details.planCode()).isEqualTo(planCode);
@@ -57,7 +57,7 @@ class EntitlementDetailsTest {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.USER, "user-456");
     final Instant periodEnd = Instant.now().plusSeconds(2592000);
 
-    final var details = new EntitlementDetails(subject, "basic-monthly", "trialing", periodEnd, PlanEntitlement.NONE);
+    final var details = new EntitlementDetails(subject, "basic-monthly", "trialing", periodEnd, null, false, PlanEntitlement.NONE);
 
     assertThat(details.subject().type()).isEqualTo(SubjectType.USER);
     assertThat(details.subject().key()).isEqualTo("user-456");
@@ -72,8 +72,8 @@ class EntitlementDetailsTest {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final Instant periodEnd = Instant.now();
     final PlanEntitlement planEntitlement = new PlanEntitlement(5, 3, Map.of(), null);
-    final var details1 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, planEntitlement);
-    final var details2 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, planEntitlement);
+    final var details1 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, null, false, planEntitlement);
+    final var details2 = new EntitlementDetails(subject, "basic-monthly", "active", periodEnd, null, false, planEntitlement);
 
     assertThat(details1).isEqualTo(details2);
     assertThat(details1.hashCode()).isEqualTo(details2.hashCode());
@@ -84,7 +84,7 @@ class EntitlementDetailsTest {
   void shouldHaveMeaningfulToString() {
     final SubscriptionSubject subject = new SubscriptionSubject(SubjectType.TENANT, "tenant-123");
     final var details = new EntitlementDetails(
-        subject, "pro-monthly", "active", Instant.now(), PlanEntitlement.NONE
+        subject, "pro-monthly", "active", Instant.now(), null, false, PlanEntitlement.NONE
     );
 
     final String toString = details.toString();
@@ -101,9 +101,9 @@ class EntitlementDetailsTest {
     final Instant periodEnd = Instant.now();
     final PlanEntitlement planEntitlement = PlanEntitlement.NONE;
 
-    final var activeDetails = new EntitlementDetails(subject, "pro-monthly", "active", periodEnd, planEntitlement);
-    final var trialingDetails = new EntitlementDetails(subject, "pro-monthly", "trialing", periodEnd, planEntitlement);
-    final var pastDueDetails = new EntitlementDetails(subject, "pro-monthly", "past_due", periodEnd, planEntitlement);
+    final var activeDetails = new EntitlementDetails(subject, "pro-monthly", "active", periodEnd, null, false, planEntitlement);
+    final var trialingDetails = new EntitlementDetails(subject, "pro-monthly", "trialing", periodEnd, null, false, planEntitlement);
+    final var pastDueDetails = new EntitlementDetails(subject, "pro-monthly", "past_due", periodEnd, null, false, planEntitlement);
 
     assertThat(activeDetails.status()).isEqualTo("active");
     assertThat(trialingDetails.status()).isEqualTo("trialing");

@@ -38,7 +38,8 @@ public class SubscriptionEvent implements AuditableEvent {
   public enum EventType {
     SUBSCRIPTION_CREATED,
     SUBSCRIPTION_UPDATED,
-    SUBSCRIPTION_CANCELLED
+    SUBSCRIPTION_CANCELLED,
+    SUBSCRIPTION_GRACE_PERIOD_ENDED
   }
 
   private String tenantKey;

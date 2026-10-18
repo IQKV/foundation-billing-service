@@ -52,7 +52,9 @@ public final class SubscriptionDtos {
       boolean cancelAtPeriodEnd,
       Instant canceledAt,
       String gatewayType,
-      String externalOrderId) {
+      String externalOrderId,
+      Instant gracePeriodEnd,
+      boolean inGracePeriod) {
   }
 
   /**
@@ -194,6 +196,9 @@ public final class SubscriptionDtos {
       String subjectKey,
       String gatewayType,
       String externalOrderId,
+      Instant gracePeriodEnd,
+      Instant suspendedAt,
+      boolean inGracePeriod,
       LocalDateTime createdAt,
       LocalDateTime updatedAt) {
   }

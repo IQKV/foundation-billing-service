@@ -49,7 +49,9 @@ public final class SubscriptionDtoMapper {
         subscription.isCancelAtPeriodEnd(),
         subscription.getCanceledAt(),
         subscription.getGatewayType(),
-        subscription.getExternalOrderId());
+        subscription.getExternalOrderId(),
+        subscription.getGracePeriodEnd(),
+        subscription.isInGracePeriod());
   }
 
   /**
@@ -77,6 +79,9 @@ public final class SubscriptionDtoMapper {
         subscription.getSubjectKey(),
         subscription.getGatewayType(),
         subscription.getExternalOrderId(),
+        subscription.getGracePeriodEnd(),
+        subscription.getSuspendedAt(),
+        subscription.isInGracePeriod(),
         subscription.getCreatedAt(),
         subscription.getUpdatedAt());
   }

@@ -17,6 +17,7 @@
 package com.iqkv.foundation.billingservice.webhook;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,6 +26,7 @@ import com.iqkv.foundation.billingservice.gateway.event.GatewayPaymentFailureEve
 import com.iqkv.foundation.billingservice.gateway.event.GatewayRefundEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewaySubscriptionEvent;
 import com.iqkv.foundation.billingservice.gateway.event.GatewayWebhookEvent;
+import com.iqkv.foundation.billingservice.infrastructure.config.BillingConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.MessagingService;
 import com.iqkv.foundation.billingservice.infrastructure.messaging.NotificationEvent;
@@ -81,6 +83,7 @@ public class WebhookProcessingService {
   private final SubscriptionSubjectResolver subjectResolver;
   private final PlanEligibilityPolicy planEligibilityPolicy;
   private final MeterRegistry meterRegistry;
+  private final BillingConfigurationProperties billingProperties;
 
   /**
    * Optional — only present in {@code SINGLE_TENANT} mode.
@@ -100,7 +103,8 @@ public class WebhookProcessingService {
                                   final NotificationConfigurationProperties notificationProps,
                                   final SubscriptionSubjectResolver subjectResolver,
                                   final PlanEligibilityPolicy planEligibilityPolicy,
-                                  final MeterRegistry meterRegistry) {
+                                  final MeterRegistry meterRegistry,
+                                  final BillingConfigurationProperties billingProperties) {
     this.webhookLogMapper = webhookLogMapper;
     this.subscriptionMapper = subscriptionMapper;
     this.refundMapper = refundMapper;
@@ -112,6 +116,7 @@ public class WebhookProcessingService {
     this.subjectResolver = subjectResolver;
     this.planEligibilityPolicy = planEligibilityPolicy;
     this.meterRegistry = meterRegistry;
+    this.billingProperties = billingProperties;
   }
 
   /**
@@ -239,6 +244,17 @@ public class WebhookProcessingService {
     subscription.setSubjectType(subject.type().name());
     subscription.setSubjectKey(subject.key());
     subscriptionMapper.upsert(subscription);
+
+    // Grace period management: set a deadline when entering past_due, clear it on recovery.
+    // Both updates are idempotent SQL — safe across webhook retries.
+    final String status = subscription.getStatus();
+    if ("past_due".equalsIgnoreCase(status)) {
+      subscriptionMapper.setGracePeriodEnd(
+          subscription.getExternalSubscriptionId(),
+          Instant.now().plus(billingProperties.gracePeriodDays(), ChronoUnit.DAYS));
+    } else if (status != null) {
+      subscriptionMapper.clearGracePeriod(subscription.getExternalSubscriptionId());
+    }
 
     meterRegistry.counter("billing_subscriptions_total",
         "action", "updated",
