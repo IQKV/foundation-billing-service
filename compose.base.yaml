@@ -212,7 +212,7 @@ services:
 
   # MinIO S3-compatible object storage - Local Development
   minio:
-    image: minio/minio:latest
+    image: pgsty/minio:latest
     container_name: foundation-billing-minio-dev
     command: server /data --console-address :9001
     environment:
@@ -236,7 +236,7 @@ services:
 
   # MinIO bucket init — creates billing-assets bucket
   minio-init:
-    image: minio/mc:latest
+    image: pgsty/mc:latest
     container_name: foundation-billing-minio-init-dev
     depends_on:
       minio:
