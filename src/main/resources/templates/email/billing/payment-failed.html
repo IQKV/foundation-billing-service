@@ -144,6 +144,14 @@
                         <span class="detail-label" th:text="#{email.payment-failed.label.amount-due}">Amount Due</span>
                         <span class="detail-value" th:text="${currency + ' ' + #numbers.formatDecimal(amountDue, 1, 2)}"></span>
                     </div>
+                    <div class="detail-row" th:if="${retryCount != null and remainingRetries != null}">
+                        <span class="detail-label" th:text="#{email.payment-failed.label.retry-attempt}">Payment Attempt</span>
+                        <span class="detail-value" th:text="${retryCount + ' of ' + (retryCount + remainingRetries)}"></span>
+                    </div>
+                    <div class="detail-row" th:if="${remainingRetries != null and remainingRetries > 0}">
+                        <span class="detail-label" th:text="#{email.payment-failed.label.remaining-retries}">Retries Remaining</span>
+                        <span class="detail-value" th:text="${remainingRetries}"></span>
+                    </div>
                 </div>
 
                 <div class="action-box">
