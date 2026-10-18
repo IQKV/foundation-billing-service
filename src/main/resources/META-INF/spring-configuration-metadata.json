@@ -25,6 +25,12 @@
             "description": "Billing-specific configuration. Provides fallback values for single-tenant mode."
         },
         {
+            "name": "iqkv.billing.plan-catalog",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.BillingConfigurationProperties$PlanCatalogProperties",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.BillingConfigurationProperties",
+            "description": "Config-driven plan catalog — the single source of truth for plan definitions. Read by BillingSeedRunner at startup and loaded into memory by PlanFeatureRegistry."
+        },
+        {
             "name": "iqkv.payment",
             "description": "Payment gateway configuration."
         },
@@ -41,6 +47,12 @@
             "description": "Stripe adapter configuration. Required when iqkv.payment.gateway.type=STRIPE."
         },
         {
+            "name": "iqkv.lemon-squeezy",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.LemonSqueezyConfigurationProperties",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.LemonSqueezyConfigurationProperties",
+            "description": "Lemon Squeezy adapter configuration. Required when iqkv.payment.gateway.type=LEMON_SQUEEZY."
+        },
+        {
             "name": "iqkv.auth",
             "type": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties",
             "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties",
@@ -50,7 +62,7 @@
             "name": "iqkv.auth.jwt",
             "type": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties$Jwt",
             "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.AuthConfigurationProperties",
-            "description": "JWT token verification settings."
+            "description": "JWT token verification settings. Exactly one of jwks-uri or public-key-path must be set."
         },
         {
             "name": "iqkv.messaging",
@@ -77,10 +89,16 @@
             "description": "Email notification settings."
         },
         {
+            "name": "iqkv.notification.mail.resend",
+            "type": "com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties$Mail$Resend",
+            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties$Mail",
+            "description": "Resend-specific configuration, required when iqkv.notification.mail.provider=resend."
+        },
+        {
             "name": "iqkv.liquibase",
-            "type": "com.iqkv.foundation.billingservice.infrastructure.config.LiquibaseConfigurationProperties",
-            "sourceType": "com.iqkv.foundation.billingservice.infrastructure.config.LiquibaseConfigurationProperties",
-            "description": "Liquibase database migration configuration for the custom LiquibaseRunner."
+            "type": "com.iqkv.foundation.tenancy.LiquibaseConfigurationProperties",
+            "sourceType": "com.iqkv.foundation.tenancy.LiquibaseConfigurationProperties",
+            "description": "Tenant-aware Liquibase migration configuration consumed by the foundation-tenancy TenantLiquibaseRunner."
         }
     ],
     "properties": [
@@ -100,19 +118,19 @@
             "name": "iqkv.db.name",
             "type": "java.lang.String",
             "description": "Database name.",
-            "defaultValue": "billing"
+            "defaultValue": "billingservice"
         },
         {
             "name": "iqkv.db.username",
             "type": "java.lang.String",
             "description": "Database username.",
-            "defaultValue": "billing"
+            "defaultValue": "svc_billing_dba"
         },
         {
             "name": "iqkv.db.password",
             "type": "java.lang.String",
             "description": "Database password.",
-            "defaultValue": "billing"
+            "defaultValue": "svc_billing_dba"
         },
         {
             "name": "iqkv.rabbitmq.host",
@@ -130,13 +148,13 @@
             "name": "iqkv.rabbitmq.username",
             "type": "java.lang.String",
             "description": "RabbitMQ username.",
-            "defaultValue": "billing"
+            "defaultValue": "svc_billing_rmq"
         },
         {
             "name": "iqkv.rabbitmq.password",
             "type": "java.lang.String",
             "description": "RabbitMQ password.",
-            "defaultValue": "billing"
+            "defaultValue": "svc_billing_rmq"
         },
         {
             "name": "iqkv.mail.host",
@@ -153,14 +171,12 @@
         {
             "name": "iqkv.mail.username",
             "type": "java.lang.String",
-            "description": "SMTP authentication username.",
-            "defaultValue": "dev"
+            "description": "SMTP authentication username."
         },
         {
             "name": "iqkv.mail.password",
             "type": "java.lang.String",
-            "description": "SMTP authentication password.",
-            "defaultValue": "dev"
+            "description": "SMTP authentication password."
         },
         {
             "name": "iqkv.mail.from",
@@ -188,12 +204,29 @@
         {
             "name": "iqkv.billing.default-contact-email",
             "type": "java.lang.String",
-            "description": "Fallback billing contact email for SINGLE_TENANT mode. Used when tenant.created event has no ownerEmail. Fallback chain: (1) ownerEmail from event → (2) this value → (3) null (payment gateway customer created without email)."
+            "description": "Fallback billing contact email for SINGLE_TENANT mode. Used when tenant.created event has no ownerEmail. Fallback chain: (1) ownerEmail from event → (2) this value → (3) null (payment gateway customer created without email). Required when gateway.type=LEMON_SQUEEZY and platform.rollout-mode=SINGLE_TENANT."
+        },
+        {
+            "name": "iqkv.billing.grace-period-days",
+            "type": "java.lang.Integer",
+            "description": "Length of the payment grace period (days) for past_due renewals before access is suspended.",
+            "defaultValue": 15
+        },
+        {
+            "name": "iqkv.billing.max-payment-retries",
+            "type": "java.lang.Integer",
+            "description": "Maximum gateway payment retry attempts tracked during the grace period.",
+            "defaultValue": 5
+        },
+        {
+            "name": "iqkv.billing.plan-catalog.products",
+            "type": "java.util.Map<java.lang.String, com.iqkv.foundation.billingservice.infrastructure.config.ProductSchema>",
+            "description": "Map of plan definitions keyed by product id. Each entry defines planCode, displayName, billingPeriod (MONTHLY|ANNUAL), priceMinor, currency, scope (TENANT|USER), active, trialPeriodDays, pricingModel (FLAT|PER_SEAT|METERED), optional externalVariantId (Lemon Squeezy), optional metering tiers and an entitlement block (maxUsers, maxProjects, features; 0 = unlimited)."
         },
         {
             "name": "iqkv.payment.gateway.type",
             "type": "com.iqkv.foundation.billingservice.gateway.GatewayType",
-            "description": "Active payment gateway adapter. Determines which PaymentGatewayPort implementation is used. Currently only STRIPE is implemented.",
+            "description": "Active payment gateway adapter. Determines which PaymentGatewayPort implementation is used.",
             "defaultValue": "STRIPE"
         },
         {
@@ -209,9 +242,42 @@
             "defaultValue": "whsec_placeholder"
         },
         {
+            "name": "iqkv.stripe.portal-return-url",
+            "type": "java.lang.String",
+            "description": "URL to redirect users back to after they leave the Stripe Customer Portal.",
+            "defaultValue": "http://localhost:3000/billing"
+        },
+        {
+            "name": "iqkv.lemon-squeezy.api-key",
+            "type": "java.lang.String",
+            "description": "Lemon Squeezy API key. Required when iqkv.payment.gateway.type=LEMON_SQUEEZY."
+        },
+        {
+            "name": "iqkv.lemon-squeezy.store-id",
+            "type": "java.lang.String",
+            "description": "Numeric Lemon Squeezy store id. Required when iqkv.payment.gateway.type=LEMON_SQUEEZY."
+        },
+        {
+            "name": "iqkv.lemon-squeezy.webhook-secret",
+            "type": "java.lang.String",
+            "description": "Lemon Squeezy webhook signing secret. Required when iqkv.payment.gateway.type=LEMON_SQUEEZY."
+        },
+        {
+            "name": "iqkv.lemon-squeezy.portal-return-url",
+            "type": "java.lang.String",
+            "description": "URL to redirect users back to after they leave the Lemon Squeezy customer portal.",
+            "defaultValue": "http://localhost:3000/billing"
+        },
+        {
+            "name": "iqkv.auth.jwt.jwks-uri",
+            "type": "java.lang.String",
+            "description": "JWKS URI of the IAM service. Preferred in deployed (K8s) environments; keys are fetched, cached and refreshed automatically on rotation. Mutually exclusive with public-key-path. Example: http://foundation-iam-service/.well-known/jwks.json",
+            "defaultValue": ""
+        },
+        {
             "name": "iqkv.auth.jwt.public-key-path",
             "type": "java.lang.String",
-            "description": "Path to the RSA public key PEM file used for verifying JWTs. Supports classpath: and file: prefixes.",
+            "description": "Path to the RSA public key PEM file used for verifying JWTs. Supports classpath: and file: prefixes. Used for local development and tests; ignored when jwks-uri is set.",
             "defaultValue": "classpath:keys/public.pem"
         },
         {
@@ -236,6 +302,17 @@
             "description": "Reply-To address used in outgoing notification emails. Resolved from iqkv.mail.reply-to."
         },
         {
+            "name": "iqkv.notification.mail.provider",
+            "type": "java.lang.String",
+            "description": "Active email transport provider: 'smtp' or 'resend'.",
+            "defaultValue": "smtp"
+        },
+        {
+            "name": "iqkv.notification.mail.resend.api-key",
+            "type": "java.lang.String",
+            "description": "Resend API key. Required when iqkv.notification.mail.provider=resend."
+        },
+        {
             "name": "iqkv.notification.default-locale",
             "type": "java.lang.String",
             "description": "Default locale for notification templates. Must be a valid BCP 47 language tag (e.g. en, en-US).",
@@ -248,15 +325,44 @@
             "defaultValue": "http://localhost:3000"
         },
         {
+            "name": "iqkv.liquibase.tenant-runner-enabled",
+            "type": "java.lang.Boolean",
+            "description": "Registers the foundation-tenancy TenantLiquibaseRunner so pending changesets are applied to every tenant schema on startup.",
+            "defaultValue": true
+        },
+        {
+            "name": "iqkv.liquibase.system-change-log",
+            "type": "java.lang.String",
+            "description": "Classpath location of the system (public schema) Liquibase changelog.",
+            "defaultValue": "db/changelog/system/db.changelog-system.xml"
+        },
+        {
+            "name": "iqkv.liquibase.tenant-change-log",
+            "type": "java.lang.String",
+            "description": "Classpath location of the per-tenant schema Liquibase changelog.",
+            "defaultValue": "db/changelog/tenant/db.changelog-tenant.xml"
+        },
+        {
             "name": "iqkv.liquibase.change-log",
             "type": "java.lang.String",
-            "description": "Classpath location of the Liquibase changelog master file.",
+            "description": "Master Liquibase changelog location. Kept for compatibility with the base application.yml; the tenant runner uses system-change-log.",
             "defaultValue": "db/changelog/system/db.changelog-system.xml"
         },
         {
             "name": "iqkv.liquibase.contexts",
             "type": "java.lang.String",
             "description": "Active Liquibase contexts. Set to 'demo' on non-production profiles to apply demo seed changelogs; omit for schema-only."
+        },
+        {
+            "name": "iqkv.liquibase.bootstrap-tenants",
+            "type": "java.util.List<java.lang.String>",
+            "description": "Tenant keys whose schemas are migrated during bootstrap, in addition to the system schema."
+        },
+        {
+            "name": "iqkv.liquibase.upgrade-existing-tenants",
+            "type": "java.lang.Boolean",
+            "description": "Whether the TenantLiquibaseRunner scans and upgrades already-provisioned tenant schemas on startup.",
+            "defaultValue": true
         }
     ],
     "hints": [
@@ -278,7 +384,11 @@
             "values": [
                 {
                     "value": "STRIPE",
-                    "description": "Stripe payment gateway (implemented). Requires iqkv.stripe.* properties."
+                    "description": "Stripe payment gateway. Requires iqkv.stripe.* properties."
+                },
+                {
+                    "value": "LEMON_SQUEEZY",
+                    "description": "Lemon Squeezy payment gateway. Requires iqkv.lemon-squeezy.* properties."
                 }
             ]
         },
@@ -305,6 +415,19 @@
             ]
         },
         {
+            "name": "iqkv.auth.jwt.jwks-uri",
+            "values": [
+                {
+                    "value": "http://foundation-iam-service/.well-known/jwks.json",
+                    "description": "In-cluster IAM JWKS endpoint (deployed environments)."
+                },
+                {
+                    "value": "",
+                    "description": "Blank — fall back to iqkv.auth.jwt.public-key-path (local dev / tests)."
+                }
+            ]
+        },
+        {
             "name": "iqkv.auth.jwt.public-key-path",
             "values": [
                 {
@@ -314,6 +437,19 @@
                 {
                     "value": "file:/run/secrets/public.pem",
                     "description": "Docker secret mount path."
+                }
+            ]
+        },
+        {
+            "name": "iqkv.notification.mail.provider",
+            "values": [
+                {
+                    "value": "smtp",
+                    "description": "Send via the configured SMTP server (default)."
+                },
+                {
+                    "value": "resend",
+                    "description": "Send via the Resend HTTP API. Requires iqkv.notification.mail.resend.api-key."
                 }
             ]
         },
