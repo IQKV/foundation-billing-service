@@ -13,6 +13,7 @@ ALTER DATABASE billingservice SET search_path TO t_platform, public, billingserv
 -- Create extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+CREATE EXTENSION IF NOT EXISTS "vector";
 
 -- Grant permissions
 GRANT ALL PRIVILEGES ON DATABASE billingservice TO svc_billing_dba;
