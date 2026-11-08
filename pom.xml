@@ -89,6 +89,12 @@
             <artifactId>foundation-audit-spi</artifactId>
         </dependency>
 
+        <!-- Shared email transport strategy (SMTP / Resend) -->
+        <dependency>
+            <groupId>com.iqkv</groupId>
+            <artifactId>foundation-mail</artifactId>
+        </dependency>
+
         <!-- Email -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

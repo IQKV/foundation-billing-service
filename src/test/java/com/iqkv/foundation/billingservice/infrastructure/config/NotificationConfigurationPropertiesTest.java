@@ -27,76 +27,22 @@ class NotificationConfigurationPropertiesTest {
   @Test
   @DisplayName("Should create properties with all fields")
   void shouldCreatePropertiesWithAllFields() {
-    // Arrange
-    final var mail = new NotificationConfigurationProperties.Mail(
-        "noreply@example.com", "Billing Service", "support@example.com", "smtp", null
-    );
-
     // Act
     final var properties = new NotificationConfigurationProperties(
-        mail, "en", "https://example.com"
+        "en", "https://example.com"
     );
 
     // Assert
-    assertThat(properties.mail()).isEqualTo(mail);
     assertThat(properties.defaultLocale()).isEqualTo("en");
     assertThat(properties.baseUrl()).isEqualTo("https://example.com");
   }
 
   @Test
-  @DisplayName("Should create Mail with all fields")
-  void shouldCreateMailWithAllFields() {
-    // Arrange & Act
-    final var mail = new NotificationConfigurationProperties.Mail(
-        "noreply@example.com", "Billing Service", "support@example.com", "smtp", null
-    );
-
-    // Assert
-    assertThat(mail.from()).isEqualTo("noreply@example.com");
-    assertThat(mail.fromName()).isEqualTo("Billing Service");
-    assertThat(mail.replyTo()).isEqualTo("support@example.com");
-    assertThat(mail.provider()).isEqualTo("smtp");
-    assertThat(mail.resend()).isNull();
-  }
-
-  @Test
-  @DisplayName("Should create Mail with null replyTo")
-  void shouldCreateMailWithNullReplyTo() {
-    // Arrange & Act
-    final var mail = new NotificationConfigurationProperties.Mail(
-        "noreply@example.com", "Billing Service", null, "smtp", null
-    );
-
-    // Assert
-    assertThat(mail.replyTo()).isNull();
-  }
-
-  @Test
-  @DisplayName("Should create Mail with Resend provider")
-  void shouldCreateMailWithResendProvider() {
-    // Arrange & Act
-    final var resend = new NotificationConfigurationProperties.Mail.Resend("re_test_key");
-    final var mail = new NotificationConfigurationProperties.Mail(
-        "noreply@example.com", "Billing Service", null, "resend", resend
-    );
-
-    // Assert
-    assertThat(mail.provider()).isEqualTo("resend");
-    assertThat(mail.resend()).isNotNull();
-    assertThat(mail.resend().apiKey()).isEqualTo("re_test_key");
-  }
-
-  @Test
   @DisplayName("Should support locale with country code")
   void shouldSupportLocaleWithCountryCode() {
-    // Arrange
-    final var mail = new NotificationConfigurationProperties.Mail(
-        "noreply@example.com", "Billing", null, "smtp", null
-    );
-
     // Act
     final var properties = new NotificationConfigurationProperties(
-        mail, "en-US", "https://example.com"
+        "en-US", "https://example.com"
     );
 
     // Assert
@@ -106,17 +52,12 @@ class NotificationConfigurationPropertiesTest {
   @Test
   @DisplayName("Should support http and https URLs")
   void shouldSupportHttpAndHttpsUrls() {
-    // Arrange
-    final var mail = new NotificationConfigurationProperties.Mail(
-        "noreply@example.com", "Billing", null, "smtp", null
-    );
-
     // Act
     final var httpsProperties = new NotificationConfigurationProperties(
-        mail, "en", "https://example.com"
+        "en", "https://example.com"
     );
     final var httpProperties = new NotificationConfigurationProperties(
-        mail, "en", "http://localhost:8080"
+        "en", "http://localhost:8080"
     );
 
     // Assert
@@ -128,14 +69,11 @@ class NotificationConfigurationPropertiesTest {
   @DisplayName("Should support record equality")
   void shouldSupportRecordEquality() {
     // Arrange
-    final var mail = new NotificationConfigurationProperties.Mail(
-        "noreply@example.com", "Billing", null, "smtp", null
-    );
     final var properties1 = new NotificationConfigurationProperties(
-        mail, "en", "https://example.com"
+        "en", "https://example.com"
     );
     final var properties2 = new NotificationConfigurationProperties(
-        mail, "en", "https://example.com"
+        "en", "https://example.com"
     );
 
     // Assert
@@ -147,11 +85,8 @@ class NotificationConfigurationPropertiesTest {
   @DisplayName("Should have meaningful toString")
   void shouldHaveMeaningfulToString() {
     // Arrange
-    final var mail = new NotificationConfigurationProperties.Mail(
-        "noreply@example.com", "Billing", null, "smtp", null
-    );
     final var properties = new NotificationConfigurationProperties(
-        mail, "en", "https://example.com"
+        "en", "https://example.com"
     );
 
     // Act

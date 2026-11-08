@@ -19,6 +19,10 @@ package com.iqkv.foundation.billingservice.infrastructure.messaging;
 import java.util.Locale;
 
 import com.iqkv.foundation.billingservice.infrastructure.config.NotificationConfigurationProperties;
+import com.iqkv.foundation.mail.EmailDeliveryException;
+import com.iqkv.foundation.mail.EmailSendRequest;
+import com.iqkv.foundation.mail.EmailSender;
+import com.iqkv.foundation.mail.MailProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,17 +54,20 @@ public class EmailService {
   private final EmailSender emailSender;
   private final TemplateEngine templateEngine;
   private final NotificationConfigurationProperties notificationProps;
+  private final MailProperties mailProps;
   private final MessageSource messageSource;
   private final MeterRegistry meterRegistry;
 
   public EmailService(final EmailSender emailSender,
                       final TemplateEngine templateEngine,
                       final NotificationConfigurationProperties notificationProps,
+                      final MailProperties mailProps,
                       final MessageSource messageSource,
                       final MeterRegistry meterRegistry) {
     this.emailSender = emailSender;
     this.templateEngine = templateEngine;
     this.notificationProps = notificationProps;
+    this.mailProps = mailProps;
     this.messageSource = messageSource;
     this.meterRegistry = meterRegistry;
   }
@@ -79,9 +86,9 @@ public class EmailService {
     final String subject = messageSource.getMessage(subjectKey, null, locale);
 
     final EmailSendRequest request = new EmailSendRequest(
-        notificationProps.mail().from(),
-        notificationProps.mail().fromName(),
-        notificationProps.mail().replyTo(),
+        mailProps.from(),
+        mailProps.fromName(),
+        mailProps.replyTo(),
         event.getRecipientEmail(),
         subject,
         htmlBody
@@ -90,10 +97,10 @@ public class EmailService {
     try {
       emailSender.send(request);
       log.info("Email sent: provider={} type={} to={}",
-          notificationProps.mail().provider(), event.getType(), event.getRecipientEmail());
+          mailProps.provider(), event.getType(), event.getRecipientEmail());
       meterRegistry.counter("billing_emails_sent_total",
           "type", event.getType().name(), "status", "success").increment();
-    } catch (final com.iqkv.foundation.billingservice.shared.exception.MessagingException e) {
+    } catch (final EmailDeliveryException e) {
       log.error("Failed to send email: type={} to={}", event.getType(), event.getRecipientEmail(), e);
       meterRegistry.counter("billing_emails_sent_total",
           "type", event.getType().name(), "status", "failure").increment();
