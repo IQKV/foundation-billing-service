@@ -286,7 +286,7 @@ Returns `404` when no active subscription exists. Resolves subject by rollout mo
 
 ## Tech Stack
 
-- Java 25 / Spring Boot 4.1
+- Java 25 / Spring Boot 4.2
 - MyBatis 3.x (no JPA) + PostgreSQL 17
 - Liquibase for schema migrations
 - RabbitMQ (event consumption and publishing)
