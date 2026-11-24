@@ -29,9 +29,6 @@ import java.util.Optional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iqkv.foundation.billingservice.gateway.GatewayType;
 import com.iqkv.foundation.billingservice.gateway.command.CreateCheckoutSessionCommand;
 import com.iqkv.foundation.billingservice.gateway.command.CreateCustomerCommand;
@@ -54,6 +51,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 @Component
 @ConditionalOnGateway(GatewayType.LEMON_SQUEEZY)
@@ -75,12 +75,12 @@ public class LemonSqueezyGatewayAdapter implements PaymentGatewayPort {
 
   private final LemonSqueezyConfigurationProperties config;
   private final RestClient restClient;
-  private final ObjectMapper objectMapper;
+  private final JsonMapper objectMapper;
 
   public LemonSqueezyGatewayAdapter(
       final LemonSqueezyConfigurationProperties config,
       final RestClient lemonSqueezyRestClient,
-      final ObjectMapper objectMapper) {
+      final JsonMapper objectMapper) {
     this.config = config;
     this.restClient = lemonSqueezyRestClient;
     this.objectMapper = objectMapper;
@@ -268,7 +268,7 @@ public class LemonSqueezyGatewayAdapter implements PaymentGatewayPort {
     final JsonNode root;
     try {
       root = objectMapper.readTree(payload);
-    } catch (final JsonProcessingException e) {
+    } catch (final JacksonException e) {
       throw new WebhookProcessingException("Failed to parse LS webhook payload", e);
     }
 
@@ -332,8 +332,8 @@ public class LemonSqueezyGatewayAdapter implements PaymentGatewayPort {
     final JsonNode meta = root.path("meta");
 
     final Map<String, String> metadata = new HashMap<>();
-    meta.path("custom_data").fields()
-        .forEachRemaining(e -> metadata.put(e.getKey(), e.getValue().asText()));
+    meta.path("custom_data").properties()
+        .forEach(e -> metadata.put(e.getKey(), e.getValue().asText()));
 
     return new GatewaySubscriptionEvent(
         eventId,
