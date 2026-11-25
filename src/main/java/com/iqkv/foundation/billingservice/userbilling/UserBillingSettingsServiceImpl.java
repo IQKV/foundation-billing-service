@@ -30,11 +30,10 @@ import com.iqkv.foundation.billingservice.shared.exception.PaymentGatewayExcepti
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 /**
- * {@link UserBillingSettingsService} implementation active only in {@code SINGLE_TENANT} mode.
+ * {@link UserBillingSettingsService} implementation for per-user billing settings.
  *
  * <p>On the first subscription action for a user, this service:
  * <ol>
@@ -43,11 +42,11 @@ import org.springframework.stereotype.Service;
  *   <li>Persists the new {@code user_billing_settings} row with the external customer ID.</li>
  * </ol>
  *
- * <p>The bean is only registered when {@code iqkv.platform.rollout-mode=SINGLE_TENANT},
- * so it is never instantiated in multi-tenant deployments.
+ * <p>The bean is registered in both {@code SINGLE_TENANT} and {@code MULTI_TENANT} modes:
+ * in single-tenant mode every subscription is user-scoped, while in multi-tenant mode it backs
+ * personal (no-organization) subscriptions for users in the platform workspace.
  */
 @Service
-@ConditionalOnProperty(name = "iqkv.platform.rollout-mode", havingValue = "SINGLE_TENANT")
 public class UserBillingSettingsServiceImpl implements UserBillingSettingsService {
 
   private static final Logger log = LoggerFactory.getLogger(UserBillingSettingsServiceImpl.class);

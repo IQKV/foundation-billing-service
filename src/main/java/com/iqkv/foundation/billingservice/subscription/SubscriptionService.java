@@ -35,6 +35,7 @@ import com.iqkv.foundation.billingservice.plan.PricingModel;
 import com.iqkv.foundation.billingservice.shared.exception.ResourceNotFoundException;
 import com.iqkv.foundation.billingservice.shared.exception.SeatLimitExceededException;
 import com.iqkv.foundation.billingservice.shared.exception.TenantContextMismatchException;
+import com.iqkv.foundation.billingservice.userbilling.UserBillingSettingsService;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +65,14 @@ public class SubscriptionService {
   private final PlanFeatureRegistry planFeatureRegistry;
   private final MeterRegistry meterRegistry;
   private final MessagingService messagingService;
+
+  /**
+   * Lazily provisions {@code user_billing_settings} for USER-scoped subscriptions
+   * (single-tenant mode, or multi-tenant callers in the platform workspace).
+   * Optional so the service stays constructable in focused unit tests.
+   */
+  @org.springframework.beans.factory.annotation.Autowired(required = false)
+  private UserBillingSettingsService userBillingSettingsService;
 
   public SubscriptionService(final SubscriptionMapper subscriptionMapper,
                              final RefundMapper refundMapper,
@@ -242,6 +251,11 @@ public class SubscriptionService {
       externalCustomerId = settings.getExternalCustomerId();
       metadata.put("tenantKey", subject.key());
     } else {
+      // Personal (USER) subscriptions may originate from a caller with no organization
+      // (multi-tenant platform workspace). Provision billing settings on demand.
+      if (userBillingSettingsService != null) {
+        userBillingSettingsService.getOrCreateUserBillingSettings(userId);
+      }
       final var settings = userBillingSettingsMapper.findByUserId(userId)
           .orElseThrow(() -> {
             log.warn("Create checkout session for subject failed: user billing settings not found, userId={}", userId);

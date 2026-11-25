@@ -28,18 +28,19 @@ class PlatformConfigurationPropertiesTest {
   @DisplayName("Should create properties with MULTI_TENANT mode")
   void shouldCreatePropertiesWithMultiTenantMode() {
     // Arrange & Act
-    final var properties = new PlatformConfigurationProperties(RolloutMode.MULTI_TENANT);
+    final var properties = new PlatformConfigurationProperties(RolloutMode.MULTI_TENANT, null);
 
     // Assert
     assertThat(properties.rolloutMode()).isEqualTo(RolloutMode.MULTI_TENANT);
     assertThat(properties.getRolloutModeValue()).isEqualTo("MULTI_TENANT");
+    assertThat(properties.platformWorkspaceKey()).isEqualTo("platform");
   }
 
   @Test
   @DisplayName("Should create properties with SINGLE_TENANT mode")
   void shouldCreatePropertiesWithSingleTenantMode() {
     // Arrange & Act
-    final var properties = new PlatformConfigurationProperties(RolloutMode.SINGLE_TENANT);
+    final var properties = new PlatformConfigurationProperties(RolloutMode.SINGLE_TENANT, null);
 
     // Assert
     assertThat(properties.rolloutMode()).isEqualTo(RolloutMode.SINGLE_TENANT);
@@ -50,8 +51,8 @@ class PlatformConfigurationPropertiesTest {
   @DisplayName("Should support record equality")
   void shouldSupportRecordEquality() {
     // Arrange
-    final var properties1 = new PlatformConfigurationProperties(RolloutMode.MULTI_TENANT);
-    final var properties2 = new PlatformConfigurationProperties(RolloutMode.MULTI_TENANT);
+    final var properties1 = new PlatformConfigurationProperties(RolloutMode.MULTI_TENANT, "platform");
+    final var properties2 = new PlatformConfigurationProperties(RolloutMode.MULTI_TENANT, "platform");
 
     // Assert
     assertThat(properties1).isEqualTo(properties2);
@@ -62,7 +63,7 @@ class PlatformConfigurationPropertiesTest {
   @DisplayName("Should have meaningful toString")
   void shouldHaveMeaningfulToString() {
     // Arrange
-    final var properties = new PlatformConfigurationProperties(RolloutMode.MULTI_TENANT);
+    final var properties = new PlatformConfigurationProperties(RolloutMode.MULTI_TENANT, "platform");
 
     // Act
     final String toString = properties.toString();

@@ -28,8 +28,22 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "iqkv.platform")
 public record PlatformConfigurationProperties(
-    @NotNull RolloutMode rolloutMode
+    @NotNull RolloutMode rolloutMode,
+    String platformWorkspaceKey
 ) {
+
+  /**
+   * Default tenant key of the hidden platform "personal workspace".
+   * In {@code MULTI_TENANT} mode a caller whose token is scoped to this workspace is billed
+   * as an individual (subject_type=USER), which enables personal subscriptions without an organization.
+   */
+  public static final String DEFAULT_PLATFORM_WORKSPACE_KEY = "platform";
+
+  public PlatformConfigurationProperties {
+    if (platformWorkspaceKey == null || platformWorkspaceKey.isBlank()) {
+      platformWorkspaceKey = DEFAULT_PLATFORM_WORKSPACE_KEY;
+    }
+  }
 
   /**
    * Returns the rollout mode as a string value.

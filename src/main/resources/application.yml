@@ -143,6 +143,10 @@ iqkv:
     # MULTI_TENANT: Subscriptions are scoped per tenant; owner fields required in tenant.created events
     # SINGLE_TENANT: Subscriptions are scoped per user; owner fields optional in tenant.created events
     rollout-mode: ${ROLLOUT_MODE:MULTI_TENANT}
+    # Tenant key of the hidden platform "personal workspace".
+    # In MULTI_TENANT mode, a caller whose token is scoped to this workspace (no organization)
+    # is billed as an individual (subject_type=USER), enabling personal subscriptions.
+    platform-workspace-key: ${PLATFORM_WORKSPACE_KEY:platform}
   billing:
     # Fallback billing contact email for SINGLE_TENANT mode.
     # Fallback chain: (1) ownerEmail from event → (2) this value → (3) null

@@ -26,7 +26,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -39,15 +38,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
- * REST resource for individual user billing settings (single-tenant mode).
+ * REST resource for individual user billing settings.
  *
- * <p>Only active when {@code iqkv.platform.rollout-mode=SINGLE_TENANT}.
+ * <p>Active in all rollout modes: these settings back user-scoped subscriptions, both in
+ * {@code SINGLE_TENANT} mode (every subscription is user-scoped) and in {@code MULTI_TENANT} mode
+ * (personal subscriptions for users without an organization).
  */
 @RestController
 @RequestMapping("/api/v1/billing/user-settings")
 @Tag(name = "User Billing Settings", description = "Individual user billing configuration management")
 @SecurityRequirement(name = "bearerAuth")
-@ConditionalOnProperty(name = "iqkv.platform.rollout-mode", havingValue = "SINGLE_TENANT")
 public class UserBillingSettingsRestResource {
 
   private final UserBillingSettingsService userBillingSettingsService;
@@ -59,7 +59,7 @@ public class UserBillingSettingsRestResource {
   @GetMapping
   @Operation(
       summary = "Get billing settings",
-      description = "Returns billing settings for the authenticated user. Only active in SINGLE_TENANT mode.")
+      description = "Returns billing settings for the authenticated user.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Billing settings returned"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -76,7 +76,7 @@ public class UserBillingSettingsRestResource {
   @Operation(
       summary = "Create billing settings",
       description = "Creates billing settings for the authenticated user. Billing email and currency are required. "
-                    + "Returns 409 if settings already exist. Only active in SINGLE_TENANT mode.")
+                    + "Returns 409 if settings already exist.")
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Billing settings created"),
       @ApiResponse(responseCode = "400", description = "Validation error"),
@@ -95,8 +95,7 @@ public class UserBillingSettingsRestResource {
   @PatchMapping
   @Operation(
       summary = "Update billing settings",
-      description = "Partially updates billing settings. Only non-null fields are applied. "
-                    + "Only active in SINGLE_TENANT mode.")
+      description = "Partially updates billing settings. Only non-null fields are applied.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Billing settings updated"),
       @ApiResponse(responseCode = "400", description = "Validation error"),
@@ -114,8 +113,7 @@ public class UserBillingSettingsRestResource {
   @PostMapping("/portal")
   @Operation(
       summary = "Create customer portal session",
-      description = "Creates a Stripe Customer Portal session for the authenticated user and returns the URL for redirection. "
-                    + "Only active in SINGLE_TENANT mode.")
+      description = "Creates a Stripe Customer Portal session for the authenticated user and returns the URL for redirection.")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Portal session created"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),

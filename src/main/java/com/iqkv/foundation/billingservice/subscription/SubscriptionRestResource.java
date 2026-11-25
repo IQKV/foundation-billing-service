@@ -30,6 +30,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -57,9 +58,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class SubscriptionRestResource {
 
   private final SubscriptionService subscriptionService;
+  private final SubscriptionSubjectResolver subjectResolver;
 
-  public SubscriptionRestResource(final SubscriptionService subscriptionService) {
+  public SubscriptionRestResource(final SubscriptionService subscriptionService,
+                                  final SubscriptionSubjectResolver subjectResolver) {
     this.subscriptionService = subscriptionService;
+    this.subjectResolver = subjectResolver;
   }
 
   @GetMapping("/{tenantKey}/active")
@@ -127,16 +131,18 @@ public class SubscriptionRestResource {
   }
 
   @PostMapping("/me/checkout")
-  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'ADMIN')")
+  @PreAuthorize("hasAnyAuthority('TENANT_OWNER', 'ADMIN', 'MEMBER')")
   @Operation(
       summary = "Create checkout session for current subject",
-      description = "Creates a Stripe Checkout Session for subscription creation for the current subject (tenant or user depending on mode). "
-                    + "Requires TENANT_OWNER or ADMIN authority.")
+      description = "Creates a Stripe Checkout Session for the current subject (tenant or user depending on mode). "
+                    + "Personal (user-scoped) checkouts are self-service for any member; "
+                    + "tenant-scoped checkouts require TENANT_OWNER or ADMIN authority.")
   public ResponseEntity<SubscriptionDtos.CheckoutSessionResponse> createCheckoutForMe(
       @RequestBody final SubscriptionDtos.CreateCheckoutSessionRequest request,
       @AuthenticationPrincipal final Jwt jwt) {
     final String tenantKey = jwt.getClaimAsString(JwtClaimNames.TENANT_ID);
     final UUID userId = UUID.fromString(jwt.getClaimAsString(JwtClaimNames.USER_ID));
+    enforceCheckoutAuthority(tenantKey, userId, jwt);
     return ResponseEntity.ok(subscriptionService.createCheckoutSessionForSubject(tenantKey, userId, request));
   }
 
@@ -229,6 +235,26 @@ public class SubscriptionRestResource {
         .map(SubscriptionDtoMapper::toResponse)
         .toList();
     return ResponseEntity.ok(subscriptions);
+  }
+
+  /**
+   * Personal (user-scoped) checkouts are self-service for any member — the caller is the
+   * billing subject. Tenant-scoped checkouts remain restricted to {@code TENANT_OWNER} / {@code ADMIN}.
+   *
+   * @throws AccessDeniedException (→ HTTP 403) when a member attempts a tenant-scoped checkout
+   */
+  private void enforceCheckoutAuthority(final String tenantKey, final UUID userId, final Jwt jwt) {
+    final SubscriptionSubject subject = subjectResolver.resolveSubject(tenantKey, userId);
+    if (subject.type() == SubjectType.TENANT && !hasBillingAdminAuthority(jwt)) {
+      throw new AccessDeniedException(
+          "Only TENANT_OWNER or ADMIN may create a tenant-scoped checkout session");
+    }
+  }
+
+  private boolean hasBillingAdminAuthority(final Jwt jwt) {
+    final List<String> authorities = jwt.getClaimAsStringList(JwtClaimNames.AUTHORITIES);
+    return authorities != null
+        && (authorities.contains("TENANT_OWNER") || authorities.contains("ADMIN"));
   }
 
   /**

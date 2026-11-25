@@ -18,21 +18,38 @@ package com.iqkv.foundation.billingservice.subscription;
 
 import java.util.UUID;
 
+import com.iqkv.foundation.billingservice.infrastructure.config.PlatformConfigurationProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 /**
  * {@link SubscriptionSubjectResolver} for {@code MULTI_TENANT} mode.
- * Subscriptions are scoped to the tenant: {@code subject_type = TENANT}, {@code subject_key = tenantKey}.
+ *
+ * <p>Subscriptions are scoped to the organization tenant by default:
+ * {@code subject_type = TENANT}, {@code subject_key = tenantKey}.
+ *
+ * <p>Exception: when the caller's token is scoped to the hidden platform workspace
+ * ({@code iqkv.platform.platform-workspace-key}), the user has no organization and is billed
+ * as an individual: {@code subject_type = USER}, {@code subject_key = userId}. This enables
+ * personal subscriptions (GitHub-style) in multi-tenant deployments.
  */
 @Primary
 @Component
 @ConditionalOnProperty(name = "iqkv.platform.rollout-mode", havingValue = "MULTI_TENANT", matchIfMissing = true)
 public class MultiTenantSubscriptionSubjectResolver implements SubscriptionSubjectResolver {
 
+  private final String platformWorkspaceKey;
+
+  public MultiTenantSubscriptionSubjectResolver(final PlatformConfigurationProperties platformProperties) {
+    this.platformWorkspaceKey = platformProperties.platformWorkspaceKey();
+  }
+
   @Override
   public SubscriptionSubject resolveSubject(final String tenantKey, final UUID userId) {
+    if (userId != null && platformWorkspaceKey.equals(tenantKey)) {
+      return new SubscriptionSubject(SubjectType.USER, userId.toString());
+    }
     return new SubscriptionSubject(SubjectType.TENANT, tenantKey);
   }
 }
